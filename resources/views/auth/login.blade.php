@@ -112,7 +112,7 @@
             {{ $config->nombre_empresa ?? 'Dizany' }}
         </h1>
 
-        <p>Bienvenido, por favor inicia sesión</p>
+        <p>Bienvenido Dizany, por favor inicia sesión</p>
 
         <div id="error-message" class="error-message"></div>
 
