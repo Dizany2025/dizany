@@ -1,0 +1,15 @@
+.resumen-card {
+    padding: 1rem;
+    min-height: auto;
+    height: 100%;
+    border-left-width: 4px !important;
+    border-radius: 10px;
+    transition: 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.resumen-card:hover {
+    transform: scale(1.01);
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.08);
+}

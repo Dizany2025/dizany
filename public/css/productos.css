@@ -1,0 +1,83 @@
+/* General Styling for the Table */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+/* Styling for table headers */
+.table th {
+    background-color: #007bff;
+    color: white;
+    text-align: center;
+    padding: 10px;
+}
+
+/* Styling for table rows */
+.table td {
+    vertical-align: middle;
+    text-align: center;
+    padding: 10px;
+}
+
+/* Image styling */
+.table .table-img {
+    width: 50px;
+    height: auto;
+}
+
+/* Hover effect on rows */
+.table-striped tbody tr:hover {
+    background-color: #f1f1f1;
+}
+/* Estilo de paginación sin flechas */
+.pagination {
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.pagination .page-item {
+    display: inline-block;
+}
+
+.pagination .page-link {
+    border-radius: 50%;
+    font-size: 14px; /* Ajusta el tamaño del texto */
+    padding: 5px 10px; /* Ajusta el padding */
+    margin: 0 2px;
+    background-color: #f8f9fa; /* Fondo gris claro */
+    color: #007bff; /* Color de texto */
+}
+
+.pagination .page-item.disabled .page-link,
+.pagination .page-item.active .page-link {
+    background-color: #007bff;
+    color: white;
+    border: none;
+}
+
+.pagination .page-link:hover {
+    background-color: #007bff;
+    color: white;
+}
+
+
+/* Customize search form */
+.form-control {
+    font-size: 14px;
+    padding: 8px;
+}
+
+/* Button styling */
+.btn {
+    font-size: 14px;
+    padding: 8px 15px;
+}
+
+/* Add some margin to the bottom of the table container */
+.card-body {
+    margin-bottom: 20px;
+}
+
+

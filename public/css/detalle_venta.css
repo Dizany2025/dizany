@@ -1,0 +1,238 @@
+/* Estilo general del modal */
+#detalleVentaModal .modal-content {
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid #ddd;
+}
+
+/* Estilo del encabezado del modal */
+#detalleVentaModal .modal-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #ddd;
+    padding: 20px;
+    border-radius: 10px 10px 0 0;
+}
+
+/* Estilo del título */
+#detalleVentaModal .modal-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #343a40;
+}
+
+/* Estilo del pie de página */
+#detalleVentaModal .modal-footer {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 0 0 10px 10px;
+}
+
+/* Estilo de los detalles dentro del card */
+#detalleVentaModal .modal-body .card .d-flex {
+    margin-bottom: 12px;
+}
+#detalleVentaModal .modal-body .row > div {
+    display: flex;
+    align-items: center;
+}
+#detalleVentaModal .modal-body .row > .col-8 {
+    justify-content: flex-end;
+}
+
+#detalleVentaModal .modal-body .card i {
+    font-size: 18px;
+    color: #6c757d;
+}
+
+#detalleVentaModal .modal-body .card strong {
+    font-size: 16px;
+    color: #343a40;
+}
+
+/* Alineación de los valores */
+#detalleVentaModal .modal-body .card span {
+    font-size: 14px;
+    color: #495057;
+}
+
+/* Estilo de los productos listados */
+#detalleVentaModal .modal-body h5 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-top: 20px;
+    color: #343a40;
+}
+
+#detalleVentaModal .modal-body ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+#detalleVentaModal .modal-body ul li {
+    font-size: 14px;
+    color: #495057;
+    padding: 8px 0;
+    border-bottom: 1px solid #e3e6f0;
+}
+
+/* Estilo del estado */
+#modalEstado {
+    font-weight: bold;
+    color: #fff;
+    background-color: #28a745; /* Verde para "Pagada" */
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+}
+
+
+/* Estilo de los íconos en los detalles */
+#detalleVentaModal .modal-body .d-flex i {
+    margin-right: 10px;
+    color: #007bff;
+}
+
+/* Estilo del botón editar y eliminar */
+#detalleVentaModal .modal-footer .btn {
+    font-size: 14px;
+}
+
+/* Estilo para el estado Pagada */
+#modalEstado {
+    background-color: #28a745;  /* Verde para el estado "Pagada" */
+}
+/*scroll lista productos*/
+#modalProductosContainer {
+    max-height: 150px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    padding: 10px;
+    background-color: #fdfdfd;
+}
+
+/* Scrollbar fino y elegante */
+#modalProductosContainer::-webkit-scrollbar {
+    width: 6px;
+}
+
+#modalProductosContainer::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+#modalProductosContainer::-webkit-scrollbar-thumb {
+    background: #007bff;
+    border-radius: 10px;
+}
+
+#modalProductosContainer::-webkit-scrollbar-thumb:hover {
+    background: #0056b3;
+}
+
+/* Firefox */
+#modalProductosContainer {
+    scrollbar-width: thin;
+    scrollbar-color: #007bff #f1f1f1;
+}
+
+/*valor total*/
+.monto-total {
+    font-size: 3rem;        /* Tamaño grande del número */
+    font-weight: bold;      /* Negrita */
+    color: #212529;         /* Color oscuro para buen contraste */
+}
+
+.estado-pago {
+    background-color: #28a745;
+    color: #fff;
+    padding: 6px 15px;
+    border-radius: 20px;
+    font-size: 1rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.linea-total {
+    border-top: 2px solid #444546;
+}
+
+/*buscar productos en editar venta*/
+.producto-card:hover {
+        background-color: #e9f5ff;
+        transition: background-color 0.2s ease-in-out;
+    }
+#resultados-busqueda {
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 8px;
+}
+/*buscador de editar ventas*/
+    #buscador-productos {
+        max-width: 350px;
+        border-radius: 1rem;
+        padding: 0.5rem 1rem;
+    }
+    
+.resultado-item .card-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    padding: 1rem;
+}
+
+.resultado-item .badge {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.resultado-item:hover {
+    background-color: #f4f6fa;
+    border: 1px solid #0d6efd30;
+    transform: translateY(-2px);
+    transition: all 0.2s ease-in-out;
+}
+
+.resultado-item button {
+    font-size: 0.85rem;
+}
+
+.producto-agregado {
+    border: 1px solid #0d6efd55;
+    background-color: #f3f7ff;
+}
+
+.producto-agregado:hover {
+    background-color: #e9f1ff;
+    transform: none;
+    box-shadow: none;
+}
+
+#grid-productos .card:hover:not(.producto-agregado) {
+    transform: scale(1.02);
+    box-shadow: 0 0 6px rgba(0,0,0,0.1);
+    transition: all 0.2s ease-in-out;
+}
+
+
+@media (max-width: 768px) {
+    .form-select,
+    input[type="text"],
+    input[type="date"] {
+        margin-bottom: 1rem;
+    }
+
+    .card-footer button {
+        width: 100% !important;
+    }
+}
+
+@media (max-width: 576px) {
+    #grid-productos .col {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}

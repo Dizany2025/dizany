@@ -1,0 +1,43 @@
+/* Iconos */
+.icon {
+    color: white;
+    font-size: 32px;
+    padding: 8px;
+    border-radius: 50%;
+}
+/* Responsividad */
+@media (max-width: 768px) {
+    .custom-card {
+        width: 100%;
+        margin-bottom: 15px;
+    }
+}
+
+/*FILTROS*/
+/* Estilo para resaltar los días de la semana seleccionada */
+.highlight-yellow {
+    background-color: #fff3cd !important;
+    color: #856404 !important;
+    border-radius: 50%;
+}
+
+/* Estilo para resaltar los días del mes seleccionado */
+.highlight-green {
+    background-color: #d4edda !important;
+    color: #155724 !important;
+    border-radius: 50%;
+}
+.calendar-icon {
+    position: absolute;
+    top: 55%;
+    right: 12px;
+    transform: translateY(-50%);
+    color: #6c757d;
+    pointer-events: auto;
+    z-index: 5;
+}
+
+.btn-sm i {
+    margin-right: 5px;
+}
+

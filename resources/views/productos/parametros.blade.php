@@ -1,0 +1,366 @@
+@extends('layouts.app')
+
+@section('content')
+<div class="container py-4">
+    <div class="row g-4">
+        <!-- Sección Categorías -->
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h5 class="mb-0">Categorías</h5>
+
+                    <div class="flex-grow-1 px-3">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white"><i class="fas fa-search"></i></span>
+                            <input type="text" id="buscador-categoria" class="form-control" placeholder="Buscar categoría...">
+                        </div>
+                    </div>
+
+                    <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#modalCategoria">
+                        <i class="fas fa-plus"></i> Nueva
+                    </button>
+                </div>
+                <div  class="card-body">
+                <div id="tabla-categorias" class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                    <table class="table table-bordered table-sm mb-0 text-center">    
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($categorias as $categoria)
+                            <tr>
+                                <td>{{ $categoria->id }}</td>
+                                <td>{{ $categoria->nombre }}</td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-danger btn-eliminar-categoria" data-id="{{ $categoria->id }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            @endforeach
+                            @if($categorias->isEmpty())
+                            <tr><td colspan="3" class="text-center text-muted">Sin categorías registradas.</td></tr>
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        </div>
+
+        <!-- Sección Marcas -->
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h5 class="mb-0">Marcas</h5>
+
+                    <div class="flex-grow-1 px-3">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white"><i class="fas fa-search"></i></span>
+                            <input type="text" id="buscador-marca" class="form-control" placeholder="Buscar marca...">
+                        </div>
+                    </div>
+
+                    <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#modalMarca">
+                        <i class="fas fa-plus"></i> Nueva
+                    </button>
+                </div>
+                <div  class="card-body">
+                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                    <table class="table table-bordered table-sm mb-0 text-center"> 
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Descripción</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-marca">
+                            @foreach($marcas as $marca)
+                            <tr>
+                                <td>{{ $marca->id }}</td>
+                                <td>{{ $marca->nombre }}</td>
+                                <td>{{ $marca->descripcion }}</td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-danger btn-eliminar-marca" data-id="{{ $marca->id }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            @endforeach
+                            @if($marcas->isEmpty())
+                            <tr><td colspan="4" class="text-center text-muted">Sin marcas registradas.</td></tr>
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nueva Categoría -->
+<div class="modal fade" id="modalCategoria" tabindex="-1" aria-labelledby="modalCategoriaLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form action="{{ route('parametros.categorias.store') }}" method="POST" class="modal-content">
+            @csrf
+            <div class="modal-header">
+                <h5 class="modal-title">Registrar Categoría</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <label class="form-label">Nombre</label>
+                <input type="text" name="nombre" id="nombre_categoria" class="form-control" required>
+                <small id="alerta-categoria" class="text-danger  d-block mt-1"></small>
+
+            </div>
+            <div class="modal-footer">
+                <button id="btn-guardar-categoria" class="btn btn-success mt-2" type="submit">Guardar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Nueva Marca -->
+<div class="modal fade" id="modalMarca" tabindex="-1" aria-labelledby="modalMarcaLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form action="{{ route('parametros.marcas.store') }}" method="POST" class="modal-content">
+            @csrf
+            <div class="modal-header">
+                <h5 class="modal-title">Registrar Marca</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <label class="form-label">Nombre</label>
+                <input type="text" name="nombre" id="nombre_marca" class="form-control" required>
+                <small id="alerta-marca" class="text-danger  d-block mt-1"></small>
+
+                <label class="form-label">Descripción</label>
+                <textarea name="descripcion" class="form-control" rows="2"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button id="btn-guardar-marca" class="btn btn-success mt-2" type="submit">Guardar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+    function eliminarElemento(url, mensajeConfirmacion, mensajeExito) {
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: mensajeConfirmacion,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(url, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.exito) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: mensajeExito,
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => location.reload());
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.mensaje || 'No se pudo eliminar.'
+                        });
+                    }
+                })
+                .catch(() => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Ocurrió un error inesperado.'
+                    });
+                });
+            }
+        });
+    }
+
+    // Eliminar Marca
+    document.querySelectorAll('.btn-eliminar-marca').forEach(button => {
+        button.addEventListener('click', function () {
+            const id = this.dataset.id;
+            eliminarElemento(`/marcas/${id}`, 'La marca será eliminada permanentemente.', 'Marca eliminada correctamente');
+        });
+    });
+
+    // Eliminar Categoría
+    document.querySelectorAll('.btn-eliminar-categoria').forEach(button => {
+        button.addEventListener('click', function () {
+            const id = this.dataset.id;
+            eliminarElemento(`/categorias/${id}`, 'La categoría será eliminada permanentemente.', 'Categoría eliminada correctamente');
+        });
+    });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const buscador = document.getElementById('buscador-categoria');
+        buscador.addEventListener('input', () => {
+            const filtro = buscador.value.toLowerCase();
+            document.querySelectorAll('#tabla-categorias tbody tr').forEach(fila => {
+                const texto = fila.textContent.toLowerCase();
+                fila.style.display = texto.includes(filtro) ? '' : 'none';
+            });
+        });
+    });
+</script>
+<script>
+document.getElementById('buscador-marca').addEventListener('input', function () {
+    const filtro = this.value.toLowerCase();
+    const filas = document.querySelectorAll('#tabla-marca tr');
+
+    filas.forEach(fila => {
+        const texto = fila.textContent.toLowerCase();
+        fila.style.display = texto.includes(filtro) ? '' : 'none';
+    });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const inputCategoria = document.getElementById('nombre_categoria');
+    const btnGuardarCategoria = document.getElementById('btn-guardar-categoria');
+    const alertaCategoria = document.getElementById('alerta-categoria');
+
+    inputCategoria.addEventListener('input', () => {
+        const nombre = inputCategoria.value.trim();
+
+        if (nombre.length < 2) {
+            alertaCategoria.textContent = '';
+            btnGuardarCategoria.disabled = true;
+            return;
+        }
+
+        fetch(`/validar-categoria?nombre=${encodeURIComponent(nombre)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.existe) {
+                    alertaCategoria.textContent = '❌ Ya existe una categoría con ese nombre';
+                    alertaCategoria.classList.add('text-danger');
+                    btnGuardarCategoria.disabled = true;
+                } else {
+                    alertaCategoria.textContent = '✅ Nombre válido';
+                    alertaCategoria.classList.remove('text-danger');
+                    alertaCategoria.classList.add('text-success');
+                    btnGuardarCategoria.disabled = false;
+                }
+            })
+            .catch(() => {
+                alertaCategoria.textContent = '⚠️ Error al validar';
+                alertaCategoria.classList.add('text-danger');
+                btnGuardarCategoria.disabled = true;
+            });
+    });
+});
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+    const inputMarca = document.getElementById('nombre_marca');
+    const btnGuardarMarca = document.getElementById('btn-guardar-marca');
+    const alertaMarca = document.getElementById('alerta-marca');
+
+    inputMarca.addEventListener('input', () => {
+        const nombre = inputMarca.value.trim();
+
+        if (nombre.length < 2) {
+            alertaMarca.textContent = '';
+            btnGuardarMarca.disabled = true;
+            return;
+        }
+
+        fetch(`/validar-marca?nombre=${encodeURIComponent(nombre)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.existe) {
+                    alertaMarca.textContent = '❌ Ya existe una marca con ese nombre';
+                    alertaMarca.classList.add('text-danger');
+                    alertaMarca.classList.remove('text-success');
+                    btnGuardarMarca.disabled = true;
+                } else {
+                    alertaMarca.textContent = '✅ Nombre válido';
+                    alertaMarca.classList.remove('text-danger');
+                    alertaMarca.classList.add('text-success');
+                    btnGuardarMarca.disabled = false;
+                }
+            })
+            .catch(() => {
+                alertaMarca.textContent = '⚠️ Error al validar';
+                alertaMarca.classList.add('text-danger');
+                alertaMarca.classList.remove('text-success');
+                btnGuardarMarca.disabled = true;
+            });
+    });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const modalCategoria = document.getElementById('modalCategoria');
+    const modalMarca = document.getElementById('modalMarca');
+
+    const inputCategoria = document.getElementById('nombre_categoria');
+    const alertaCategoria = document.getElementById('alerta-categoria');
+    const btnGuardarCategoria = document.getElementById('btn-guardar-categoria');
+
+    const inputMarca = document.getElementById('nombre_marca');
+    const alertaMarca = document.getElementById('alerta-marca');
+    const btnGuardarMarca = document.getElementById('btn-guardar-marca');
+
+    // Al cerrar modal categoría
+    modalCategoria.addEventListener('hidden.bs.modal', function () {
+        inputCategoria.value = '';
+        alertaCategoria.textContent = '';
+        alertaCategoria.classList.remove('text-danger', 'text-success');
+        btnGuardarCategoria.disabled = true;
+    });
+
+    // Al cerrar modal marca
+    modalMarca.addEventListener('hidden.bs.modal', function () {
+        inputMarca.value = '';
+        alertaMarca.textContent = '';
+        alertaMarca.classList.remove('text-danger', 'text-success');
+        btnGuardarMarca.disabled = true;
+    });
+});
+</script>
+@if(session('success'))
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    Swal.fire({
+        toast: true,
+        icon: 'success',
+        title: '{{ session('success') }}',
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 2500,
+        timerProgressBar: true,
+    });
+});
+</script>
+@endif
+
+@endpush

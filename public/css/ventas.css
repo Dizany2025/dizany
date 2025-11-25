@@ -1,0 +1,211 @@
+/* ----------- GENERAL ----------- */
+body {
+    background-color: #f4f6f9;
+    font-family: 'Segoe UI', sans-serif;
+}
+.producto-card {
+    background: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 10px;
+    padding: 15px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: box-shadow 0.3s ease;
+}
+
+.producto-card:hover {
+    box-shadow: 0 5px 12px rgba(0,0,0,0.15);
+}
+
+.ventas-form {
+    background: #fff;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+    margin-bottom: 40px;
+}
+
+h2 {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-bottom: 25px;
+    color: #2c3e50;
+}
+
+/* ----------- INPUTS Y GRUPOS ----------- */
+.input-group-text {
+    background-color: #2980b9;
+    color: #fff;
+    border: none;
+}
+
+.input-group .form-control,
+.form-select {
+    border-radius: 0 0.375rem 0.375rem 0;
+    border-left: none;
+}
+
+.input-group .form-control:focus {
+    border-color: #2980b9;
+    box-shadow: 0 0 0 0.1rem rgba(41, 128, 185, 0.25);
+}
+
+/* ----------- TABLA DE PRODUCTOS ----------- */
+.table {
+    background-color: #ffffff;
+}
+
+.table th {
+    background-color: #2980b9;
+    color: white;
+    font-weight: 600;
+    vertical-align: middle;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.table-bordered th,
+.table-bordered td {
+    border: 1px solid #dee2e6;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #ecf6fd;
+}
+
+/* ----------- CARDS DE PRODUCTOS ----------- */
+#resultados-busqueda .producto-card {
+    background: #ffffff;
+    border: 1px solid #ced4da;
+    border-radius: 10px;
+    padding: 15px;
+    transition: box-shadow 0.3s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+#resultados-busqueda .producto-card:hover {
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+#resultados-busqueda h3 {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+#resultados-busqueda p {
+    font-size: 0.85rem;
+    margin-bottom: 5px;
+}
+
+#resultados-busqueda .agregar-carrito {
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    border-radius: 5px;
+    margin-top: 10px;
+}
+
+#resultados-busqueda .agregar-carrito:hover {
+    background-color: #1e8449;
+}
+
+/* ----------- RESUMEN ----------- */
+.card.resumen {
+    border: 1px solid #dcdde1;
+    background-color: #fdfdfd;
+}
+
+.card.resumen h6 {
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+}
+
+.card.resumen input {
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+/* ----------- BOTÓN CONTINUAR VENTA ----------- */
+#continuar-venta-btn {
+    font-size: 1rem;
+    font-weight: bold;
+    background-color: #2980b9;
+    border: none;
+    padding: 12px;
+    margin-top: 25px;
+    transition: all 0.2s ease-in-out;
+}
+
+#continuar-venta-btn:hover {
+    background-color: #1e5a81;
+    transform: translateY(-1px);
+}
+
+/* ----------- MODAL ----------- */
+.modal-content {
+    border-radius: 10px;
+}
+
+.modal-header {
+    background-color: #2980b9;
+    color: white;
+    border-bottom: 1px solid #ddd;
+}
+
+.modal-body label {
+    font-weight: 600;
+}
+
+/* ----------- RESPONSIVE ----------- */
+@media (max-width: 768px) {
+    #resultados-busqueda .producto-card {
+        font-size: 0.9rem;
+    }
+
+    .ventas-form h2 {
+        font-size: 1.4rem;
+    }
+
+    /* Contenedor para la tabla con scroll horizontal */
+.table-responsive {
+    width: 100%;             /* La tabla ocupa el 100% del ancho disponible */
+    overflow-x: auto;        /* Permite el desplazamiento horizontal */
+    -webkit-overflow-scrolling: touch; /* Mejora el desplazamiento en dispositivos móviles */
+    margin-bottom: 1rem;     /* Espacio debajo de la tabla */
+}
+
+/* Tabla dentro del contenedor */
+.table-responsive table {
+    width: 100%;
+    min-width: 600px; /* Establece el ancho mínimo para evitar que la tabla se haga muy pequeña */
+}
+
+/* Evitar que el texto se divida en varias líneas */
+.table-responsive th,
+.table-responsive td {
+    white-space: nowrap;
+}
+
+/* Estilos opcionales para las celdas */
+.table-responsive th {
+    background-color: #2980b9;
+    color: white;
+}
+
+.table-responsive td {
+    padding: 0.5rem;
+}
+
+
+    #continuar-venta-btn {
+        font-size: 0.95rem;
+    }
+}

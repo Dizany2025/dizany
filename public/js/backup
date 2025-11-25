@@ -1,0 +1,319 @@
+let productosAgregados = new Set();
+
+$(document).ready(function () {
+    $('#productos-venta tr').each(function () {
+        const id = $(this).data('producto-id');
+        if (id) productosAgregados.add(id);
+    });
+    recalcularTotales();
+});
+
+// Buscar productos
+$('#buscador-productos').on('input', function () {
+    const termino = $(this).val().trim();
+    const resultados = $('#resultados-busqueda');
+
+    if (termino.length === 0) {
+        resultados.addClass('d-none').empty();
+        return;
+    }
+
+    $.ajax({
+        url: '/buscar-producto',
+        method: 'GET',
+        data: { search: termino },
+        success: function (productos) {
+            resultados.empty();
+            if (productos.length === 0) {
+                resultados.html('<div class="text-center text-muted py-2">No se encontraron productos</div>');
+            } else {
+                const row = $('<div class="row g-3"></div>');
+                productos.forEach(producto => {
+                    const col = $(`
+                        <div class="col-md-3">
+                            <div class="card h-100 border-primary shadow-sm">
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title text-primary">${producto.nombre}</h5>
+                                    <p class="card-text small mb-1"><strong>Descripción:</strong> ${producto.descripcion || 'Sin descripción'}</p>
+                                    <p class="card-text small mb-1"><strong>Precio Unitario:</strong> S/ ${parseFloat(producto.precio_venta).toFixed(2)}</p>
+                                    <p class="card-text small mb-2"><strong>Stock:</strong> ${producto.stock}</p>
+                                    <button type="button" class="btn btn-success btn-sm mt-auto agregar-producto"
+                                        data-id="${producto.id}"
+                                        data-nombre="${producto.nombre}"
+                                        data-descripcion="${producto.descripcion || ''}"
+                                        data-precio="${parseFloat(producto.precio_venta)}"
+                                        data-precio-mayor="${parseFloat(producto.precio_mayor)}"
+                                        data-unidades-por-mayor="${producto.unidades_por_mayor || 1}"
+                                        data-stock="${producto.stock}">
+                                        <i class="fas fa-plus-circle"></i> Agregar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                    row.append(col);
+                });
+                resultados.append(row);
+            }
+            resultados.removeClass('d-none');
+        },
+        error: function () {
+            console.error('Error al buscar productos');
+        }
+    });
+});
+
+// Agregar producto
+$(document).on('click', '.agregar-producto', function (e) {
+    e.preventDefault();
+    const id = $(this).data('id');
+    const nombre = $(this).data('nombre');
+    const descripcion = $(this).data('descripcion');
+    const precio = parseFloat($(this).data('precio')).toFixed(2);
+    const precioMayor = parseFloat($(this).data('precio-mayor')).toFixed(2);
+    const unidadesMayor = parseInt($(this).data('unidades-por-mayor')) || 1;
+    const stock = parseInt($(this).data('stock')) || 0;
+
+    const resultados = $('#resultados-busqueda');
+    $('#buscador-productos').val('');
+    resultados.addClass('d-none').empty();
+
+    if (productosAgregados.has(id)) {
+        playErrorSound();
+        Swal.fire({
+            icon: 'warning',
+            title: 'Producto ya agregado.',
+            timer: 2000,
+            showConfirmButton: false
+        });
+        $('#buscador-productos').val('');
+        $('#resultados-busqueda').addClass('d-none').empty();
+        return;
+    }
+
+    if (stock < 1) {
+        playErrorSound();
+        Swal.fire({
+            icon: 'error',
+            title: 'Sin stock disponible.',
+            timer: 2000,
+            showConfirmButton: false
+        });
+        $('#buscador-productos').val('');
+        $('#resultados-busqueda').addClass('d-none').empty();
+        return;
+    }
+
+    const fila = `
+        <tr data-producto-id="${id}" data-stock="${stock}" data-unidades-mayor="${unidadesMayor}">
+            <td>${nombre}</td>
+            <td>${descripcion}</td>
+            <td>
+                <select name="productos[${id}][tipo_venta]" class="form-select form-select-sm tipo-venta">
+                    <option value="unidad" selected>Unidad</option>
+                    <option value="mayor">Mayor</option>
+                </select>
+            </td>
+            <td class="precio-unitario">S/ ${precio}</td>
+            <td>
+                <input type="number" name="productos[${id}][precio_mayor]" class="form-control form-control-sm precio-mayor"
+                    min="0" step="0.01" value="${precioMayor}"
+                    data-precio-base="${precio}" data-stock="${stock}" data-unidades-por-mayor="${unidadesMayor}"
+                    style="max-width: 100px; margin: auto;" disabled>
+            </td>
+            <td>
+                <input type="number" name="productos[${id}][cantidad]" class="form-control form-control-sm cantidad"
+                    min="1" value="1" style="max-width: 80px; margin: auto;">
+            </td>
+            <td class="total-item">S/ ${precio}</td>
+            <td class="text-center">
+                <button type="button" class="btn btn-danger btn-sm btn-eliminar-producto">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </td>
+        </tr>
+    `;
+
+    $('#productos-venta').append(fila);
+    productosAgregados.add(id);
+    $('#buscador-productos').val('');
+    $('#resultados-busqueda').addClass('d-none').empty();
+    recalcularTotales();
+});
+
+// Eliminar producto
+$(document).on('click', '.btn-eliminar-producto', function () {
+    const fila = $(this).closest('tr');
+    const id = fila.data('producto-id');
+    fila.remove();
+    productosAgregados.delete(id);
+    recalcularTotales();
+});
+
+// Validar tipo de venta
+$(document).on('change', '.tipo-venta', function () {
+    const row = $(this).closest('tr');
+    const tipoVenta = $(this).val();
+    const precioMayorInput = row.find('.precio-mayor');
+    const cantidadInput = row.find('.cantidad');
+    const cantidad = parseInt(cantidadInput.val()) || 1;
+    const stock = parseInt(row.data('stock')) || 0;
+    const unidadesMayor = parseInt(row.data('unidades-mayor')) || 1;
+
+    if (tipoVenta === 'mayor') {
+        precioMayorInput.prop('disabled', false);
+        if (cantidad * unidadesMayor > stock) {
+            $(this).val('unidad');
+            precioMayorInput.prop('disabled', true);
+            playErrorSound();
+            Swal.fire({
+                icon: 'error',
+                title: 'Stock insuficiente',
+                text: 'No hay suficiente stock para venta por mayor.',
+                timer: 2500,
+                showConfirmButton: false
+            });
+        }
+    } else {
+        precioMayorInput.prop('disabled', true);
+    }
+
+    recalcularTotales();
+});
+
+// Validar cantidad
+$(document).on('input', '.cantidad', function () {
+    const row = $(this).closest('tr');
+    const tipoVenta = row.find('.tipo-venta').val();
+    const cantidadInput = $(this);
+    const cantidad = parseInt(cantidadInput.val()) || 1;
+
+    // Extraer desde tr o desde input
+    const stock = parseInt(row.data('stock')) || parseInt(row.find('.precio-mayor').data('stock')) || 0;
+    const unidadesMayor = parseInt(row.data('unidades-mayor')) || parseInt(row.find('.precio-mayor').data('unidades-por-mayor')) || 1;
+    const totalUnidades = tipoVenta === 'mayor' ? cantidad * unidadesMayor : cantidad;
+
+    if (!cantidadInput.data('last') || cantidadInput.data('last') !== cantidad) {
+        if (totalUnidades > stock) {
+            const maxCantidad = tipoVenta === 'mayor' ? Math.floor(stock / unidadesMayor) : stock;
+            cantidadInput.val(maxCantidad > 0 ? maxCantidad : 1);
+            playErrorSound();
+            Swal.fire({
+                icon: 'warning',
+                title: 'Cantidad excede el stock',
+                text: `Stock disponible: ${stock}.`,
+                timer: 2500,
+                showConfirmButton: false
+            });
+        }
+        cantidadInput.data('last', cantidad);
+    }
+
+    recalcularTotales();
+});
+
+
+// Recalcular totales
+function recalcularTotales() {
+    let subtotal = 0;
+    $('#productos-venta tr').each(function () {
+        const fila = $(this);
+        const precioUnitario = parseFloat(fila.find('.precio-unitario').text().replace(/[^\d.]/g, '')) || 0;
+        const precioMayorInput = fila.find('.precio-mayor');
+        const tipoVenta = fila.find('.tipo-venta').val();
+        const cantidad = parseInt(fila.find('.cantidad').val()) || 1;
+
+        let precioFinal = parseFloat(precioMayorInput.val()) || 0;
+        if (tipoVenta === 'unidad' || precioFinal === 0) {
+            precioFinal = precioUnitario;
+        }
+
+        const total = precioFinal * cantidad;
+        subtotal += total;
+        fila.find('.total-item').text(`S/ ${total.toFixed(2)}`);
+    });
+
+    const igv = 0;
+    const total = subtotal + igv;
+    $('#subtotal').text(`S/ ${subtotal.toFixed(2)}`);
+    $('#igv').text(`S/ ${igv.toFixed(2)}`);
+    $('#total-venta').text(`S/ ${total.toFixed(2)}`);
+}
+
+// Enviar formulario
+$('#form-editar-venta').on('submit', function (e) {
+    e.preventDefault();
+
+    const form = this;
+    const url = form.action;
+    const token = document.querySelector('meta[name="csrf-token"]').content;
+
+    const clienteId = form.querySelector('[name="cliente_id"]').value;
+    const fecha = form.querySelector('[name="fecha"]').value;
+    const metodoPago = form.querySelector('[name="metodo_pago"]').value;
+
+    const productos = {};
+    $('#productos-venta tr').each(function () {
+        const row = $(this);
+        const productoId = row.data('producto-id');
+        const cantidad = parseFloat(row.find('.cantidad').val()) || 1;
+        const precioMayor = parseFloat(row.find('.precio-mayor').val()) || 0;
+        const tipoVenta = row.find('.tipo-venta').val();
+
+        productos[productoId] = {
+            cantidad: cantidad,
+            precio_mayor: precioMayor,
+            tipo_venta: tipoVenta
+        };
+    });
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': token,
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            _method: 'PUT',
+            cliente_id: clienteId,
+            fecha: fecha,
+            metodo_pago: metodoPago,
+            productos: productos
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            playSuccessSound();
+            Swal.fire({
+                icon: 'success',
+                title: '¡Venta actualizada!',
+                text: data.message,
+                timer: 2000,
+                showConfirmButton: false
+            }).then(() => {
+                window.location.href = "/ventas";
+            });
+        } else {
+            playErrorSound();
+            Swal.fire('Error', data.message || 'No se pudo actualizar la venta', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error al guardar la venta:', error);
+        playErrorSound();
+        Swal.fire('Error', 'Error inesperado al guardar la venta.', 'error');
+    });
+});
+
+// Sonidos
+function playErrorSound() {
+    const audio = new Audio('/sonidos/error-alert.mp3');
+    audio.play();
+}
+
+function playSuccessSound() {
+    const audio = new Audio('/sonidos/success.mp3');
+    audio.play();
+}

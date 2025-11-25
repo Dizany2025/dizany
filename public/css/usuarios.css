@@ -1,0 +1,13 @@
+.table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+.table td, .table th {
+    vertical-align: middle;
+}
+
+#buscadorUsuarios {
+    max-width: 400px;
+    margin: 0 auto;
+}

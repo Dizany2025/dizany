@@ -1,0 +1,52 @@
+.form-container {
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.form-group label {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.form-actions {
+    text-align: center;
+}
+
+.imagen-preview img {
+    border-radius: 8px;
+    max-width: 100%;
+    height: auto;
+}
+
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+/*validar codigo de barras*/
+/* Estilo para el mensaje de error */
+.invalid-feedback {
+    color: #dc3545;  /* Rojo (color para mensajes de error) */
+    font-size: 0.875em;  /* Tamaño de fuente más pequeño */
+    margin-top: 0.25rem;  /* Espacio entre el input y el mensaje */
+    display: none;  /* Inicialmente oculto */
+}
+
+/* Estilo para el campo de entrada cuando hay un error */
+.is-invalid {
+    border-color: #dc3545;  /* Borde rojo cuando hay error */
+    padding-right: calc(1.25em + .75rem);  /* Añadir relleno al lado derecho si es necesario */
+    background-image: url('data:image/svg+xml,...'); /* Icono de error en el campo si deseas añadirlo */
+    background-position: right 0.7rem center; /* Alineación del icono de error */
+    background-repeat: no-repeat;
+}
+

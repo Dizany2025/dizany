@@ -1,0 +1,247 @@
+@extends('layouts.app')
+
+@push('styles')
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <!-- CSS personalizado para productos -->
+    <link href="{{ asset('css/productos.css') }}" rel="stylesheet" />
+    <link href="{{ asset('css/usuarios.css') }}" rel="stylesheet" />
+@endpush
+
+@section('header-actions')
+<div class="d-flex align-items-center gap-3">
+    <a href="#" class="nuevo-producto" data-bs-toggle="modal" data-bs-target="#modalNuevoUsuario">
+        <i class="fa-solid fa-plus"></i> Nuevo Usuario
+    </a>
+</div>
+@endsection
+
+@section('content')
+<!-- alerta de confirmacion -->
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        </div>
+    @endif
+    @if ($errors->any())
+    <div class="alert alert-danger">
+        <ul class="mb-0">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+    @endif
+    <div class="card mx-auto my-4" style="max-width: 900px;">
+    <div class="card-header text-center bg-primary text-white">
+        <h4 class="mb-0"><i class="fa-solid fa-users"></i> Lista de Usuarios</h4>
+    </div>
+    <div class="card-body">
+
+        <!-- Fila de buscador y botón Exportar -->
+        <div class="row mb-3">
+            <div class="col-md-8">
+                <input type="text" id="buscadorUsuarios" class="form-control" placeholder="Buscar por nombre, usuario o rol...">
+            </div>
+            <div class="col-md-4 text-md-end mt-2 mt-md-0">
+                <a href="{{ route('usuarios.exportarExcel') }}" class="btn btn-success w-100 w-md-auto">
+                    <i class="fa-solid fa-file-excel"></i> Exportar Excel
+                </a>
+            </div>
+        </div>
+
+        <!-- Tabla de usuarios -->
+        <div class="table-responsive">
+            <table id="tablaUsuarios" class="table table-bordered table-striped align-middle text-center mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Usuario</th>
+                        <th>Rol</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($usuarios as $usuario)
+                        <tr>
+                            <td>{{ $usuario->id }}</td>
+                            <td>{{ $usuario->nombre }}</td>
+                            <td>{{ $usuario->usuario }}</td>
+                            <td>{{ $usuario->rol->nombre ?? 'Sin rol' }}</td>
+                            <td>
+                                <div class="d-flex justify-content-center gap-1">
+                                    <button type="button"
+                                        class="btn btn-warning btn-sm"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modalEditarUsuario"
+                                        data-id="{{ $usuario->id }}"
+                                        data-nombre="{{ $usuario->nombre }}"
+                                        data-usuario="{{ $usuario->usuario }}"
+                                        data-email="{{ $usuario->email }}"  {{-- 👈 IMPORTANTE --}}
+                                        data-rol="{{ $usuario->rol_id }}">
+                                        <i class="fa fa-edit"></i>
+                                    </button>
+                                    <form action="{{ route('usuarios.destroy', $usuario->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de eliminar este usuario?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger btn-sm">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
+                                    </form>
+
+                                    <button class="btn btn-primary btn-sm cambiar-clave-btn"
+                                            data-id="{{ $usuario->id }}"
+                                            data-nombre="{{ $usuario->nombre }}"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#modalCambiarClave">
+                                        <i class="fa-solid fa-key"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+
+    <!-- Modal para Agregar Usuario -->
+<div class="modal fade" id="modalNuevoUsuario" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="POST" action="{{ route('usuarios.store') }}" class="modal-content">
+            @csrf
+            <div class="modal-header">
+                <h5 class="modal-title">Nuevo Usuario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label>Nombre</label>
+                    <input type="text" name="nombre" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label>Usuario</label>
+                    <input type="text" name="usuario" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label>Correo Electrónico</label>
+                    <input type="email" name="email" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label>Contraseña</label>
+                    <input type="password" name="password" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label>Rol</label>
+                    <select name="rol_id" class="form-control" required>
+                        <option value="" disabled selected>Seleccione un rol</option>
+                        @foreach($roles as $rol)
+                            <option value="{{ $rol->id }}">{{ $rol->nombre }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-success">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal para Editar Usuario -->
+<div class="modal fade" id="modalEditarUsuario" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="POST" id="formEditarUsuario" class="modal-content">
+            @csrf
+            @method('PUT')
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Usuario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="id" id="editar-id">
+                
+                <div class="mb-3">
+                    <label>Nombre</label>
+                    <input type="text" name="nombre" id="editar-nombre" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label>Usuario</label>
+                    <input type="text" name="usuario" id="editar-usuario" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label>Correo Electrónico</label>
+                    <input type="email" name="email" id="editar-email" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label>Rol</label>
+                    <select name="rol_id" id="editar-rol" class="form-control" required>
+                        @foreach($roles as $rol)
+                            <option value="{{ $rol->id }}">{{ $rol->nombre }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-success">Actualizar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Cambiar Clave -->
+<div class="modal fade" id="modalCambiarClave" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="POST" action="{{ route('usuarios.cambiarClave') }}" class="modal-content">
+            @csrf
+            <input type="hidden" name="usuario_id" id="usuario_id_cambiar_clave">
+            <div class="modal-header">
+                <h5 class="modal-title">Cambiar Contraseña</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p id="nombre_usuario_label"></p>
+                <div class="mb-3">
+                    <label>Nueva Contraseña</label>
+                    <input type="password" name="nueva_clave" class="form-control" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Actualizar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+@endsection
+
+@push('scripts')
+<!-- Bootstrap JS con Popper incluido -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script src="{{ asset('js/usuarios.js') }}"></script>
+    
+    
+@endpush
