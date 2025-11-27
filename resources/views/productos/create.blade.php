@@ -49,14 +49,30 @@
                 <input type="number" step="0.01" class="form-control shadow-sm" id="precio_venta" name="precio_venta" required>
             </div>
 
+            <!-- PRECIOS Y PRESENTACIONES -->
             <div class="col-md-6 col-lg-4">
-                <label for="precio_mayor" class="form-label">Precio por Mayor</label>
-                <input type="number" step="0.01" class="form-control shadow-sm" id="precio_mayor" name="precio_mayor">
+                <label for="precio_paquete" class="form-label">Precio por Paquete</label>
+                <input type="number" step="0.01" class="form-control shadow-sm" id="precio_paquete" name="precio_paquete">
             </div>
 
             <div class="col-md-6 col-lg-4">
-                <label for="unidades_por_mayor" class="form-label">Unidades Por (Paquete/Caja.)</label>
-                <input type="number" class="form-control shadow-sm" id="unidades_por_mayor" name="unidades_por_mayor" placeholder="Ej: 6, 12, 24">
+                <label for="unidades_por_paquete" class="form-label">Unidades por Paquete</label>
+                <input type="number" class="form-control shadow-sm" id="unidades_por_paquete" name="unidades_por_paquete" placeholder="Ej: 10, 20">
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <label for="tipo_paquete" class="form-label">Tipo de Paquete</label>
+                <input type="text" class="form-control shadow-sm" id="tipo_paquete" name="tipo_paquete" placeholder="Ej: bolsa, blister, pack">
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <label for="paquetes_por_caja" class="form-label">Paquetes por Caja</label>
+                <input type="number" class="form-control shadow-sm" id="paquetes_por_caja" name="paquetes_por_caja" placeholder="Ej: 6, 12, 24">
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <label for="precio_caja" class="form-label">Precio por Caja</label>
+                <input type="number" step="0.01" class="form-control shadow-sm" id="precio_caja" name="precio_caja">
             </div>
 
             <div class="col-md-6 col-lg-4">
@@ -77,6 +93,20 @@
             <div class="col-md-6 col-lg-4">
                 <label for="imagen" class="form-label">Imagen</label>
                 <input type="file" class="form-control shadow-sm" id="imagen" name="imagen" accept="image/*">
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <label for="slug" class="form-label">Slug (URL)</label>
+                <input type="text" class="form-control shadow-sm" id="slug" name="slug" placeholder="ej: cerveza-corona-355ml">
+            </div>
+
+            <div class="col-md-6 col-lg-4 d-flex align-items-end">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="visible_en_catalogo" name="visible_en_catalogo" value="1">
+                    <label class="form-check-label" for="visible_en_catalogo">
+                        Visible en el catálogo online
+                    </label>
+                </div>
             </div>
 
             <div class="col-md-6 col-lg-4">
