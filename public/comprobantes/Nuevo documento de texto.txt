@@ -1,3 +1,5 @@
+// public/js/ventas_productos.js
+
 // ===============================
 // IGV global desde configuración
 // ===============================
@@ -7,9 +9,8 @@ console.log("IGV leído:", IGV_PERCENT);
 
 // Helper: dado un precio base (sin IGV) devuelve el precio final (con IGV)
 function calcularPrecioFinal(precioBase) {
-    const base = parseFloat(precioBase) || 0;
-    if (IGV_PERCENT <= 0) return base;
-    return base * (1 + IGV_PERCENT / 100);
+    if (IGV_PERCENT <= 0) return precioBase;
+    return precioBase * (1 + IGV_PERCENT / 100);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -20,40 +21,64 @@ document.addEventListener("DOMContentLoaded", () => {
     const buscarInput       = document.getElementById("buscar_producto");
     const resultadosDiv     = document.getElementById("resultados-busqueda"); // grilla de cards
 
-    // Carrito Treinta (fase 1)
+    
+    // 👉 NUEVO: contenedor tipo Treinta del carrito
     const carritoLista      = document.getElementById("carrito-lista");
 
-    // Botones FASES
+    // Botón de continuar Fase 1 (Treinta)
     const btnIrStep2        = document.getElementById("btn-ir-step2");
-    const btnVolverStep1    = document.getElementById("btn-volver-step1") || document.getElementById("btn-volver-carrito");
-    const btnIrStep3        = document.getElementById("btn-ir-step3")      || document.getElementById("btn-ir-vuelto");
-    const btnVolverStep2    = document.getElementById("btn-volver-step2")  || document.getElementById("btn-vuelto-atras");
-    const btnConfirmar3     = document.getElementById("btn-confirmar-venta");
+    // ============================
+//   IR DE FASE 2 → FASE 3
+// ============================
 
-    const step1             = document.getElementById("step-1");
-    const step2             = document.getElementById("step-2");
-    const step3             = document.getElementById("step-3");
+    const btnIrStep3 = document.getElementById("btn-ir-step3");
 
-    // Modal de venta exitosa (si existe)
-    let modalVentaExitosa   = null;
+    if (btnIrStep3) {
+        btnIrStep3.addEventListener("click", () => {
+            const { total } = calcularTotal();
+
+            // Asignar total al input de la fase 3
+            const inputTotal = document.getElementById("vuelto-total-venta");
+            if (inputTotal) {
+                inputTotal.value = total.toFixed(2);
+            }
+
+            // Cambiar a la fase 3
+            document.getElementById("step-2").classList.remove("is-active");
+            document.getElementById("step-3").classList.add("is-active");
+        });
+    }
+
+
+    // (siguen existiendo en tu Blade; si no están, quedan en null)
+    let   modalConfirmarVenta = null;
+    let   modalVentaExitosa   = null;
+
+    const modalConfirmarVentaElement = document.getElementById('modalConfirmarVenta');
+    if (modalConfirmarVentaElement) {
+        modalConfirmarVenta = new bootstrap.Modal(modalConfirmarVentaElement);
+    }
+
     const modalVentaExitosaElement = document.getElementById('modalVentaExitosa');
-    if (modalVentaExitosaElement && window.bootstrap) {
+    if (modalVentaExitosaElement) {
         modalVentaExitosa = new bootstrap.Modal(modalVentaExitosaElement);
     }
 
-    // Otros datos
-    const documentoInput    = document.getElementById('documento');
-    const metodoPagoSelect  = document.getElementById("estado_pago"); // select pagado/pendiente
+    // Inputs del modal de confirmar venta (si lo sigues usando)
+    const confirmarVentaBtn   = document.getElementById("confirmar-venta");
+    const valorVentaModal     = document.getElementById("valor_venta");
+    const valorPagarModal     = document.getElementById("valor_pagar");
+    const valorDevolverModal  = document.getElementById("valor_devolver");
+    const modalCloseBtn       = document.getElementById("cerrarModal");
 
-    // Botones modal venta exitosa
+    // Otros datos
+    const documentoInput      = document.getElementById('documento');
+    const metodoPagoSelect    = document.getElementById("estado_pago");
+
+    // Botones de venta exitosa
     const btnImprimir   = document.getElementById("btnImprimir");
     const btnDescargar  = document.getElementById("btn-descargar");
     const btnNuevaVenta = document.getElementById("btnNuevaVenta");
-
-    // Inputs FASE 3 (vuelto)
-    const inputTotalVenta = document.getElementById("vuelto-total-venta");
-    const inputPaga       = document.getElementById("vuelto-paga");
-    const inputVuelto     = document.getElementById("vuelto-mostrar");
 
     // Sonidos
     const sonidoError = new Audio('/sonidos/error-alert.mp3');
@@ -67,7 +92,7 @@ document.addEventListener("DOMContentLoaded", () => {
         buscarInput.addEventListener('keydown', e => e.key === 'Enter' && e.preventDefault());
     }
 
-    // Carrito (datos en memoria)
+    // Carrito
     let productosSeleccionados = [];
 
     // Cache de productos que se van mostrando en cards
@@ -340,14 +365,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         return cantidad;
     }
-    // ============================
-    //   HELPER: COLOR DEL BADGE DE STOCK
-    // ============================
-    function getStockBadgeColor(stock) {
-        if (stock >= 20) return "bg-success";   // verde
-        if (stock >= 6)  return "bg-warning";   // amarillo
-        return "bg-danger";                     // rojo
-    }
+
     function renderCarritoTreinta() {
         if (!carritoLista) return;
 
@@ -374,36 +392,21 @@ document.addEventListener("DOMContentLoaded", () => {
             const unidades = unidadesReales(p, p.cantidad);
 
             const card = `
-                <div class="carrito-item border-bottom pb-3 mb-3" data-index="${index}">
-                    
-                    <div class="d-flex justify-content-between align-items-start">
-
-                        <div class="d-flex align-items-start gap-2">
-
-                            <img src="${imgSrc}" alt="${p.nombre}" class="carrito-thumb">
-
-                            <div>
-
-                                <!-- NOMBRE + BADGE DE STOCK -->
-                                <div class="d-flex justify-content-between align-items-center" style="min-width: 200px;">
-                                    <span class="fw-semibold small">${p.nombre}</span>
-                                    <span class="badge ${getStockBadgeColor(p.stock)} ms-2">Stock: 
-                                        ${p.stock}
-                                    </span>
-                                </div>
-
-                                <!-- DESCRIPCIÓN debajo del nombre -->
-                                <div class="text-muted extra-small">
-                                    ${p.producto_original.descripcion || ""}
-                                </div>
-
+            <div class="carrito-item border-bottom pb-3 mb-3" data-index="${index}">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <img src="${imgSrc}" alt="${p.nombre}" class="carrito-thumb">
+                        <div>
+                            <div class="fw-semibold small">${p.nombre}</div>
+                            <div class="text-muted extra-small">
+                                ${p.stock} disponibles
                             </div>
                         </div>
-
-                        <button class="btn btn-outline-danger btn-sm rounded-circle eliminar-item" data-index="${index}">
-                            <i class="fas fa-trash"></i>
-                        </button>
                     </div>
+                    <button class="btn btn-outline-danger btn-sm rounded-circle eliminar-item" data-index="${index}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
 
                 <div class="d-flex align-items-center mt-2 gap-2">
                     <div class="flex-grow-1">
@@ -516,10 +519,10 @@ document.addEventListener("DOMContentLoaded", () => {
             renderCarritoTreinta();
         }, true);
 
-        // BOTONES + / - / ELIMINAR
+        // BOTONES + / -
         carritoLista.addEventListener("click", e => {
-            const btnSumar    = e.target.closest(".btn-sumar");
-            const btnRestar   = e.target.closest(".btn-restar");
+            const btnSumar  = e.target.closest(".btn-sumar");
+            const btnRestar = e.target.closest(".btn-restar");
             const btnEliminar = e.target.closest(".eliminar-item");
 
             // SUMAR
@@ -617,15 +620,10 @@ document.addEventListener("DOMContentLoaded", () => {
     function actualizarResumen() {
         const { subtotal, igv, total, igvPercent } = calcularTotal();
 
-        const opEl   = document.getElementById("resumen-op-gravadas");
-        const igvEl  = document.getElementById("resumen-igv-monto");
-        const totEl  = document.getElementById("resumen-total");
-        const igvPEl = document.getElementById("resumen-igv-porcentaje");
-
-        if (opEl)   opEl.innerText   = "S/ " + subtotal.toFixed(2);
-        if (igvEl)  igvEl.innerText  = "S/ " + igv.toFixed(2);
-        if (totEl)  totEl.innerText  = "S/ " + total.toFixed(2);
-        if (igvPEl) igvPEl.innerText = igvPercent.toFixed(0) + "%";
+        document.getElementById("resumen-op-gravadas").innerText = "S/ " + subtotal.toFixed(2);
+        document.getElementById("resumen-igv-monto").innerText   = "S/ " + igv.toFixed(2);
+        document.getElementById("resumen-total").innerText        = "S/ " + total.toFixed(2);
+        document.getElementById("resumen-igv-porcentaje").innerText = igvPercent.toFixed(0) + "%";
 
         const totalFooter = document.getElementById("total-general-footer");
         if (totalFooter) totalFooter.innerText = total.toFixed(2);
@@ -649,7 +647,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const cantidad = productosSeleccionados.reduce((s, p) => s + p.cantidad, 0);
 
         if (productosSeleccionados.length === 0) {
-            btnIrStep2.innerHTML = `0 Continuar`;
+            btnIrStep2.innerHTML = `Continuar <i class="fas fa-arrow-right ms-2"></i>`;
             btnIrStep2.disabled = true;
             return;
         }
@@ -664,64 +662,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ============================
-    //   NAVEGACIÓN ENTRE FASES
-    // ============================
-
-    if (btnIrStep2 && step1 && step2) {
-        btnIrStep2.addEventListener("click", () => {
-            if (productosSeleccionados.length === 0) {
-                mostrarAlerta("Agrega al menos un producto antes de continuar.");
-                return;
-            }
-            step1.classList.remove("is-active");
-            step2.classList.add("is-active");
-        });
-    }
-
-    if (btnVolverStep1 && step1 && step2) {
-        btnVolverStep1.addEventListener("click", () => {
-            step2.classList.remove("is-active");
-            step1.classList.add("is-active");
-        });
-    }
-
-    // Fase 2 → Fase 3
-    if (btnIrStep3 && step2 && step3 && inputTotalVenta) {
-        btnIrStep3.addEventListener("click", () => {
-            const { total } = calcularTotal();
-            inputTotalVenta.value = total.toFixed(2);
-
-            step2.classList.remove("is-active");
-            step3.classList.add("is-active");
-        });
-    }
-
-    // Fase 3 → Fase 2
-    if (btnVolverStep2 && step2 && step3) {
-        btnVolverStep2.addEventListener("click", () => {
-            step3.classList.remove("is-active");
-            step2.classList.add("is-active");
-        });
-    }
-
-    // ============================
-    //   FASE 3: VUELTO
-    // ============================
-
-    if (inputPaga && inputTotalVenta && inputVuelto) {
-        inputPaga.addEventListener("input", () => {
-            const pagar = parseFloat(inputPaga.value || 0);
-            const total = parseFloat(inputTotalVenta.value || 0);
-
-            let vuelto = pagar - total;
-            if (vuelto < 0) vuelto = 0;
-
-            inputVuelto.value = "S/ " + vuelto.toFixed(2);
-        });
-    }
-
-    // ============================
-    //   CONFIGURAR BOTONES COMPROBANTE
+    //   CONFIGURAR BOTONES DEL COMPROBANTE
     // ============================
 
     function configurarBotonesComprobante(data) {
@@ -742,94 +683,109 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ============================
-    //   REGISTRAR VENTA (FASE 3)
+    //   CONFIRMAR VENTA
     // ============================
 
-    function registrarVenta() {
-        const { total } = calcularTotal();
+    if (confirmarVentaBtn) {
+        confirmarVentaBtn.addEventListener("click", () => {
 
-        if (productosSeleccionados.length === 0) {
-            mostrarAlerta("No hay productos en la venta.");
-            return;
-        }
+            const tipoComprobante = document.getElementById("tipo_comprobante")?.value;
+            const documento       = documentoInput?.value || '';
+            const { total }       = calcularTotal();
+            const fecha           = document.getElementById("fecha_emision")?.value;
+            const hora            = document.getElementById("hora_actual")?.value;
 
-        const tipoComprobante = document.getElementById("tipo_comprobante")?.value;
-        const documento       = documentoInput?.value || '';
-        const fecha           = document.getElementById("fecha_emision")?.value;
-        const hora            = document.getElementById("hora_actual")?.value;
-        const estadoPago      = document.getElementById("estado_pago")?.value || '';
-        const metodoPago      = document.getElementById("metodo_pago")?.value || '';
-        const formato         = document.getElementById("formato_pdf")?.value || 'a4';
+            const estadoPago = document.getElementById("estado_pago")?.value || '';
+            const metodoPago = document.getElementById("metodo_pago")?.value || '';
 
-        if (!metodoPago) {
-            mostrarAlerta("Debes seleccionar un método de pago.");
-            return;
-        }
-
-        const productosEnviar = productosSeleccionados.map(p => {
-            let unidades_desc = p.cantidad;
-
-            if (p.tipo_venta === "paquete") {
-                unidades_desc = p.cantidad * p.unidades_por_paquete;
-            }
-
-            if (p.tipo_venta === "caja") {
-                unidades_desc = p.cantidad * p.unidades_por_paquete * p.paquetes_por_caja;
-            }
-
-            return {
-                producto_id: p.id,
-                cantidad: p.cantidad,
-                tipo_venta: p.tipo_venta,
-                precio_unitario: p.precio_unitario,
-                unidades_descuento: unidades_desc
-            };
-        });
-
-        fetch('/ventas/registrar', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            },
-            body: JSON.stringify({
-                tipo_comprobante: tipoComprobante,
-                documento: documento,
-                total_venta: total,
-                fecha: fecha,
-                hora: hora,
-                estado_pago: estadoPago,
-                metodo_pago: metodoPago,
-                productos: productosEnviar,
-                formato: formato
-            })
-        })
-        .then(res => res.json())
-        .then(data => {
-            console.log(data);
-
-            if (!data.success) {
-                mostrarAlerta(data.message || "Error al registrar venta.");
+            if (!metodoPago) {
+                mostrarAlerta("Debes seleccionar un método de pago.");
                 return;
             }
 
-            configurarBotonesComprobante(data);
+            const productosEnviar = productosSeleccionados.map(p => {
+                let unidades_desc = p.cantidad;
 
-            if (modalVentaExitosa) {
-                modalVentaExitosa.show();
-            }
+                if (p.tipo_venta === "paquete") {
+                    unidades_desc = p.cantidad * p.unidades_por_paquete;
+                }
 
-            sonidoExito.play().catch(() => {});
-        })
-        .catch(() => mostrarAlerta("Error inesperado al registrar la venta."));
-    }
+                if (p.tipo_venta === "caja") {
+                    unidades_desc = p.cantidad * p.unidades_por_paquete * p.paquetes_por_caja;
+                }
 
-    if (btnConfirmar3) {
-        btnConfirmar3.addEventListener("click", registrarVenta);
+                return {
+                    producto_id: p.id,
+                    cantidad: p.cantidad,
+                    tipo_venta: p.tipo_venta,
+                    precio_unitario: p.precio_unitario,
+                    unidades_descuento: unidades_desc
+                };
+            });
+
+            fetch('/ventas/registrar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    tipo_comprobante: tipoComprobante,
+                    documento: documento,
+                    total_venta: total,
+                    fecha: fecha,
+                    hora: hora,
+                    estado_pago: estadoPago,
+                    metodo_pago: metodoPago,
+                    productos: productosEnviar,
+                    formato: document.getElementById("formato_pdf")?.value || 'a4'
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                console.log(data);
+
+                if (!data.success) {
+                    mostrarAlerta(data.message || "Error al registrar venta.");
+                    return;
+                }
+
+                configurarBotonesComprobante(data);
+
+                if (modalConfirmarVenta) modalConfirmarVenta.hide();
+                if (modalVentaExitosa)   modalVentaExitosa.show();
+
+                sonidoExito.play().catch(() => {});
+            })
+            .catch(() => mostrarAlerta("Error inesperado al registrar la venta."));
+        });
     }
 
     // ============================
-    //   NUEVA VENTA (desde modal)
+    //   CALCULAR VUELTO
+    // ============================
+
+    if (valorPagarModal) {
+        valorPagarModal.addEventListener("input", () => {
+            const { total }  = calcularTotal();
+            const pagar      = parseFloat(valorPagarModal.value || 0);
+            const devolver   = pagar - total;
+
+            valorDevolverModal.value =
+                devolver >= 0 ? `S/ ${devolver.toFixed(2)}` : "S/ 0.00";
+        });
+    }
+
+    if (modalCloseBtn) {
+        modalCloseBtn.addEventListener("click", () => {
+            valorVentaModal.value    = "";
+            valorPagarModal.value    = "";
+            valorDevolverModal.value = "";
+        });
+    }
+
+    // ============================
+    //   NUEVA VENTA
     // ============================
 
     if (btnNuevaVenta) {
@@ -860,18 +816,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 tipoComprobanteSelect.dispatchEvent(new Event("change"));
             }
 
-            if (inputTotalVenta) inputTotalVenta.value = "";
-            if (inputPaga)       inputPaga.value       = "";
-            if (inputVuelto)     inputVuelto.value     = "";
-
             if (modalVentaExitosa) modalVentaExitosa.hide();
-
-            // Volver a la fase 1
-            if (step1 && step2 && step3) {
-                step2.classList.remove("is-active");
-                step3.classList.remove("is-active");
-                step1.classList.add("is-active");
-            }
 
             window.scrollTo({ top: 0, behavior: "smooth" });
         });
@@ -907,7 +852,57 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         sonidoError.play().catch(() => {});
     }
+// ============================
+//   FASE 3: VUELTO
+// ============================
+
+const inputTotalVenta = document.getElementById("vuelto-total-venta");
+const inputPaga       = document.getElementById("vuelto-paga");
+const inputVuelto     = document.getElementById("vuelto-mostrar");
+const btnVolverStep2  = document.getElementById("btn-volver-step2");
+const btnConfirmar3   = document.getElementById("btn-confirmar-venta");
+
+// Cuando escribe cuánto paga
+if (inputPaga) {
+    inputPaga.addEventListener("input", () => {
+        const pagar = parseFloat(inputPaga.value || 0);
+        const total = parseFloat(inputTotalVenta.value || 0);
+
+        let vuelto = pagar - total;
+        if (vuelto < 0) vuelto = 0;
+
+        inputVuelto.value = "S/ " + vuelto.toFixed(2);
+    });
+}
+
+// Ir de Step 2 → Step 3
+if (btnIrStep3) {
+    btnIrStep3.addEventListener("click", () => {
+        const { total } = calcularTotal();
+
+        inputTotalVenta.value = total.toFixed(2);
+
+        document.getElementById("step-2").classList.remove("is-active");
+        document.getElementById("step-3").classList.add("is-active");
+    });
+}
+
+// Volver Step 3 → Step 2
+if (btnVolverStep2) {
+    btnVolverStep2.addEventListener("click", () => {
+        document.getElementById("step-3").classList.remove("is-active");
+        document.getElementById("step-2").classList.add("is-active");
+    });
+}
+
+// Confirmar venta desde Step 3
+if (btnConfirmar3) {
+    btnConfirmar3.addEventListener("click", () => {
+        confirmarVentaBtn.click(); // usa tu lógica original
+    });
+}
 
     // Render inicial
     renderCarritoTreinta();
 });
+

@@ -144,109 +144,142 @@
 
 <!-- Modal para ver detalles del producto -->
 <div class="modal fade" id="productoModal" tabindex="-1" aria-labelledby="productoModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <div class="modal-header">
+
+            <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title" id="productoModalLabel">Detalles del Producto</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
+
             <div class="modal-body">
-                <form>
-                    <div class="row">
-                        <!-- Columna 1 -->
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="modalId" class="form-label">ID Producto</label>
-                                <input type="text" class="form-control" id="modalId" disabled>
-                            </div>
 
-                            <div class="mb-3">
-                                <label for="modalCodigo" class="form-label">Código de Barras</label>
-                                <input type="text" class="form-control" id="modalCodigo" disabled>
-                            </div>
+                <div class="row g-3">
 
-                            <div class="mb-3">
-                                <label for="modalNombre" class="form-label">Nombre</label>
-                                <input type="text" class="form-control" id="modalNombre" disabled>
-                            </div>
+                    <!-- 🟦 COLUMNA 1: Información general -->
+                    <div class="col-md-4">
+                        <h6 class="fw-bold border-bottom pb-1">Información General</h6>
 
-                            <div class="mb-3">
-                                <label for="modalDescripcion" class="form-label">Descripción</label>
-                                <textarea class="form-control" id="modalDescripcion" rows="3" disabled></textarea>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="modalPrecioCompra" class="form-label">Precio de Compra</label>
-                                <input type="text" class="form-control" id="modalPrecioCompra" disabled>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="modalPrecioVenta" class="form-label">Precio de Venta</label>
-                                <input type="text" class="form-control" id="modalPrecioVenta" disabled>
-                            </div>
+                        <div class="mb-2">
+                            <label class="form-label">ID</label>
+                            <input type="text" id="modalId" class="form-control" disabled>
                         </div>
 
-                        <!-- Columna 2 -->
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="modalPrecioMayor" class="form-label">Precio al por Mayor</label>
-                                <input type="text" class="form-control" id="modalPrecioMayor" disabled>
-                            </div>
+                        <div class="mb-2">
+                            <label class="form-label">Código de Barras</label>
+                            <input type="text" id="modalCodigo" class="form-control" disabled>
+                        </div>
 
-                            <div class="mb-3">
-                                <label for="modalUnidadesPorMayor" class="form-label">Unidades por Mayor</label>
-                                <input type="number" class="form-control" id="modalUnidadesPorMayor" disabled>
-                            </div>
+                        <div class="mb-2">
+                            <label class="form-label">Nombre</label>
+                            <input type="text" id="modalNombre" class="form-control" disabled>
+                        </div>
 
-                            <div class="mb-3">
-                                <label for="modalStock" class="form-label">Stock</label>
-                                <input type="number" class="form-control" id="modalStock" disabled>
-                            </div>
+                        <div class="mb-2">
+                            <label class="form-label">Slug</label>
+                            <input type="text" id="modalSlug" class="form-control" disabled>
+                        </div>
 
-                            <div class="mb-3">
-                                <label for="modalUbicacion" class="form-label">Ubicación</label>
-                                <input type="text" class="form-control" id="modalUbicacion" disabled>
-                            </div>
+                        <div class="mb-2">
+                            <label class="form-label">Descripción</label>
+                            <textarea id="modalDescripcion" class="form-control" rows="3" disabled></textarea>
+                        </div>
 
-                            <div class="mb-3">
-                                <label for="modalImagen" class="form-label">Imagen</label>
-                                <img id="modalImagen" src="" alt="Imagen Producto" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: contain;">
-                            </div>
+                        <div class="mb-2">
+                            <label class="form-label">Activo</label>
+                            <input type="text" id="modalActivo" class="form-control" disabled>
+                        </div>
 
-                            <div class="mb-3">
-                                <label for="modalFechaVencimiento" class="form-label">Fecha de Vencimiento</label>
-                                <input type="text" class="form-control" id="modalFechaVencimiento" disabled>
-                            </div>
+                        <div class="mb-2">
+                            <label class="form-label">Visible en Catálogo</label>
+                            <input type="text" id="modalVisibleCatalogo" class="form-control" disabled>
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label for="modalCategoria" class="form-label">Categoría</label>
-                                <input type="text" class="form-control" id="modalCategoria" disabled>
-                            </div>
+                    <!-- 🟩 COLUMNA 2: Precios y empaques -->
+                    <div class="col-md-4">
+                        <h6 class="fw-bold border-bottom pb-1">Precios y Empaques</h6>
+
+                        <div class="mb-2">
+                            <label class="form-label">Precio Compra</label>
+                            <input type="text" id="modalPrecioCompra" class="form-control" disabled>
                         </div>
 
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label for="modalMarca" class="form-label">Marca</label>
-                                <input type="text" class="form-control" id="modalMarca" disabled>
-                            </div>
+                        <div class="mb-2">
+                            <label class="form-label">Precio Venta</label>
+                            <input type="text" id="modalPrecioVenta" class="form-control" disabled>
                         </div>
-                    
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label for="modalActivo" class="form-label">Activo</label>
-                                <input type="text" class="form-control" id="modalActivo" disabled>
-                            </div>
+
+                        
+
+                        <div class="mb-2">
+                            <label class="form-label">Precio Paquete</label>
+                            <input type="text" id="modalPrecioPaquete" class="form-control" disabled>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">Unidades por Paquete</label>
+                            <input type="text" id="modalUnidadesPorPaquete" class="form-control" disabled>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">Paquetes por Caja</label>
+                            <input type="text" id="modalPaquetesPorCaja" class="form-control" disabled>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">Precio Caja</label>
+                            <input type="text" id="modalPrecioCaja" class="form-control" disabled>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">Tipo de Paquete</label>
+                            <input type="text" id="modalTipoPaquete" class="form-control" disabled>
                         </div>
                     </div>
-                </form>
+
+                    <!-- 🟧 COLUMNA 3: Stock, Ubicación, Imagen -->
+                    <div class="col-md-4">
+                        <h6 class="fw-bold border-bottom pb-1">Inventario</h6>
+
+                        <div class="mb-2">
+                            <label class="form-label">Stock Total</label>
+                            <input type="text" id="modalStock" class="form-control" disabled>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">Ubicación</label>
+                            <input type="text" id="modalUbicacion" class="form-control" disabled>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">Fecha de Vencimiento</label>
+                            <input type="text" id="modalFechaVencimiento" class="form-control" disabled>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">Categoría</label>
+                            <input type="text" id="modalCategoria" class="form-control" disabled>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">Marca</label>
+                            <input type="text" id="modalMarca" class="form-control" disabled>
+                        </div>
+
+                        <div class="mt-3 text-center">
+                            <img id="modalImagen" class="img-thumbnail border"
+                                 style="width: 130px; height: 130px; object-fit: contain;">
+                        </div>
+                    </div>
+
+                </div>
             </div>
+
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
+
         </div>
     </div>
 </div>
@@ -288,46 +321,89 @@
 </script>
 
 <script>
+        function formatFechaLarga(fecha) {
+        if (!fecha) return "---";
+
+        const meses = [
+            "Ene", "Feb", "Mar", "Abr", "May", "Jun",
+            "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"
+        ];
+
+        const d = new Date(fecha);
+        const dia = d.getDate().toString().padStart(2, "0");
+        const mes = meses[d.getMonth()];
+        const año = d.getFullYear();
+
+        return `${dia} ${mes} ${año}`;
+    }
 $(document).on('click', '.ver-detalles', function() {
-    const productoId = $(this).data('id');  // Obtener el ID del producto
+    const productoId = $(this).data('id');
 
-    // Hacer la solicitud AJAX para obtener los detalles del producto
     $.ajax({
-        url: `/producto/detalles/${productoId}`,  // Ruta para obtener los detalles del producto
+        url: `/producto/detalles/${productoId}`,
         method: 'GET',
-            success: function(response) {
-            console.log(response);  // Verifica los datos recibidos
+        success: function(response) {
+
             if (response.success) {
-            $('#modalId').val(response.id);
-            $('#modalCodigo').val(response.codigo_barras);
-            $('#modalNombre').val(response.nombre);
-            $('#modalDescripcion').val(response.descripcion);
-            $('#modalPrecioCompra').val(response.precio_compra);
-            $('#modalPrecioVenta').val(response.precio_venta);
-            $('#modalPrecioMayor').val(response.precio_mayor);
-            $('#modalUnidadesPorMayor').val(response.unidades_por_mayor);
-            $('#modalStock').val(response.stock);
-            $('#modalUbicacion').val(response.ubicacion);
 
-            const imagenSrc = response.imagen 
-                ? `/uploads/productos/${response.imagen}` 
-                : '/img/sin-imagen.png';
+                // Helpers
+                const money = v => formatMoney(v);
+                const num   = v => formatNumber(v);
 
-            $('#modalImagen').attr('src', imagenSrc);
-            
-            $('#modalFechaVencimiento').val(response.fecha_vencimiento);
-            $('#modalCategoria').val(response.categoria_nombre);
-            $('#modalMarca').val(response.marca_nombre);
-            $('#modalActivo').val(response.activo ? 'Sí' : 'No');
+                // === Columna 1 ===
+                $('#modalId').val(response.id);
+                $('#modalCodigo').val(response.codigo_barras);
+                $('#modalNombre').val(response.nombre);
+                $('#modalSlug').val(response.slug);
+                $('#modalDescripcion').val(response.descripcion);
 
-            const modal = new bootstrap.Modal(document.getElementById('productoModal'));
-            modal.show();
-            } else {
-                console.error('Error al cargar los detalles:', response.message); // Ver si hay algún error
+                $('#modalActivo').val(response.activo ? "Sí" : "No");
+                $('#modalVisibleCatalogo').val(response.visible_en_catalogo ? "Sí" : "No");
+
+                // === Columna 2 ===
+                $('#modalPrecioCompra').val(money(response.precio_compra));
+                $('#modalPrecioVenta').val(money(response.precio_venta));
+
+                $('#modalPrecioPaquete').val(money(response.precio_paquete));
+                $('#modalUnidadesPorPaquete').val(num(response.unidades_por_paquete));
+                $('#modalPaquetesPorCaja').val(num(response.paquetes_por_caja));
+                $('#modalPrecioCaja').val(money(response.precio_caja));
+                $('#modalTipoPaquete').val(response.tipo_paquete);
+
+                // === Columna 3 ===
+                $('#modalStock').val(num(response.stock));
+                $('#modalUbicacion').val(response.ubicacion);
+                // === Fecha de vencimiento ===
+                $('#modalFechaVencimiento').val(
+                    formatFechaLarga(response.fecha_vencimiento));
+                $('#modalCategoria').val(response.categoria_nombre);
+                $('#modalMarca').val(response.marca_nombre);
+
+                // Imagen
+                $('#modalImagen').attr(
+                    'src',
+                    response.imagen ? `/uploads/productos/${response.imagen}` : '/img/sin-imagen.png'
+                );
+
+                // Mostrar modal
+                new bootstrap.Modal(document.getElementById('productoModal')).show();
             }
         }
     });
 });
 
+// FORMATO MONEY
+function formatMoney(value) {
+    if (!value) return "S/. 0.00";
+    return "S/. " + parseFloat(value).toFixed(2);
+}
+
+// FORMATO NUMERICO
+function formatNumber(value) {
+    if (!value) return "0";
+    return new Intl.NumberFormat('es-PE').format(value);
+}
 </script>
+
+
 @endpush

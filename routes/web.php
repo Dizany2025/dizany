@@ -18,6 +18,8 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Controllers\GastoController;
 use App\Http\Controllers\ParametrosController;
 use App\Http\Controllers\InventarioController;
+use App\Http\Controllers\CategoriaController;
+use App\Http\Controllers\MarcaController;
 //consultar dni y ruc
 use Illuminate\Support\Facades\Http;
 use App\Models\Producto;
@@ -158,10 +160,11 @@ Route::get('/productos/parametros', [ParametrosController::class, 'index'])->nam
 // Rutas de MARCAS
 Route::post('/marcas', [ParametrosController::class, 'storeMarca'])->name('parametros.marcas.store');
 Route::delete('/marcas/{id}', [ParametrosController::class, 'destroyMarca'])->name('parametros.marcas.destroy');
-
+Route::post('/marca/crear', [MarcaController::class, 'ajaxStore'])->name('marca.ajax.store');
 // Rutas de CATEGORÍAS
 Route::post('/categorias', [ParametrosController::class, 'storeCategoria'])->name('parametros.categorias.store');
 Route::delete('/categorias/{id}', [ParametrosController::class, 'destroyCategoria'])->name('parametros.categorias.destroy');
+Route::post('/categoria/crear', [CategoriaController::class, 'ajaxStore'])->name('categoria.ajax.store');
 
 // Validación en tiempo real para marcas
 Route::get('/validar-marca', function (Illuminate\Http\Request $request) {
@@ -181,4 +184,7 @@ Route::get('/notificaciones/inventario', [InventarioController::class, 'obtenerN
 Route::post('/autorizar', [VentaController::class, 'autorizar'])->name('ventas.autorizar');
 Route::get('/comprobantes/descargar/{filename}', [VentaController::class, 'descargarComprobante']);
 
+Route::get('/ventas/filtrar-productos', [VentaController::class, 'filtrarPorCategoria']);
+
+Route::get('/productos/iniciales', [ProductoController::class, 'productosIniciales']);
 

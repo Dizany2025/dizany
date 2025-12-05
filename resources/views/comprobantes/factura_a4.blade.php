@@ -71,11 +71,21 @@
         </tbody>
     </table>
 
-    <table class="totales">
+    <table class="totales" style="margin-top:10px; width:100%;">
         <tr>
-            <td><strong>Total:</strong> {{ $config->moneda }} {{ number_format($venta->total, 2) }}</td>
+            <td style="text-align:right;"><strong>Op. Gravadas:</strong></td>
+            <td style="text-align:right;">S/ {{ number_format($subtotal, 2) }}</td>
+        </tr>
+        <tr>
+            <td style="text-align:right;"><strong>IGV ({{ $config->igv }}%):</strong></td>
+            <td style="text-align:right;">S/ {{ number_format($igv, 2) }}</td>
+        </tr>
+        <tr>
+            <td style="text-align:right;"><strong>Total:</strong></td>
+            <td style="text-align:right;">S/ {{ number_format($total, 2) }}</td>
         </tr>
     </table>
+
 
     <div class="qr">
         <img src="data:image/png;base64,{{ $qr }}" alt="Código QR">

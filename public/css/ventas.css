@@ -1,211 +1,536 @@
-/* ----------- GENERAL ----------- */
-body {
-    background-color: #f4f6f9;
-    font-family: 'Segoe UI', sans-serif;
-}
-.producto-card {
-    background: #fff;
-    border: 1px solid #ced4da;
-    border-radius: 10px;
-    padding: 15px;
-    height: 100%;
+/* ============================================================
+   LAYOUT GENERAL / WRAPPER TIPO TREINTA
+============================================================ */
+
+/* Contenedor principal de la vista de ventas (debajo del header del layout) */
+.ventas-treinta {
+    height: calc(100vh - 80px); /* Ajusta este valor si tu header es más alto/bajo */
     display: flex;
     flex-direction: column;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    transition: box-shadow 0.3s ease;
+    padding: 10px 15px;
+    background: #f5f7fb;
+    overflow: hidden;
 }
 
-.producto-card:hover {
-    box-shadow: 0 5px 12px rgba(0,0,0,0.15);
+/* Header interno "Nueva venta" */
+.treinta-header {
+    padding: 4px 0 14px 0;
 }
 
+.titulo-venta {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+}
+
+/* Cuerpo con 2 columnas flexibles */
+.treinta-body {
+    display: flex;
+    gap: 16px;
+    height: 100%;
+    min-height: 0; /* importante para scroll interno */
+}
+
+/* Columna base */
+.treinta-col {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+/* Columna izquierda (productos) */
+.treinta-col.izquierda {
+    flex: 1;
+    min-width: 0;
+    border-right: 1px solid #e5e7eb;
+    padding-right: 10px;
+}
+
+/* Columna derecha (cliente, carrito) */
+.treinta-col.derecha {
+    width: 420px;
+    min-width: 380px;
+    max-width: 460px;
+    padding-left: 4px;
+}
+
+/* Scroll interno columna derecha */
+.scroll-derecha {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+/* Fallback antiguo por si en algún lado sigue usándose */
 .ventas-form {
-    background: #fff;
-    padding: 25px;
+    background: #f5f7fb;
+    padding: 1rem 1.5rem 2rem;
     border-radius: 12px;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-    margin-bottom: 40px;
 }
 
-h2 {
-    font-size: 1.8rem;
-    font-weight: bold;
-    margin-bottom: 25px;
-    color: #2c3e50;
+.ventas-layout {
+    margin-top: 0.5rem;
 }
 
-/* ----------- INPUTS Y GRUPOS ----------- */
-.input-group-text {
-    background-color: #2980b9;
-    color: #fff;
-    border: none;
-}
+/* ============================================================
+   BUSCADOR + CATEGORÍAS (IZQUIERDA)
+============================================================ */
 
-.input-group .form-control,
-.form-select {
-    border-radius: 0 0.375rem 0.375rem 0;
-    border-left: none;
-}
-
-.input-group .form-control:focus {
-    border-color: #2980b9;
-    box-shadow: 0 0 0 0.1rem rgba(41, 128, 185, 0.25);
-}
-
-/* ----------- TABLA DE PRODUCTOS ----------- */
-.table {
-    background-color: #ffffff;
-}
-
-.table th {
-    background-color: #2980b9;
-    color: white;
-    font-weight: 600;
-    vertical-align: middle;
-}
-
-.table td {
-    vertical-align: middle;
-}
-
-.table-bordered th,
-.table-bordered td {
-    border: 1px solid #dee2e6;
-}
-
-.table-hover tbody tr:hover {
-    background-color: #ecf6fd;
-}
-
-/* ----------- CARDS DE PRODUCTOS ----------- */
-#resultados-busqueda .producto-card {
+/* Card buscador estilo Treinta */
+.contenedor-buscador {
     background: #ffffff;
-    border: 1px solid #ced4da;
     border-radius: 10px;
-    padding: 15px;
-    transition: box-shadow 0.3s;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    padding: 0.75rem 1rem;
+    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.07);
+    margin-bottom: 12px;
 }
 
-#resultados-busqueda .producto-card:hover {
-    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-}
-
-#resultados-busqueda h3 {
-    font-size: 1.2rem;
-    font-weight: bold;
-    margin-bottom: 10px;
-}
-
-#resultados-busqueda p {
-    font-size: 0.85rem;
-    margin-bottom: 5px;
-}
-
-#resultados-busqueda .agregar-carrito {
-    background-color: #27ae60;
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    font-size: 0.85rem;
-    border-radius: 5px;
-    margin-top: 10px;
-}
-
-#resultados-busqueda .agregar-carrito:hover {
-    background-color: #1e8449;
-}
-
-/* ----------- RESUMEN ----------- */
-.card.resumen {
-    border: 1px solid #dcdde1;
-    background-color: #fdfdfd;
-}
-
-.card.resumen h6 {
-    font-weight: bold;
-    font-size: 1.1rem;
-    margin-bottom: 15px;
-}
-
-.card.resumen input {
-    font-weight: bold;
-    color: #2c3e50;
-}
-
-/* ----------- BOTÓN CONTINUAR VENTA ----------- */
-#continuar-venta-btn {
-    font-size: 1rem;
-    font-weight: bold;
-    background-color: #2980b9;
-    border: none;
-    padding: 12px;
-    margin-top: 25px;
-    transition: all 0.2s ease-in-out;
-}
-
-#continuar-venta-btn:hover {
-    background-color: #1e5a81;
-    transform: translateY(-1px);
-}
-
-/* ----------- MODAL ----------- */
-.modal-content {
+/* Fallback para clases antiguas (por si quedan) */
+.ventas-search-card {
+    background: #ffffff;
     border-radius: 10px;
+    padding: 0.75rem 1rem;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
 }
 
-.modal-header {
-    background-color: #2980b9;
-    color: white;
-    border-bottom: 1px solid #ddd;
+/* Botones de categorías */
+.ventas-categorias {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.6rem;
 }
 
-.modal-body label {
-    font-weight: 600;
-}
-
-/* ----------- RESPONSIVE ----------- */
-@media (max-width: 768px) {
-    #resultados-busqueda .producto-card {
-        font-size: 0.9rem;
-    }
-
-    .ventas-form h2 {
-        font-size: 1.4rem;
-    }
-
-    /* Contenedor para la tabla con scroll horizontal */
-.table-responsive {
-    width: 100%;             /* La tabla ocupa el 100% del ancho disponible */
-    overflow-x: auto;        /* Permite el desplazamiento horizontal */
-    -webkit-overflow-scrolling: touch; /* Mejora el desplazamiento en dispositivos móviles */
-    margin-bottom: 1rem;     /* Espacio debajo de la tabla */
-}
-
-/* Tabla dentro del contenedor */
-.table-responsive table {
-    width: 100%;
-    min-width: 600px; /* Establece el ancho mínimo para evitar que la tabla se haga muy pequeña */
-}
-
-/* Evitar que el texto se divida en varias líneas */
-.table-responsive th,
-.table-responsive td {
+.btn-filtro-categoria {
+    border-radius: 999px;
+    border: 1px solid #e2e6f0;
+    font-size: 0.75rem;
+    padding: 0.2rem 0.8rem;
+    background: #f8fafc;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
     white-space: nowrap;
 }
 
-/* Estilos opcionales para las celdas */
-.table-responsive th {
-    background-color: #2980b9;
-    color: white;
+.btn-filtro-categoria.active,
+.btn-filtro-categoria:hover {
+    background: #2563eb;
+    color: #ffffff;
+    border-color: #2563eb;
 }
 
-.table-responsive td {
-    padding: 0.5rem;
+/* ============================================================
+   GRID DE PRODUCTOS (SCROLL IZQUIERDO)
+============================================================ */
+
+.productos-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 4px;
 }
 
+/* Card de producto */
+.product-card {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 0.6rem;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
+    transition: all 0.15s ease-in-out;
+    cursor: pointer;
+}
 
-    #continuar-venta-btn {
-        font-size: 0.95rem;
+.product-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12);
+}
+
+/* Contenedor de imagen */
+.product-img-wrapper {
+    width: 100%;
+    height: 150px;
+    border-radius: 12px;
+    background: #f1f5f9;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Imagen */
+.product-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #ffffff;
+}
+
+/* Precio flotante */
+.product-price-badge {
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+    padding: 4px 8px;
+    background: #16a34a;
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+/* Información extra (Incl. IGV) puede ir como texto pequeño */
+.product-info {
+    margin-top: 0.5rem;
+}
+
+.product-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #0f172a;
+    height: 2.2em;
+    overflow: hidden;
+}
+
+.product-desc {
+    font-size: 0.75rem;
+    color: #64748b;
+    height: 1.8em;
+    overflow: hidden;
+}
+
+.product-stock {
+    font-size: 0.75rem;
+    margin-top: 0.2rem;
+}
+
+.product-stock.stock-ok {
+    color: #16a34a;
+}
+
+.product-stock.stock-low {
+    color: #dc2626;
+}
+
+/* ============================================================
+   FORMULARIO CLIENTE + COMPROBANTE (DERECHA)
+============================================================ */
+
+.ventas-col-right .card {
+    border-radius: 12px;
+}
+
+/* Texto más pequeño dentro de card-body.small */
+.card-body.small * {
+    font-size: 0.82rem !important;
+}
+
+/* Ajustar tamaño de input-group */
+.input-group-text {
+    padding: 4px 8px !important;
+}
+
+input.form-control-sm,
+select.form-select-sm,
+.input-group.input-group-sm .form-control,
+.input-group.input-group-sm .form-select {
+    padding: 4px !important;
+    height: auto !important;
+}
+
+#btn-cliente-accion {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    padding: 4px 8px !important;
+}
+
+/* Iconos de guardar / agregar cliente */
+#icono-save {
+    color: #16a34a !important;
+    font-size: 1.2rem;
+}
+#icono-plus {
+    color: #0d91e9 !important;
+    font-size: 1.2rem;
+}
+
+/* Animación de giro opcional */
+.icono-animado {
+    animation: giro 0.5s linear forwards;
+}
+@keyframes giro {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+/* ============================================================
+   CARRITO - TABLA INDUSTRIAL
+============================================================ */
+
+.carrito-table {
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+/* Tabla interna */
+.carrito-table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+}
+
+.carrito-table thead th {
+    background: #f8fafc;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 6px;
+    text-transform: uppercase;
+}
+
+.carrito-table tbody td {
+    border-bottom: 1px solid #e5e7eb;
+    padding: 5px 6px;
+    vertical-align: middle;
+}
+
+/* Última fila sin borde extra */
+.carrito-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Texto truncado con "..." */
+.texto-truncado {
+    max-width: 150px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Control de cantidad compacto */
+.input-cantidad {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.input-cantidad button {
+    width: 26px;
+    height: 26px;
+    border: 1px solid #d1d5db;
+    color: #374151;
+    font-weight: bold;
+    font-size: 14px;
+    padding: 0;
+    border-radius: 6px;
+    background: #f8fafc;
+}
+
+.input-cantidad button:hover {
+    background: #e5e7eb;
+}
+
+.input-cantidad input {
+    width: 40px;
+    height: 26px;
+    padding: 0;
+    text-align: center;
+    font-size: 13px;
+    border-radius: 6px;
+}
+
+/* Precio y total alineados a la derecha */
+.carrito-table td:nth-child(4),
+.carrito-table td:nth-child(6) {
+    text-align: right;
+    font-weight: 600;
+}
+
+/* Botón eliminar centrado */
+.carrito-table td:last-child {
+    text-align: center;
+}
+
+/* ============================================================
+   RESUMEN INDUSTRIAL (Op. Gravadas / IGV / TOTAL)
+============================================================ */
+
+.resumen-box {
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px 5px;
+    border-top: 1px solid #e5e7eb;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.resumen-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+    font-size: 0.9rem;
+}
+
+.resumen-label {
+    color: #374151;
+    font-weight: 600;
+}
+
+.resumen-value {
+    color: #111827;
+    font-weight: 600;
+}
+
+.resumen-total {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid #d1d5db;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+/* ============================================================
+   MÉTODO DE PAGO (iconitos + textos)
+============================================================ */
+
+.metodo-pago-opciones {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    gap: 4px;
+}
+
+.metodo-pago-item {
+    width: 60px;
+    height: 65px;
+    background: #f8f9fa;
+    border: 1px solid #dcdcdc;
+    border-radius: 10px;
+    text-align: center;
+    padding: 6px 0;
+    font-size: 11px;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.metodo-pago-item .label {
+    margin-top: 2px;
+}
+
+.metodo-pago-item.active {
+    border: 2px solid #22c55e;
+    background: #dcfce7;
+    color: #166534;
+    font-weight: bold;
+}
+
+.icon-img {
+    width: 22px;
+    height: 22px;
+    display: block;
+    margin: 0 auto;
+}
+
+/* ============================================================
+   OTROS DETALLES / UTILIDADES
+============================================================ */
+
+/* Link "Ventas" en header (por si no tiene estilos en otro lado) */
+.nuevo-producto {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid #e2e8f0;
+    color: #0f172a;
+    text-decoration: none;
+    font-size: 0.9rem;
+    background: #ffffff;
+    transition: all 0.15s ease;
+}
+.nuevo-producto:hover {
+    background: #0f172a;
+    color: #ffffff;
+}
+
+/* Responsive: cuando la pantalla es pequeña, columnas se apilan */
+@media (max-width: 991.98px) {
+
+    .ventas-treinta {
+        height: auto;
+        min-height: 100vh;
+        padding: 10px;
     }
+
+    .treinta-body {
+        flex-direction: column;
+    }
+
+    .treinta-col.izquierda {
+        border-right: none;
+        border-bottom: 1px solid #e5e7eb;
+        padding-right: 0;
+        margin-bottom: 10px;
+    }
+
+    .treinta-col.derecha {
+        width: 100%;
+        min-width: 0;
+        padding-left: 0;
+    }
+
+    .productos-scroll,
+    .scroll-derecha {
+        max-height: none;
+        overflow-y: visible;
+    }
+}
+
+/*step-panel*/
+.step-panel {
+    display: none;
+}
+
+.step-panel.is-active {
+    display: block;
+}
+.carrito-thumb {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: #f1f5f9;
+}
+
+.extra-small {
+    font-size: 11px;
+}
+
+.carrito-item:last-child {
+    border-bottom: none !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* FASE 1 – scroll solo en productos */
+#carrito-lista {
+    max-height: calc(100vh - 280px);
+    overflow-y: auto;
+    padding: 10px;
+}
+
+/* Ocultar scroll feo */
+#carrito-lista::-webkit-scrollbar {
+    width: 6px;
+}
+#carrito-lista::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
 }

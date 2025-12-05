@@ -25,9 +25,31 @@ class VentaController extends Controller
     // Mostrar la interfaz para registrar una nueva venta
     public function index()
     {
-        $config = Configuracion::first(); // Obtener la configuración con IGV
-        return view('ventas.index', compact('config'));
+        // Configuración (IGV, empresa, etc.)
+        $config = Configuracion::first();
+
+        // Categorías activas y ordenadas
+        $categorias = \App\Models\Categoria::orderBy('nombre', 'ASC')->get();
+
+        // Productos visibles disponibles
+        $productos = Producto::where('activo', true)
+            ->where('visible_en_catalogo', true)
+            ->orderBy('nombre', 'ASC')
+            ->get();
+
+        return view('ventas.index', compact('config', 'categorias', 'productos'));
     }
+public function filtrarPorCategoria(Request $request)
+{
+    $productos = Producto::where('categoria_id', $request->id)
+        ->where('activo', true)
+        ->where('visible_en_catalogo', true)
+        ->orderBy('nombre', 'ASC')
+        ->get();
+
+    return response()->json($productos);
+}
+
    //FILTRAR VENTAS
     public function listar(Request $request)
 {
@@ -88,23 +110,20 @@ class VentaController extends Controller
     }
 }
 
-
 public function registrarVenta(Request $request)
 {
+    // ==============================
+    //   VALIDACIÓN
+    // ==============================
     $request->validate([
         'tipo_comprobante' => 'required|string',
         'documento'        => 'required|string',
         'total_venta'      => 'required|numeric',
         'fecha'            => 'required|date',
-        'hora'             => 'required|date_format:H:i:s',
+        'hora'             => 'required',
         'metodo_pago'      => 'required|string',
+        'estado_pago'      => 'required|string',
         'productos'        => 'required|array|min:1',
-        'serie'            => 'nullable|string|max:20',
-        'correlativo'      => 'nullable|integer',
-        'estado_sunat'     => 'nullable|string',
-        'hash'             => 'nullable|string',
-        'xml_url'          => 'nullable|string|url',
-        'pdf_url'          => 'nullable|string|url',
         'formato'          => 'nullable|string|in:a4,ticket'
     ]);
 
@@ -115,21 +134,34 @@ public function registrarVenta(Request $request)
         ]);
     }
 
-    $usuario_id = auth()->id();
-
-    $cliente = Cliente::where('ruc', $request->documento)
-                      ->orWhere('dni', $request->documento)
-                      ->first();
-
-    if (!$cliente) {
-        return response()->json(['success' => false, 'message' => 'Cliente no encontrado.']);
-    }
-
     try {
         DB::beginTransaction();
 
-        $fechaHora = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $request->fecha . ' ' . $request->hora);
+        // ==============================
+        //   CLIENTE
+        // ==============================
+        $cliente = Cliente::where('ruc', $request->documento)
+                          ->orWhere('dni', $request->documento)
+                          ->first();
+
+        if (!$cliente) {
+            return response()->json(['success' => false, 'message' => 'Cliente no encontrado.']);
+        }
+
+        // ==============================
+        //   FECHA Y HORA
+        // ==============================
+        $horaReal = strlen($request->hora) === 5 
+            ? $request->hora . ':00'
+            : $request->hora;
+
+        $fechaHora = Carbon::createFromFormat('Y-m-d H:i:s', "{$request->fecha} {$horaReal}");
+
+        // ==============================
+        //   SERIE Y CORRELATIVO
+        // ==============================
         $tipo = $request->tipo_comprobante;
+
         $serie = match ($tipo) {
             'boleta'     => 'B001',
             'factura'    => 'F001',
@@ -137,102 +169,100 @@ public function registrarVenta(Request $request)
             default      => 'ND00',
         };
 
-        $ultimoCorrelativo = DB::table('ventas')
-            ->where('tipo_comprobante', $tipo)
-            ->where('serie', $serie)
-            ->max('correlativo');
+        $ultimoCorrelativo = Venta::where('tipo_comprobante', $tipo)
+                                  ->where('serie', $serie)
+                                  ->max('correlativo');
 
         $nuevoCorrelativo = $ultimoCorrelativo ? $ultimoCorrelativo + 1 : 1;
 
+        // ==============================
+        //   CREAR VENTA (TEMPORAL)
+        // ==============================
         $venta = Venta::create([
             'cliente_id'       => $cliente->id,
-            'usuario_id'       => $usuario_id,
+            'usuario_id'       => auth()->id(),
             'tipo_comprobante' => $tipo,
-            'total'            => $request->total_venta,
+            'total'            => 0,
             'fecha'            => $fechaHora,
             'metodo_pago'      => $request->metodo_pago,
-            'estado'           => 'pagada',
+            'estado'           => $request->estado_pago,
             'estado_sunat'     => 'pendiente',
             'serie'            => $serie,
             'correlativo'      => $nuevoCorrelativo,
-            'hash'             => $request->hash,
-            'xml_url'          => $request->xml_url,
-            'pdf_url'          => $request->pdf_url,
         ]);
 
-
-        // Inicializamos el total de la venta
+        // ==============================
+        //   DETALLE DE VENTA
+        // ==============================
         $totalVenta = 0;
-        foreach ($request->productos as $producto) {
-        // Buscar el producto en la base de datos
-        $productoBD = Producto::find($producto['producto_id']);
-        if (!$productoBD) continue;
 
-        // Asignar las variables del producto y la venta
-        $cantidad         = $producto['cantidad'];
-        $tipoVenta        = $producto['tipo_venta'];
-        $precioUnitario   = floatval($producto['precio_unitario']);
-        $precioMayor      = floatval($producto['precio_mayor']);
-        $unidadesPorMayor = intval($producto['unidades_por_mayor']) ?: 1;
+        foreach ($request->productos as $item) {
 
-        // Si la venta es por mayor, ajustamos la cantidad para que sea multiplicada por las unidades por mayor
-        $cantidadReal = $tipoVenta === 'mayor' ? $cantidad * $unidadesPorMayor : $cantidad;
+            $producto = Producto::find($item['producto_id']);
+            if (!$producto) continue;
 
-        // Si la venta es por mayor, la cantidad se mantiene igual y no se multiplica por unidades por mayor
-        $unidadesDescuento = $tipoVenta === 'mayor' ? $cantidad : $cantidad;
+            $cantidad = (int) $item['cantidad'];
+            $tipoVenta = $item['tipo_venta'];
+            $precioAplicado = floatval($item['precio_unitario']);
 
-        // Asignar precios dependiendo del tipo de venta
-        $precioUnitarioGuardado = ($tipoVenta === 'mayor') ? $precioMayor / $unidadesPorMayor : $precioUnitario;
-        $precioMayorGuardado    = ($tipoVenta === 'unidad') ? null : $precioMayor;
+            $u_paquete = $producto->unidades_por_paquete ?: 1;
+            $p_caja    = $producto->paquetes_por_caja ?: 1;
 
-        // Determinar el precio aplicado dependiendo del tipo de venta
-        $precioAplicado = $tipoVenta === 'mayor' && $precioMayor > 0
-            ? $precioUnitarioGuardado  // Usar el precio unitario ajustado para venta por mayor
-            : $precioUnitario;
+            // UNIDADES REALES SEGÚN PRESENTACIÓN
+            $unidadesAfectadas =
+                $tipoVenta === 'unidad'  ? $cantidad :
+                ($tipoVenta === 'paquete' ? $cantidad * $u_paquete :
+                $cantidad * $u_paquete * $p_caja);
 
-        // Calcular la ganancia correctamente
-        if ($tipoVenta === 'mayor') {
-            // Ganancia para ventas por mayor: Usamos el precio unitario ajustado y la diferencia con el costo
-            $ganancia = ($precioUnitarioGuardado - $productoBD->precio_compra) * $cantidad;
-        } else {
-            // Calcular la ganancia para ventas al por unidad
-            $ganancia = ($precioUnitario - $productoBD->precio_compra) * $cantidad;
+            if ($producto->stock < $unidadesAfectadas) {
+                throw new \Exception("Stock insuficiente para {$producto->nombre}");
+            }
+
+            $subtotal = $cantidad * $precioAplicado;
+            $totalVenta += $subtotal;
+
+            $ganancia = ($precioAplicado - $producto->precio_compra) * $cantidad;
+
+            DetalleVenta::create([
+                'venta_id'           => $venta->id,
+                'producto_id'        => $producto->id,
+                'presentacion'       => $tipoVenta,
+                'cantidad'           => $cantidad,
+                'unidades_afectadas' => $unidadesAfectadas,
+                'precio_presentacion'=> $precioAplicado,
+                'precio_unitario'    => $precioAplicado,
+                'subtotal'           => $subtotal,
+                'ganancia'           => $ganancia,
+                'activo'             => 1
+            ]);
+
+            // RESTAR STOCK
+            $producto->stock -= $unidadesAfectadas;
+            $producto->save();
         }
 
-        // Calcular el subtotal con el precio aplicado
-        $subtotal = $precioAplicado * $cantidad;
-        // Sumar el subtotal al total de la venta
-        $totalVenta += $subtotal;
+        // ==============================
+        //   CALCULAR IGV Y SUBTOTAL
+        // ==============================
+        // Después del foreach
+        $config     = Configuracion::first();
+        $igvPercent = floatval($config->igv ?? 0);
 
-        // Generar la descripción con "unidades" sin guardarlo en la base de datos
-        $descripcionProducto = $tipoVenta === 'mayor'
-            ? "{$productoBD->nombre} - S/ {$precioAplicado} x {$unidadesPorMayor} unidades"
-            : "{$productoBD->nombre} - S/ {$precioUnitario} x 1";
+        $subtotalBase = $totalVenta;                       // suma de precios sin IGV
+        $igvMonto     = $subtotalBase * $igvPercent / 100; // IGV
+        $totalFinal   = $subtotalBase + $igvMonto;         // total con IGV
 
-        // Crear el detalle de la venta
-        DetalleVenta::create([
-            'venta_id'           => $venta->id,
-            'producto_id'        => $productoBD->id,
-            'cantidad'           => $cantidad,
-            'tipo_venta'         => $tipoVenta,
-            'precio_unitario'    => $tipoVenta === 'mayor' ? $precioUnitarioGuardado : $precioUnitario,
-            'precio_mayor'       => $tipoVenta === 'mayor' ? $precioMayor : 0,
-            'subtotal'           => $subtotal,
-            'ganancia'           => $ganancia,
-            'unidades_descuento' => $unidadesDescuento
+        $venta->update([
+            'op_gravadas' => round($subtotalBase, 2),
+            'igv'         => round($igvMonto, 2),
+            'total'       => round($totalFinal, 2),
         ]);
-        // Finalmente, actualizamos el total de la venta
-        $venta->total = $totalVenta;
-        $venta->save();
 
-            $productoBD->stock -= $unidadesDescuento;
-            $productoBD->save();
-        }
-
-        DB::commit();
-
-        // === Generar PDF ===
+        // ==============================
+        //   GENERAR PDF
+        // ==============================
         $formato = $request->input('formato', 'a4');
+
         $vista = match ($formato) {
             'ticket' => "comprobantes.{$tipo}_ticket",
             default  => "comprobantes.{$tipo}_a4",
@@ -243,34 +273,33 @@ public function registrarVenta(Request $request)
         }
 
         $venta->load(['cliente', 'detalleVentas.producto']);
-        $config = Configuracion::first();
 
-        // === Generar logo en base64
+        // LOGO
         $logoBase64 = null;
         if ($config->logo && file_exists(public_path($config->logo))) {
-            $logoPath = public_path($config->logo);
-            $type = pathinfo($logoPath, PATHINFO_EXTENSION);
-            $data = file_get_contents($logoPath);
-            $logoBase64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+            $path = public_path($config->logo);
+            $logoBase64 = 'data:image/' . pathinfo($path, PATHINFO_EXTENSION) .
+                          ';base64,' . base64_encode(file_get_contents($path));
         }
 
-        // === Generar QR SUNAT
-        $qrData = "{$config->ruc}|{$tipo}|{$serie}|{$nuevoCorrelativo}|{$venta->total}|0.00|{$venta->fecha->format('d/m/Y')}|{$venta->hash}";
+        // QR
+        $qrData = "{$config->ruc}|{$tipo}|{$serie}|{$nuevoCorrelativo}|{$venta->total}|{$venta->igv}|{$venta->fecha->format('d/m/Y')}|{$venta->hash}";
         $qr = base64_encode(\QrCode::format('png')->size(120)->generate($qrData));
 
-        $options = new \Dompdf\Options();
-        $options->set('isRemoteEnabled', true);
-        $options->set('image_backend', 'GD');
-
         $pdf = \PDF::setOptions([
-            'isRemoteEnabled' => true,
-            'dpi' => 96,
-            'defaultMediaType' => 'screen'
+            'isRemoteEnabled'   => true,
+            'dpi'               => 96,
+            'defaultMediaType'  => 'screen',
         ])->loadView($vista, [
-            'venta' => $venta,
-            'config' => $config,
-            'qr' => $qr,
-            'logoBase64' => $logoBase64
+            'venta'      => $venta,
+            'config'     => $config,
+            'qr'         => $qr,
+            'logoBase64' => $logoBase64,
+
+            // Estos valores YA vienen del cálculo que hicimos antes
+            'subtotal'   => $venta->op_gravadas, // base sin IGV
+            'igv'        => $venta->igv,         // monto IGV
+            'total'      => $venta->total,       // total final con IGV
         ]);
 
         if ($formato === 'ticket') {
@@ -281,16 +310,20 @@ public function registrarVenta(Request $request)
         }
 
         $nombreArchivo = "{$serie}-" . str_pad($nuevoCorrelativo, 6, '0', STR_PAD_LEFT) . ".pdf";
+        $ruta = public_path("comprobantes");
 
-        $comprobantesPath = public_path('comprobantes');
-        if (!is_dir($comprobantesPath)) {
-            mkdir($comprobantesPath, 0775, true);
-        }
+        if (!is_dir($ruta)) mkdir($ruta, 0775, true);
 
-        $pdf->save("{$comprobantesPath}/{$nombreArchivo}");
-        $pdfUrl = asset("comprobantes/{$nombreArchivo}");
+        $pdf->save("$ruta/$nombreArchivo");
+
+        $pdfUrl = asset("comprobantes/$nombreArchivo");
 
         $venta->update(['pdf_url' => $pdfUrl]);
+
+        // ==============================
+        //   FINALIZAR
+        // ==============================
+        DB::commit();
 
         return response()->json([
             'success'        => true,
@@ -302,11 +335,13 @@ public function registrarVenta(Request $request)
         ]);
 
     } catch (\Exception $e) {
+
         DB::rollBack();
-        \Log::error("Error en registrarVenta: " . $e->getMessage());
+        \Log::error("Error registrarVenta: " . $e->getMessage());
+
         return response()->json([
             'success' => false,
-            'message' => 'Error al registrar la venta: ' . $e->getMessage()
+            'message' => $e->getMessage()
         ], 500);
     }
 }

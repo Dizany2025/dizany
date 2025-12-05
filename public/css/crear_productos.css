@@ -1,3 +1,8 @@
+.input-group-text {
+    background-color: #f8f8f8;
+    font-weight: bold;
+}
+
 /* Estilo general para la tarjeta */
 .card {
     margin-top: 20px;
