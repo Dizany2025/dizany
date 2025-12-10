@@ -98,46 +98,5 @@
 </script>
 
 <!-- Estilos internos aplicables al modo claro/oscuro -->
-<style>
-    .sidebar-content a {
-        display: flex;
-        align-items: center;
-        padding: 10px 15px;
-        margin-bottom: 12px;
-        color: var(--sidebar-link-color, #fff);
-        text-decoration: none;
-        border-radius: 8px;
-        border-bottom: 2px solid transparent;
-        transition: all 0.3s ease;
-    }
 
-    .sidebar-content a i {
-        margin-right: 8px;
-        transition: color 0.3s ease;
-    }
 
-    #sidebar a.active {
-        color: var(--sidebar-active-color, #4ea5ff);
-        font-weight: bold;
-        border-bottom: 2px solid var(--sidebar-active-border, #0d6efd);
-        background-color: transparent;
-    }
-
-    .sidebar-content a.active i {
-        color: var(--sidebar-active-icon, #0d6efd);
-    }
-
-    .theme-dark .sidebar-content a {
-        color: #ccc;
-    }
-
-    .theme-dark #sidebar a.active {
-        color: #4ea5ff;
-        border-bottom-color: #4ea5ff;
-    }
-
-    .theme-dark .sidebar-footer {
-        background-color: #0c2b4bf6;
-        border-top: 1px solid #1e4c7c;
-    }
-</style>

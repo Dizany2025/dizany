@@ -40,7 +40,6 @@ class Producto extends Model
         'fecha_vencimiento' => 'date',
     ];
 
-    public $timestamps = false;
 
     /* -------------------
        Relaciones

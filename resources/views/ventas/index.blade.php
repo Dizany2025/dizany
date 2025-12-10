@@ -19,9 +19,30 @@
 <div class="container-fluid ventas-treinta">
 
     <!-- 🔵 HEADER -->
-    <div class="treinta-header">
-        <h3 class="titulo-venta">Nueva venta</h3>
+    <div class="treinta-header d-flex justify-content-between align-items-center mb-3">
+        
+        <!-- Título -->
+        <h5 class="titulo-venta m-0">Nueva venta</h5>
+
+        <!-- Botones derecha -->
+        <div class="d-flex align-items-center gap-2">
+
+            <!-- Botón ordenar -->
+            <div class="ordenar-wrapper">
+                <button id="btn-ordenar" class="btn-ordenar" data-tooltip="Ordenar productos
+                Organiza tus productos por orden alfabético, stock, ventas o fecha reciente.">
+                    <i class="fas fa-sort-amount-down"></i>
+                </button>
+            </div>
+
+            <!-- Nuevo gasto -->
+            <a href="{{ route('gastos.create') }}" class="btn btn-danger">
+                <i class="fas fa-receipt me-1"></i> Nuevo gasto
+            </a>
+
+        </div>
     </div>
+
 
     <!-- 🔥 CUERPO PRINCIPAL 2 COLUMNAS -->
     <div class="treinta-body">
@@ -57,7 +78,7 @@
         </div> <!-- cierre columna izquierda -->
                 <!-- ====================== 🟥 COLUMNA DERECHA ====================== -->
         <div class="treinta-col derecha">
-        <div class="scroll-derecha venta-steps">
+        <div class="venta-steps">
 
             <!-- █████████████████████████████ -->
             <!--        FASE 1: CARRITO       -->
@@ -92,8 +113,7 @@
             <!-- FASE 2: CLIENTE + RESUMEN    -->
             <!-- █████████████████████████████ -->
             <!-- ==================== FASE 2 ==================== -->
-            <div id="step-2" class="step-panel">
-
+            <div id="step-2" class="step-panel step2-scroll">
                 <!-- CLIENTE Y COMPROBANTE -->
                 <div class="card shadow-sm mb-3">
                     <div class="card-header bg-primary text-white">Cliente y Comprobante</div>
@@ -295,9 +315,65 @@
     </div> <!-- /.treinta-body -->
 </div> <!-- /.ventas-treinta -->
 
+<!-- MODAL ORDENAR PRODUCTOS -->
+<div class="modal fade" id="modalOrdenar" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
 
-<!-- Modal para mostrar los detalles de la venta -->
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Ordenar inventario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
 
+            <div class="modal-body">
+
+                <p class="text-muted small mb-3">Solo puedes aplicar un orden a la vez</p>
+
+                <!-- POR STOCK -->
+                <label class="fw-bold small text-secondary">Por stock</label>
+                <div class="d-flex gap-2 mb-3">
+                    <button class="orden-btn w-100" data-type="stock_asc">Menos stock</button>
+                    <button class="orden-btn w-100" data-type="stock_desc">Más stock</button>
+                </div>
+
+                <!-- POR VENTAS -->
+                <label class="fw-bold small text-secondary">Por ventas (últimos 30 días)</label>
+                <div class="d-flex gap-2 mb-3">
+                    <button class="orden-btn w-100" data-type="menos_vendidos">Menos vendidos</button>
+                    <button class="orden-btn w-100" data-type="mas_vendidos">Más vendidos</button>
+                </div>
+
+                <!-- POR NOMBRE -->
+                <label class="fw-bold small text-secondary">Por nombre</label>
+                <div class="d-flex gap-2 mb-3">
+                    <button class="orden-btn w-100" data-type="az">Nombre A-Z</button>
+                    <button class="orden-btn w-100" data-type="za">Nombre Z-A</button>
+                </div>
+
+                <!-- POR FECHA -->
+                <label class="fw-bold small text-secondary">Por fecha de creación</label>
+                <div class="d-flex gap-2 mb-3">
+                    <button class="orden-btn w-100" data-type="fecha_asc">Más antiguo</button>
+                    <button class="orden-btn w-100" data-type="fecha_desc">Más reciente</button>
+                </div>
+
+                <!-- POR PRECIO -->
+                <label class="fw-bold small text-secondary">Por precio</label>
+                <div class="d-flex gap-2 mb-3">
+                    <button class="orden-btn w-100" data-type="precio_asc">Más bajo</button>
+                    <button class="orden-btn w-100" data-type="precio_desc">Más alto</button>
+                </div>
+
+            </div>
+
+            <div class="modal-footer d-flex justify-content-between">
+                <button class="btn btn-light" id="btn-limpiar-orden">Limpiar</button>
+                <button class="btn btn-primary" id="btn-aplicar-orden">Aplicar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
 
 <!-- Modal para registrar un cliente -->
 <div class="modal fade" id="clientModal" tabindex="-1" aria-labelledby="clientModalLabel" aria-hidden="true">
@@ -376,10 +452,31 @@
 
 
 <script src="{{ asset('js/ventas_dniruc.js') }}"></script>
+@php
+$productos = \App\Models\Producto::withSum('detalleVentas as total_vendido', 'cantidad')
+    ->where('activo', 1)
+    ->get();
+@endphp
 <script>
   window.PRODUCTOS_INICIALES = @json($productos); // productos activos con imagen, etc.
+  window.USUARIO_ES_ADMIN = @json(Auth::user()->rol_id == 1);
 </script>
+
 <script src="{{ asset('js/ventas_productos.js') }}"></script>
+
+<script>
+document.getElementById("btn-ordenar").addEventListener("click", () => {
+    if (window.matchMedia("(hover: none)").matches) {
+        const btn = document.getElementById("btn-ordenar");
+        btn.classList.add("show-tooltip");
+
+        setTimeout(() => {
+            btn.classList.remove("show-tooltip");
+        }, 2000); // 2 segundos visible
+    }
+});
+</script>
+
 <script>
 function showStep(n) {
     document.querySelectorAll(".step-panel").forEach(p => p.classList.remove("is-active"));

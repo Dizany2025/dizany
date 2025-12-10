@@ -187,4 +187,6 @@ Route::get('/comprobantes/descargar/{filename}', [VentaController::class, 'desca
 Route::get('/ventas/filtrar-productos', [VentaController::class, 'filtrarPorCategoria']);
 
 Route::get('/productos/iniciales', [ProductoController::class, 'productosIniciales']);
-
+// ORDENAR VENTAS (F)
+Route::get('/productos/ordenar', [ProductoController::class, 'ordenar'])
+    ->name('productos.ordenar');

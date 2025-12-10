@@ -347,6 +347,63 @@ public function productosIniciales() {
     return Producto::orderBy('nombre')->get();
 }
 
+public function ordenar(Request $request)
+{
+    $tipo = $request->tipo;
+
+    $query = Producto::query()->where('activo', 1);
+
+    switch ($tipo) {
+
+        case 'az':
+            $query->orderBy('nombre', 'asc');
+            break;
+
+        case 'za':
+            $query->orderBy('nombre', 'desc');
+            break;
+
+        case 'precio_mayor':
+            $query->orderBy('precio_venta', 'desc');
+            break;
+
+        case 'precio_menor':
+            $query->orderBy('precio_venta', 'asc');
+            break;
+
+        case 'stock_mayor':
+            $query->orderBy('stock', 'desc');
+            break;
+
+        case 'stock_menor':
+            $query->orderBy('stock', 'asc');
+            break;
+
+        case 'mas_vendidos':
+            $query->withSum('detalles as total_vendido', 'cantidad')
+                  ->orderBy('total_vendido', 'desc');
+            break;
+
+        case 'menos_vendidos':
+            $query->withSum('detalles as total_vendido', 'cantidad')
+                  ->orderBy('total_vendido', 'asc');
+            break;
+
+        case 'fecha_asc':   // ⭐ AÑADIR
+            $query->orderBy('created_at', 'asc');
+            break;
+
+        case 'fecha_desc':  // ⭐ AÑADIR
+            $query->orderBy('created_at', 'desc');
+            break;
+
+        default:
+            $query->orderBy('created_at', 'desc');
+    }
+
+    return response()->json($query->get());
+}
+
 
 
 }

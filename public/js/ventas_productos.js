@@ -17,33 +17,38 @@ document.addEventListener("DOMContentLoaded", () => {
     // ============================
     //   ELEMENTOS PRINCIPALES
     // ============================
-    const buscarInput       = document.getElementById("buscar_producto");
-    const resultadosDiv     = document.getElementById("resultados-busqueda"); // grilla de cards
+    const modalOrdenarEl = document.getElementById("modalOrdenar");
+    const modalOrdenar   = (window.bootstrap && modalOrdenarEl)
+        ? new bootstrap.Modal(modalOrdenarEl)
+        : null;
+
+    const buscarInput   = document.getElementById("buscar_producto");
+    const resultadosDiv = document.getElementById("resultados-busqueda"); // grilla de cards
 
     // Carrito Treinta (fase 1)
-    const carritoLista      = document.getElementById("carrito-lista");
+    const carritoLista  = document.getElementById("carrito-lista");
 
     // Botones FASES
-    const btnIrStep2        = document.getElementById("btn-ir-step2");
-    const btnVolverStep1    = document.getElementById("btn-volver-step1") || document.getElementById("btn-volver-carrito");
-    const btnIrStep3        = document.getElementById("btn-ir-step3")      || document.getElementById("btn-ir-vuelto");
-    const btnVolverStep2    = document.getElementById("btn-volver-step2")  || document.getElementById("btn-vuelto-atras");
-    const btnConfirmar3     = document.getElementById("btn-confirmar-venta");
+    const btnIrStep2     = document.getElementById("btn-ir-step2");
+    const btnVolverStep1 = document.getElementById("btn-volver-step1") || document.getElementById("btn-volver-carrito");
+    const btnIrStep3     = document.getElementById("btn-ir-step3")      || document.getElementById("btn-ir-vuelto");
+    const btnVolverStep2 = document.getElementById("btn-volver-step2")  || document.getElementById("btn-vuelto-atras");
+    const btnConfirmar3  = document.getElementById("btn-confirmar-venta");
 
-    const step1             = document.getElementById("step-1");
-    const step2             = document.getElementById("step-2");
-    const step3             = document.getElementById("step-3");
+    const step1 = document.getElementById("step-1");
+    const step2 = document.getElementById("step-2");
+    const step3 = document.getElementById("step-3");
 
     // Modal de venta exitosa (si existe)
-    let modalVentaExitosa   = null;
+    let modalVentaExitosa = null;
     const modalVentaExitosaElement = document.getElementById('modalVentaExitosa');
     if (modalVentaExitosaElement && window.bootstrap) {
         modalVentaExitosa = new bootstrap.Modal(modalVentaExitosaElement);
     }
 
     // Otros datos
-    const documentoInput    = document.getElementById('documento');
-    const metodoPagoSelect  = document.getElementById("estado_pago"); // select pagado/pendiente
+    const documentoInput   = document.getElementById('documento');
+    const metodoPagoSelect = document.getElementById("estado_pago"); // select pagado/pendiente
 
     // Botones modal venta exitosa
     const btnImprimir   = document.getElementById("btnImprimir");
@@ -167,22 +172,60 @@ document.addEventListener("DOMContentLoaded", () => {
         resultadosDiv.classList.remove("d-none");
         resultadosDiv.innerHTML = "";
 
+        // --- TARJETA CREAR PRODUCTO (SIEMPRE PRIMERA) ---
+        if (window.USUARIO_ES_ADMIN) {
+            resultadosDiv.insertAdjacentHTML("beforeend", `
+                <div class="col-6 col-md-4 col-xl-3 mb-3">
+                    <div class="product-card crear-producto-card">
+                        <div class="crear-producto-center">
+                            <div class="crear-producto-icon">+</div>
+                            <span>Crear producto</span>
+                        </div>
+                    </div>
+                </div>
+            `);
+        }
+
+        // Hacer visible la tarjeta de crear (animación)
+        const cardCrear = resultadosDiv.querySelector(".crear-producto-card");
+            if (cardCrear) {
+                cardCrear.classList.add("show");
+
+                if (window.USUARIO_ES_ADMIN) {
+                    cardCrear.addEventListener("click", () => {
+                        window.location.href = "/productos/create";
+                    });
+                } else {
+                    cardCrear.style.pointerEvents = "none"; // Extra seguridad
+                }
+            }
+
+        // --- SI NO HAY PRODUCTOS ---
         if (!lista || lista.length === 0) {
-            resultadosDiv.innerHTML = `
+            resultadosDiv.insertAdjacentHTML("beforeend", `
                 <div class="col-12 text-center text-muted py-3">
                     No se encontraron productos
                 </div>
-            `;
+            `);
             return;
         }
 
         cacheProductos(lista);
 
-        lista.forEach(prod => {
+        lista.forEach((prod, index) => {
             resultadosDiv.insertAdjacentHTML("beforeend", crearCardProducto(prod));
+
+            const col = resultadosDiv.lastElementChild;        // <div class="col-6 ...">
+            const card = col.querySelector(".product-card");   // tarjeta real
+
+            card.style.transitionDelay = (index * 0.02) + "s";
+
+            requestAnimationFrame(() => {
+                card.classList.add("show");
+            });
         });
 
-        // Asignar eventos a las cards
+        // Eventos de agregar al carrito SOLO para las cards de productos
         resultadosDiv.querySelectorAll(".product-card.agregar-carrito").forEach(card => {
             card.addEventListener("click", () => {
                 const id = Number(card.dataset.id);
@@ -207,6 +250,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         });
     }
+
 
     // Mostrar productos iniciales al cargar (si existen declarados en Blade)
     if (window.PRODUCTOS_INICIALES && Array.isArray(window.PRODUCTOS_INICIALES)) {
@@ -279,8 +323,19 @@ document.addEventListener("DOMContentLoaded", () => {
             const query = buscarInput.value.trim();
 
             if (query.length === 0) {
+                // Si hay categoría activa, respetarla
+                const btnActivo = document.querySelector(".btn-filtro-categoria.active");
+                const catID = btnActivo ? Number(btnActivo.dataset.cat) : 0;
+
                 if (window.PRODUCTOS_INICIALES && Array.isArray(window.PRODUCTOS_INICIALES)) {
-                    renderGrillaProductos(window.PRODUCTOS_INICIALES);
+                    if (catID === 0) {
+                        renderGrillaProductos(window.PRODUCTOS_INICIALES);
+                    } else {
+                        const filtrados = window.PRODUCTOS_INICIALES.filter(prod =>
+                            Number(prod.categoria_id) === catID
+                        );
+                        renderGrillaProductos(filtrados);
+                    }
                 } else {
                     resultadosDiv.innerHTML = "";
                     resultadosDiv.classList.add("d-none");
@@ -340,23 +395,85 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         return cantidad;
     }
-    // ============================
-    //   HELPER: COLOR DEL BADGE DE STOCK
-    // ============================
+
+    // Helper color badge stock
     function getStockBadgeColor(stock) {
         if (stock >= 20) return "bg-success";   // verde
         if (stock >= 6)  return "bg-warning";   // amarillo
         return "bg-danger";                     // rojo
     }
+
     function renderCarritoTreinta() {
         if (!carritoLista) return;
 
         carritoLista.innerHTML = "";
 
         if (productosSeleccionados.length === 0) {
+
+            // Detectar categoría activa en los filtros de arriba
+            const btnActivo = document.querySelector(".btn-filtro-categoria.active");
+            let nombreCat   = btnActivo ? btnActivo.textContent.trim() : "productos";
+            
+            // Mensaje según categoría
+            let textoCategoria = "tu catálogo";
+            if (nombreCat && nombreCat.toLowerCase() !== "todos") {
+                textoCategoria = `la categoría ${nombreCat.toLowerCase()}`;
+            }
+
             carritoLista.innerHTML = `
-                <p class="text-muted text-center mb-0">No hay productos en la canasta.</p>
+                <div class="empty-cart-premium text-center py-5">
+                    
+                    <!-- ILUSTRACIÓN SVG -->
+                    <div class="empty-illustration mb-3">
+                        <svg viewBox="0 0 140 100" class="empty-svg">
+                            <!-- Fondo círculo -->
+                            <defs>
+                                <linearGradient id="gradCart" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#4A90E2"/>
+                                    <stop offset="100%" stop-color="#6C5CE7"/>
+                                </linearGradient>
+                            </defs>
+                            <circle cx="70" cy="40" r="36" fill="url(#gradCart)" opacity="0.15"/>
+
+                            <!-- Carrito -->
+                            <rect x="30" y="32" width="60" height="26" rx="6" ry="6" fill="#ffffff" stroke="#4A90E2" stroke-width="2"/>
+                            <path d="M32 32 L26 20" stroke="#4A90E2" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M88 32 L96 20" stroke="#4A90E2" stroke-width="2" stroke-linecap="round"/>
+
+                            <!-- Cajas dentro -->
+                            <rect x="38" y="26" width="12" height="10" rx="2" fill="#4A90E2" opacity="0.9"/>
+                            <rect x="54" y="24" width="12" height="12" rx="2" fill="#6C5CE7" opacity="0.9"/>
+                            <rect x="70" y="27" width="12" height="9"  rx="2" fill="#00B894" opacity="0.9"/>
+
+                            <!-- Ruedas -->
+                            <circle cx="44" cy="62" r="5" fill="#ffffff" stroke="#4A90E2" stroke-width="2"/>
+                            <circle cx="76" cy="62" r="5" fill="#ffffff" stroke="#4A90E2" stroke-width="2"/>
+
+                            <!-- Brillito -->
+                            <path d="M96 25 Q104 20 108 26" stroke="#4A90E2" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+                        </svg>
+                    </div>
+
+                    <h5 class="fw-bold text-dark mb-1">Tu carrito está vacío</h5>
+                    <p class="text-muted small mb-2">
+                        Agrega productos desde <strong>${textoCategoria}</strong> para iniciar tu venta.
+                    </p>
+
+                    <button type="button" class="btn btn-primary btn-sm shadow-sm btn-empezar-compra">
+                        <i class="fas fa-search"></i> Empezar a buscar productos
+                    </button>
+                </div>
             `;
+
+            // Opcional: cuando hacen clic en el botón, enfocar el buscador
+            const btnBuscar = carritoLista.querySelector(".btn-empezar-compra");
+            if (btnBuscar && buscarInput) {
+                btnBuscar.addEventListener("click", () => {
+                    buscarInput.focus();
+                    buscarInput.scrollIntoView({ behavior: "smooth", block: "center" });
+                });
+            }
+
             actualizarResumen();
             actualizarBotonCarrito();
             return;
@@ -387,8 +504,8 @@ document.addEventListener("DOMContentLoaded", () => {
                                 <!-- NOMBRE + BADGE DE STOCK -->
                                 <div class="d-flex justify-content-between align-items-center" style="min-width: 200px;">
                                     <span class="fw-semibold small">${p.nombre}</span>
-                                    <span class="badge ${getStockBadgeColor(p.stock)} ms-2">Stock: 
-                                        ${p.stock}
+                                    <span class="badge ${getStockBadgeColor(p.stock)} ms-2">
+                                        Stock: ${p.stock}
                                     </span>
                                 </div>
 
@@ -405,44 +522,48 @@ document.addEventListener("DOMContentLoaded", () => {
                         </button>
                     </div>
 
-                <div class="d-flex align-items-center mt-2 gap-2">
-                    <div class="flex-grow-1">
-                        <span class="d-block extra-small text-muted mb-1">Tipo venta</span>
-                        <select class="form-select form-select-sm tipo-venta" data-index="${index}">
-                            <option value="unidad" ${p.tipo_venta === "unidad" ? "selected" : ""}>
-                                Unidad
-                            </option>
-                            <option value="paquete" ${p.tipo_venta === "paquete" ? "selected" : ""}>
-                                Paquete (${p.unidades_por_paquete})
-                            </option>
-                            <option value="caja" ${p.tipo_venta === "caja" ? "selected" : ""}>
-                                Caja (${p.paquetes_por_caja} paquetes)
-                            </option>
-                        </select>
+                    <div class="d-flex align-items-center mt-2 gap-2">
+                        <div class="flex-grow-1">
+                            <span class="d-block extra-small text-muted mb-1">Tipo venta</span>
+                            <select class="form-select form-select-sm tipo-venta" data-index="${index}">
+
+                                <option value="unidad" ${p.tipo_venta === "unidad" ? "selected" : ""}>
+                                    Unidad
+                                </option>
+
+                                <option value="paquete" ${p.tipo_venta === "paquete" ? "selected" : ""}>
+                                    Paquete (${p.unidades_por_paquete})
+                                </option>
+
+                                <option value="caja" ${p.tipo_venta === "caja" ? "selected" : ""}>
+                                    Caja (${p.paquetes_por_caja} paquetes)
+                                </option>
+
+                            </select>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-1">
+                            <button class="btn btn-light btn-sm btn-restar" data-index="${index}">−</button>
+                            <input type="number"
+                                min="1"
+                                class="form-control form-control-sm text-center cambiar-cantidad"
+                                data-index="${index}"
+                                value="${p.cantidad}">
+                            <button class="btn btn-light btn-sm btn-sumar" data-index="${index}">+</button>
+                        </div>
+
+                        <div class="text-end" style="width: 90px;">
+                            <div class="fw-semibold small">S/ ${precioUnitFinal.toFixed(2)}</div>
+                        </div>
                     </div>
 
-                    <div class="d-flex align-items-center gap-1">
-                        <button class="btn btn-light btn-sm btn-restar" data-index="${index}">−</button>
-                        <input type="number"
-                            min="1"
-                            class="form-control form-control-sm text-center cambiar-cantidad"
-                            data-index="${index}"
-                            value="${p.cantidad}">
-                        <button class="btn btn-light btn-sm btn-sumar" data-index="${index}">+</button>
-                    </div>
-
-                    <div class="text-end" style="width: 90px;">
-                        <div class="fw-semibold small">S/ ${precioUnitFinal.toFixed(2)}</div>
+                    <div class="mt-2 small">
+                        <span class="text-muted">
+                            Precio por <strong>${unidades}</strong> unidades:
+                        </span>
+                        <span class="fw-semibold"> S/ ${subtotal.toFixed(2)}</span>
                     </div>
                 </div>
-
-                <div class="mt-2 small">
-                    <span class="text-muted">
-                        Precio por <strong>${unidades}</strong> unidades:
-                    </span>
-                    <span class="fw-semibold"> S/ ${subtotal.toFixed(2)}</span>
-                </div>
-            </div>
             `;
 
             carritoLista.insertAdjacentHTML("beforeend", card);
@@ -603,9 +724,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function calcularTotal() {
-        const subtotal = calcularSubtotal();
+        const subtotal  = calcularSubtotal();
         const igvPercent = obtenerIGVPercent();
-        const igv = subtotal * igvPercent / 100;
+        const igv       = subtotal * igvPercent / 100;
         return {
             subtotal,
             igv,
@@ -894,6 +1015,132 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // ============================
+    //   MODAL ORDENAR PRODUCTOS
+    // ============================
+
+    const btnOrdenar = document.getElementById("btn-ordenar");
+    let ordenSeleccionada = null;
+
+    // Abrir modal
+    if (btnOrdenar && modalOrdenar) {
+        btnOrdenar.addEventListener("click", () => {
+            modalOrdenar.show();
+        });
+    }
+
+    // SELECCIONAR OPCIÓN
+    const ordenBtns = document.querySelectorAll(".orden-btn");
+    if (ordenBtns.length > 0) {
+        ordenBtns.forEach(btn => {
+            btn.addEventListener("click", () => {
+                ordenBtns.forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+                ordenSeleccionada = btn.dataset.type;
+            });
+        });
+    }
+
+    function ordenarProductos(tipo) {
+        if (!window.PRODUCTOS_INICIALES || !Array.isArray(window.PRODUCTOS_INICIALES)) return;
+
+        // Respetar categoría activa
+        const btnActivo = document.querySelector(".btn-filtro-categoria.active");
+        const catID = btnActivo ? Number(btnActivo.dataset.cat) : 0;
+
+        let base = [...window.PRODUCTOS_INICIALES];
+
+        if (catID !== 0) {
+            base = base.filter(p => Number(p.categoria_id) === catID);
+        }
+
+        switch (tipo) {
+
+            case "az":
+                base.sort((a, b) => a.nombre.localeCompare(b.nombre));
+                break;
+
+            case "za":
+                base.sort((a, b) => b.nombre.localeCompare(a.nombre));
+                break;
+
+            case "precio_asc":
+                base.sort((a, b) => (a.precio_venta || 0) - (b.precio_venta || 0));
+                break;
+
+            case "precio_desc":
+                base.sort((a, b) => (b.precio_venta || 0) - (a.precio_venta || 0));
+                break;
+
+            case "stock_asc":
+                base.sort((a, b) => (a.stock || 0) - (b.stock || 0));
+                break;
+
+            case "stock_desc":
+                base.sort((a, b) => (b.stock || 0) - (a.stock || 0));
+                break;
+
+            case "menos_vendidos":
+                base.sort((a, b) => (a.total_vendido || 0) - (b.total_vendido || 0));
+                break;
+
+            case "mas_vendidos":
+                base.sort((a, b) => (b.total_vendido || 0) - (a.total_vendido || 0));
+                break;
+
+            case "fecha_asc":
+                base.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                break;
+
+            case "fecha_desc":
+                base.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                break;
+        }
+
+        renderGrillaProductos(base);
+    }
+
+    // LIMPIAR
+    const btnLimpiarOrden = document.getElementById("btn-limpiar-orden");
+    if (btnLimpiarOrden) {
+        btnLimpiarOrden.addEventListener("click", () => {
+            ordenSeleccionada = null;
+            document.querySelectorAll(".orden-btn").forEach(b => b.classList.remove("active"));
+
+            // Volver a la lista original respetando categoría
+            const btnActivo = document.querySelector(".btn-filtro-categoria.active");
+            const catID = btnActivo ? Number(btnActivo.dataset.cat) : 0;
+
+            if (window.PRODUCTOS_INICIALES && Array.isArray(window.PRODUCTOS_INICIALES)) {
+                if (catID === 0) {
+                    renderGrillaProductos(window.PRODUCTOS_INICIALES);
+                } else {
+                    const filtrados = window.PRODUCTOS_INICIALES.filter(prod =>
+                        Number(prod.categoria_id) === catID
+                    );
+                    renderGrillaProductos(filtrados);
+                }
+            }
+            // ⭐ CERRAR EL MODAL
+            if (modalOrdenar) {
+                modalOrdenar.hide();
+            }
+        });
+    }
+
+    // APLICAR
+    const btnAplicarOrden = document.getElementById("btn-aplicar-orden");
+    if (btnAplicarOrden) {
+        btnAplicarOrden.addEventListener("click", () => {
+            if (ordenSeleccionada) {
+                ordenarProductos(ordenSeleccionada);
+            }
+            if (modalOrdenar) {
+                modalOrdenar.hide();
+            }
+        });
+    }
+
+    // ============================
     //   ALERTA
     // ============================
 
@@ -908,6 +1155,6 @@ document.addEventListener("DOMContentLoaded", () => {
         sonidoError.play().catch(() => {});
     }
 
-    // Render inicial
+    // Render inicial carrito
     renderCarritoTreinta();
 });

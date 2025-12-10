@@ -1,22 +1,3 @@
-@php
-    use Illuminate\Support\Carbon;
-
-    $hora = Carbon::now()->format('H');
-    $saludo = '';
-    $emoji = '';
-
-    if ($hora >= 0 && $hora < 12) {
-        $saludo = '¡Buenos días!';
-        $emoji = '🌞'; // sol
-    } elseif ($hora >= 12 && $hora < 19) {
-        $saludo = '¡Buenas tardes!';
-        $emoji = '☀️'; // sol con nubes
-    } else {
-        $saludo = '¡Buenas noches!';
-        $emoji = '🌙'; // luna
-    }
-@endphp
-
 <header id="header" class="d-flex align-items-center p-2 text-white">
     <button id="btn-toggle-sidebar" class="btn btn-primary me-3" aria-label="Toggle sidebar">&#9776;</button>
 
@@ -65,14 +46,6 @@
                 </li>
             </ul>
         </div>
-
-    <!-- Saludo y nombre de usuario -->
-    <div class="header-actions flex-grow-1 d-flex justify-content-end align-items-center text-end">
-        <div class="d-flex flex-column align-items-end">
-            <span>{!! $emoji !!} {{ $saludo }}</span>
-            <strong>{{ ucfirst(Auth::user()->nombre) }}</strong>
-        </div>
-    </div>
 </header>
 @push('scripts')
 <script>
