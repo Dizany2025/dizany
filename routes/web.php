@@ -20,6 +20,7 @@ use App\Http\Controllers\ParametrosController;
 use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\MarcaController;
+use App\Http\Controllers\MovimientoController;
 //consultar dni y ruc
 use Illuminate\Support\Facades\Http;
 use App\Models\Producto;
@@ -71,8 +72,10 @@ Route::middleware(['auth', 'role:Administrador,Empleado'])->group(function () {
     Route::get('/gastos', [GastoController::class, 'index'])->name('gastos.index');
     Route::get('/gastos/crear', [GastoController::class, 'create'])->name('gastos.create');
     Route::post('/gastos', [GastoController::class, 'store'])->name('gastos.store');
-    Route::get('/ventas/lista', [VentaController::class, 'listar'])->name('ventas.listar');
-    
+
+    Route::get('/movimientos', [MovimientoController::class, 'index'])
+    ->name('movimientos.index');
+   
 
     // Otras rutas comunes aquí...
     Route::get('/ventas/exportar-excel', [VentaController::class, 'exportarExcel'])->name('ventas.exportarExcel');

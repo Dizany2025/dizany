@@ -1,21 +1,38 @@
+// ===============================
+// ESTADO GLOBAL DEL CLIENTE
+// ===============================
+window.estadoCliente = "ninguno";
+// ninguno | nuevo_no_guardado | ok
+
 document.addEventListener('DOMContentLoaded', function () {
 
     const token = "65380308035e6817f4baf2770fd241dfde303c06eec3376cc7694c53bcc8e83d";
 
-    // Inputs
-    const inputDocumento = document.getElementById('documento');
-    const inputRazon = document.getElementById('razon_social');
-    const inputDireccion = document.getElementById('direccion');
-    const estadoRUC = document.getElementById('estado_ruc');
+    // ===============================
+    // ELEMENTOS DOM
+    // ===============================
+    const inputDocumento  = document.getElementById('documento');
+    const inputRazon      = document.getElementById('razon_social');
+    const inputDireccion  = document.getElementById('direccion');
+    const estadoRUC       = document.getElementById('estado_ruc');
 
-    // Íconos del botón de acción
-    const btnAccion = document.getElementById('btn-cliente-accion');
-    const iconoPlus = document.getElementById('icono-plus');
-    const iconoSave = document.getElementById('icono-save');
+    const btnAccion  = document.getElementById('btn-cliente-accion');
+    const iconoPlus  = document.getElementById('icono-plus');
+    const iconoSave  = document.getElementById('icono-save');
 
-    // -------------------------------
-    // FUNCIONES VISUALES
-    // -------------------------------
+    const modalEl = document.getElementById('clientModal');
+    const modalCliente = (modalEl && window.bootstrap)
+        ? new bootstrap.Modal(modalEl)
+        : null;
+
+    if (!inputDocumento || !inputRazon || !inputDireccion || !btnAccion || !iconoPlus || !iconoSave) {
+        console.warn("[ventas_dniruc] Faltan elementos del DOM");
+        return;
+    }
+
+    // ===============================
+    // HELPERS VISUALES
+    // ===============================
     function mostrarIconoGuardar() {
         iconoPlus.classList.add("d-none");
         iconoSave.classList.remove("d-none");
@@ -32,17 +49,40 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(() => iconoPlus.classList.remove("icono-animado"), 600);
     }
 
-    // -------------------------------
-    // CONSULTA A BD
-    // -------------------------------
-    function buscarEnBD(dniRuc) {
-        return fetch(`/buscar-cliente/${dniRuc}`)
-            .then(r => r.json());
+    function limpiarCliente() {
+        inputRazon.value = "";
+        inputDireccion.value = "";
+        estadoRUC.textContent = "";
+
+        window.estadoCliente = "ninguno";
+        mostrarIconoAgregar();
+
+        // 🧠 limpiar cliente de la venta activa
+        const v = window.ventaActiva?.();
+        if (v) v.cliente = null;
     }
 
-    // -------------------------------
-    // CONSULTA A API PERÚ (DNI/RUC)
-    // -------------------------------
+    // ===============================
+    // SINCRONIZAR CLIENTE → VENTA
+    // ===============================
+    function setClienteVenta(cliente) {
+        const v = window.ventaActiva?.();
+        if (!v) return;
+
+        v.cliente = cliente;
+
+        if (window.actualizarAliasVentaDesdeCliente) {
+            actualizarAliasVentaDesdeCliente();
+        }
+    }
+
+    // ===============================
+    // CONSULTAS
+    // ===============================
+    function buscarEnBD(dniRuc) {
+        return fetch(`/buscar-cliente/${dniRuc}`).then(r => r.json());
+    }
+
     function consultarDNI(dni) {
         return fetch(`https://apiperu.dev/api/dni/${dni}`, {
             headers: { Authorization: `Bearer ${token}` }
@@ -55,82 +95,127 @@ document.addEventListener('DOMContentLoaded', function () {
         }).then(r => r.json());
     }
 
-    // -------------------------------
-    // EVENTO PRINCIPAL
-    // -------------------------------
+    // ===============================
+    // INPUT DNI / RUC
+    // ===============================
+    let ultimaConsulta = null;
+    let apiFallida = false;
+
     inputDocumento.addEventListener('input', () => {
 
         const valor = inputDocumento.value.trim();
 
+        if (valor !== ultimaConsulta) apiFallida = false;
+
         if (valor.length < 8) {
-            estadoRUC.textContent = "";
-            inputRazon.value = "";
-            inputDireccion.value = "";
-            mostrarIconoAgregar();
+            limpiarCliente();
+            ultimaConsulta = null;
             return;
         }
 
-        // 1️⃣ Buscar si existe en BD
+        if (valor === ultimaConsulta) return;
+        ultimaConsulta = valor;
+
+        // 1️⃣ BUSCAR EN BD
         buscarEnBD(valor).then(res => {
 
             if (res.encontrado) {
-                // CLIENTE EXISTE EN BD
+
                 inputRazon.value = res.nombre;
                 inputDireccion.value = res.direccion;
                 estadoRUC.textContent = "";
+
+                window.estadoCliente = "ok";
                 mostrarIconoAgregar();
+
+                setClienteVenta({
+                    tipo: valor.length === 8 ? 'DNI' : 'RUC',
+                    documento: valor,
+                    razon: res.nombre,
+                    direccion: res.direccion
+                });
+
                 return;
             }
 
-            // 2️⃣ NO EXISTE EN BD → Consultar API
-            if (valor.length === 8) {
-                consultarDNI(valor).then(data => {
-                    if (data.success) {
-                        inputRazon.value =
-                          `${data.data.nombres} ${data.data.apellido_paterno} ${data.data.apellido_materno}`;
-                        inputDireccion.value = "No disponible";
-                        estadoRUC.textContent = "";
-                        mostrarIconoGuardar();
-                    } else {
-                        inputRazon.value = "";
-                        inputDireccion.value = "";
-                        estadoRUC.textContent = "❌ DNI no encontrado";
-                        mostrarIconoGuardar();
-                    }
-                });
+            if (apiFallida) {
+                estadoRUC.textContent = "❌ Documento no encontrado";
+                return;
             }
 
+            // 2️⃣ DNI API
+            if (valor.length === 8) {
+                consultarDNI(valor)
+                    .then(data => {
+                        if (!data.success) throw new Error();
+
+                        const razon =
+                            `${data.data.nombres} ${data.data.apellido_paterno} ${data.data.apellido_materno}`.trim();
+
+                        inputRazon.value = razon;
+                        inputDireccion.value = "No disponible";
+                        estadoRUC.textContent = "";
+
+                        window.estadoCliente = "nuevo_no_guardado";
+                        mostrarIconoGuardar();
+
+                        setClienteVenta({
+                            tipo: 'DNI',
+                            documento: valor,
+                            razon: razon,
+                            direccion: "No disponible"
+                        });
+                    })
+                    .catch(() => {
+                        apiFallida = true;
+                        limpiarCliente();
+                        estadoRUC.textContent = "❌ DNI no encontrado";
+                    });
+            }
+
+            // 3️⃣ RUC API
             if (valor.length === 11) {
-                consultarRUC(valor).then(data => {
-                    if (data.success) {
-                        inputRazon.value = data.data.nombre_o_razon_social;
-                        inputDireccion.value = data.data.direccion || "Sin dirección";
-                        estadoRUC.textContent = `✔️ ${data.data.estado}`;
+                consultarRUC(valor)
+                    .then(data => {
+                        if (!data.success) throw new Error();
+
+                        const razon = data.data.nombre_o_razon_social || "";
+                        const direccion = data.data.direccion || "Sin dirección";
+
+                        inputRazon.value = razon;
+                        inputDireccion.value = direccion;
+                        estadoRUC.textContent = `✔️ ${data.data.estado || ""}`;
+
+                        window.estadoCliente = "nuevo_no_guardado";
                         mostrarIconoGuardar();
-                    } else {
-                        inputRazon.value = "";
-                        inputDireccion.value = "";
+
+                        setClienteVenta({
+                            tipo: 'RUC',
+                            documento: valor,
+                            razon: razon,
+                            direccion: direccion
+                        });
+                    })
+                    .catch(() => {
+                        apiFallida = true;
+                        limpiarCliente();
                         estadoRUC.textContent = "❌ RUC no encontrado";
-                        mostrarIconoGuardar();
-                    }
-                });
+                    });
             }
 
         });
-
     });
 
-    // -------------------------------
-    // GUARDAR CLIENTE EN BD
-    // -------------------------------
-    const modalCliente = new bootstrap.Modal(document.getElementById('clientModal'));
-        btnAccion.addEventListener("click", () => {
+    // ===============================
+    // BOTÓN + / 💾
+    // ===============================
+    btnAccion.addEventListener("click", () => {
 
-        // Si el icono visible es SAVE → Guardar cliente
+        // 💾 GUARDAR CLIENTE
         if (!iconoSave.classList.contains("d-none")) {
 
-            const dniRuc = inputDocumento.value.trim();
-            const razon = inputRazon.value.trim();
+            const dniRuc    = inputDocumento.value.trim();
+            const razon     = inputRazon.value.trim();
             const direccion = inputDireccion.value.trim();
 
             if (!dniRuc || !razon) {
@@ -142,7 +227,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    'X-CSRF-TOKEN': document
+                        .querySelector('meta[name="csrf-token"]')
+                        .content
                 },
                 body: JSON.stringify({
                     dni_ruc: dniRuc,
@@ -152,26 +239,43 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .then(r => r.json())
             .then(res => {
-                if (res.exito) {
-                    Swal.fire({
-                        icon: "success",
-                        title: "Cliente guardado",
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
+                if (!res.exito) {
+                    Swal.fire("Error", res.mensaje || "Error al guardar", "error");
+                    return;
+                }
 
-                    mostrarIconoAgregar();
-                } else {
-                    Swal.fire("Error", res.mensaje, "error");
+                // ✅ alerta OK
+                Swal.fire({
+                    icon: "success",
+                    title: "Cliente guardado",
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+
+                window.estadoCliente = "ok";
+                mostrarIconoAgregar();
+
+                // 🔥🔥🔥 LO IMPORTANTE (SIN ALIAS, SIN EVENTOS, SIN MAGIA)
+                const v = window.ventaActiva?.();
+                if (v) {
+                    if (!v.cliente) v.cliente = {};
+                    v.cliente.documento = dniRuc;
+                    v.cliente.razon = razon;
+                    v.cliente.direccion = direccion;
+                    v.cliente.no_guardado = false;
+                }
+
+                // 🔄 refrescar panel de ventas en espera
+                if (window.renderVentasEsperaPanel) {
+                    window.renderVentasEsperaPanel();
                 }
             });
 
-            return; // 🚀 IMPORTANTÍSIMO
+            return;
         }
 
-        // Si el icono SAVE NO está visible → es ícono PLUS → abrir modal
-        modalCliente.show();
+        // ➕ MODAL MANUAL
+        if (modalCliente) modalCliente.show();
     });
-
 
 });

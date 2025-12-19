@@ -15,16 +15,15 @@ class Venta extends Model
         'usuario_id',
         'fecha',
         'tipo_comprobante',
+        'serie',
+        'correlativo',
         'metodo_pago',
-        'total',
         'estado',
-        'estado_sunat',     // NUEVO
-        'serie',            // opcional
-        'correlativo',      // opcional
-        'hash',             // opcional
-        'xml_url',          // opcional
-        'pdf_url',          // opcional
-        'cdr_url'           // opcional
+        'estado_sunat',
+        'op_gravadas',   // 🔥
+        'igv',           // 🔥
+        'total',         // 🔥
+        'activo'
     ];
 
     public function cliente()

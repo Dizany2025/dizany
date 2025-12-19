@@ -6,11 +6,48 @@
 @endpush
 
 @section('header-actions')
-<div class="d-flex align-items-center gap-3">
-    <a href="{{ route('ventas.listar') }}" class="nuevo-producto">
-        <i class="fa-solid fa-coins"></i> Ventas
-    </a>
-</div>
+    <!-- 🔵 HEADER -->
+    <div class="header-venta-treinta">
+        
+        <!-- Izquierda -->
+        <div class="titulo-venta-wrapper">
+            <div class="separador"></div>
+            <h5 class="titulo-venta">Nueva venta</h5>
+        </div>
+
+        <!-- Botones derecha -->
+        <div class="header-right-actions">
+            <!-- Ventas en espera -->
+            <div class="pos-espera-wrapper">
+                <button id="btn-pos-espera" class="btn-pos-espera">
+                    <i class="fas fa-receipt"></i>
+                    <span class="btn-text">Ventas en espera</span>
+                    <span id="pos-espera-count" class="badge">0</span>
+                    <i class="fas fa-chevron-down ms-1"></i>
+                </button>
+
+                <!-- PANEL DESLIZABLE -->
+                <div id="pos-espera-panel" class="pos-espera-panel d-none">
+                    <!-- Render JS -->
+                </div>
+            </div>
+
+            <!-- Ordenar -->
+            <div class="ordenar-wrapper">
+                <button id="btn-ordenar" class="btn-ordenar"
+                data-tooltip="Ordenar productos&#10;Organiza tus productos por orden alfabético, stock, ventas o fecha reciente.">
+                <i class="fas fa-sort-amount-down"></i>
+                </button>
+            </div>
+
+            <!-- Nuevo gasto -->
+            <a href="{{ route('gastos.create') }}" class="btn btn-danger">
+                <i class="fas fa-receipt"></i>
+                <span class="btn-text">Nuevo gasto</span>
+            </a>
+
+        </div>
+    </div>
 @endsection
 
 @section('content')
@@ -18,30 +55,7 @@
 
 <div class="container-fluid ventas-treinta">
 
-    <!-- 🔵 HEADER -->
-    <div class="treinta-header d-flex justify-content-between align-items-center mb-3">
-        
-        <!-- Título -->
-        <h5 class="titulo-venta m-0">Nueva venta</h5>
-
-        <!-- Botones derecha -->
-        <div class="d-flex align-items-center gap-2">
-
-            <!-- Botón ordenar -->
-            <div class="ordenar-wrapper">
-                <button id="btn-ordenar" class="btn-ordenar" data-tooltip="Ordenar productos
-                Organiza tus productos por orden alfabético, stock, ventas o fecha reciente.">
-                    <i class="fas fa-sort-amount-down"></i>
-                </button>
-            </div>
-
-            <!-- Nuevo gasto -->
-            <a href="{{ route('gastos.create') }}" class="btn btn-danger">
-                <i class="fas fa-receipt me-1"></i> Nuevo gasto
-            </a>
-
-        </div>
-    </div>
+    
 
 
     <!-- 🔥 CUERPO PRINCIPAL 2 COLUMNAS -->
@@ -116,7 +130,9 @@
             <div id="step-2" class="step-panel step2-scroll">
                 <!-- CLIENTE Y COMPROBANTE -->
                 <div class="card shadow-sm mb-3">
-                    <div class="card-header bg-primary text-white">Cliente y Comprobante</div>
+                    <div class="card-header bg-primary text-white">
+                        Cliente y Comprobante
+                    </div>
 
                     <div class="card-body small">
                         <div class="row g-3">
@@ -148,6 +164,16 @@
                                     <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
                                     <input type="text" id="direccion" class="form-control" placeholder="Dirección" readonly>
                                 </div>
+
+                                <!-- FECHA (debajo de dirección) -->
+                                <div class="input-group input-group-sm mb-2">
+                                    <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                    <input type="date"
+                                        id="fecha_emision"
+                                        class="form-control"
+                                        value="{{ date('Y-m-d') }}"
+                                        readonly>
+                                </div>
                             </div>
 
                             <!-- ========= COLUMNA DERECHA: COMPROBANTE ========= -->
@@ -170,7 +196,7 @@
                                     <input type="text" id="serie_correlativo" class="form-control" readonly>
                                 </div>
 
-                                <!-- ESTADO PAGO (PAGADO / PENDIENTE) -->
+                                <!-- ESTADO DE PAGO -->
                                 <div class="input-group input-group-sm mb-2">
                                     <span class="input-group-text"><i class="fas fa-money-bill-wave"></i></span>
                                     <select id="estado_pago" class="form-select">
@@ -179,25 +205,17 @@
                                     </select>
                                 </div>
 
-                                <!-- FECHA / HORA -->
-                                <div class="row g-2">
-                                    <div class="col-6">
-                                        <div class="input-group input-group-sm mb-2">
-                                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
-                                            <input type="date" id="fecha_emision" class="form-control form-control-sm"
-                                                value="{{ date('Y-m-d') }}" readonly>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="input-group input-group-sm mb-2">
-                                            <span class="input-group-text"><i class="fas fa-clock"></i></span>
-                                            <input type="time" id="hora_actual" class="form-control form-control-sm"
-                                                value="{{ date('H:i') }}" readonly>
-                                        </div>
-                                    </div>
+                                <!-- HORA (debajo de estado pago) -->
+                                <div class="input-group input-group-sm mb-2">
+                                    <span class="input-group-text"><i class="fas fa-clock"></i></span>
+                                    <input type="time"
+                                        id="hora_actual"
+                                        class="form-control"
+                                        value="{{ date('H:i') }}"
+                                        readonly>
                                 </div>
-
                             </div>
+
                         </div>
                     </div>
                 </div>
@@ -465,114 +483,112 @@ $productos = \App\Models\Producto::withSum('detalleVentas as total_vendido', 'ca
 <script src="{{ asset('js/ventas_productos.js') }}"></script>
 
 <script>
-document.getElementById("btn-ordenar").addEventListener("click", () => {
-    if (window.matchMedia("(hover: none)").matches) {
-        const btn = document.getElementById("btn-ordenar");
-        btn.classList.add("show-tooltip");
+    document.getElementById("btn-ordenar").addEventListener("click", () => {
+        if (window.matchMedia("(hover: none)").matches) {
+            const btn = document.getElementById("btn-ordenar");
+            btn.classList.add("show-tooltip");
 
-        setTimeout(() => {
-            btn.classList.remove("show-tooltip");
-        }, 2000); // 2 segundos visible
-    }
-});
+            setTimeout(() => {
+                btn.classList.remove("show-tooltip");
+            }, 2000); // 2 segundos visible
+        }
+    });
 </script>
 
-<script>
-function showStep(n) {
-    document.querySelectorAll(".step-panel").forEach(p => p.classList.remove("is-active"));
-    document.getElementById("step-" + n).classList.add("is-active");
-}
 
-document.getElementById("btn-ir-step2").addEventListener("click", () => showStep(2));
-document.getElementById("btn-volver-step1").addEventListener("click", () => showStep(1));
-
-document.getElementById("btn-ir-step3").addEventListener("click", () => showStep(3));
-document.getElementById("btn-volver-step2").addEventListener("click", () => showStep(2));
-</script>
 @endsection
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const horaInput = document.getElementById('hora_actual');
-    if (horaInput) {
-        function actualizarHora() {
-            const ahora = new Date();
-            const horas = String(ahora.getHours()).padStart(2, '0');
-            const minutos = String(ahora.getMinutes()).padStart(2, '0');
-            const segundos = String(ahora.getSeconds()).padStart(2, '0');
-            horaInput.value = `${horas}:${minutos}:${segundos}`;
+    document.addEventListener("DOMContentLoaded", () => {
+        const efectivo = document.querySelector('.metodo-pago-item[data-value="efectivo"]');
+        const hidden   = document.getElementById("metodo_pago");
+
+        if (efectivo && hidden) {
+            efectivo.classList.add("active");
+            hidden.value = "efectivo";
         }
-        setInterval(actualizarHora, 1000);
-        actualizarHora();
-    }
-});
+    });
 </script>
 
 <script>
-   $(document).ready(function() {
-    // Detectar el clic en el botón "Abrir modal"
-    $(document).on('click', '#open-modal-btn', function() {
+    document.addEventListener('DOMContentLoaded', function () {
+        const horaInput = document.getElementById('hora_actual');
+        if (horaInput) {
+            function actualizarHora() {
+                const ahora = new Date();
+                const horas = String(ahora.getHours()).padStart(2, '0');
+                const minutos = String(ahora.getMinutes()).padStart(2, '0');
+                const segundos = String(ahora.getSeconds()).padStart(2, '0');
+                horaInput.value = `${horas}:${minutos}:${segundos}`;
+            }
+            setInterval(actualizarHora, 1000);
+            actualizarHora();
+        }
+    });
+</script>
+<script>
+$(document).ready(function () {
+
+    // abrir modal
+    $(document).on('click', '#open-modal-btn', function () {
         $('#clientModal').modal('show');
     });
 
-    // Registrar un cliente
-    $('#clientForm').on('submit', function(e) {
-        e.preventDefault(); // Evitar que el formulario se envíe de forma tradicional
+    // enviar formulario
+    $('#clientForm').on('submit', function (e) {
+        e.preventDefault();
 
-        // Obtener los datos del formulario del modal
-        var clientName = $('#client_name').val();
-        var clientAddress = $('#client_address').val();
-        var clientPhone = $('#client_phone').val();
-        var clientDni = $('#client_dni').val();
-        var clientRuc = $('#client_ruc').val();
-
-        // Enviar los datos del cliente al servidor con AJAX
         $.ajax({
-            url: '/clientes', // Ruta para almacenar el cliente
+            url: '/clientes',
             method: 'POST',
             data: {
                 _token: $('meta[name="csrf-token"]').attr('content'),
-                client_name: clientName,
-                client_address: clientAddress,
-                client_phone: clientPhone,
-                client_dni: clientDni,
-                client_ruc: clientRuc
+                client_name: $('#client_name').val(),
+                client_address: $('#client_address').val(),
+                client_phone: $('#client_phone').val(),
+                client_dni: $('#client_dni').val(),
+                client_ruc: $('#client_ruc').val()
             },
-            success: function(response) {
-                // Llenar los campos del formulario de ventas con los datos del cliente
+            success: function (response) {
+
+                // llenar inputs visuales
                 $('#razon_social').val(response.nombre);
                 $('#direccion').val(response.direccion);
-
-
-                // Llenar el input DNI/RUC con el DNI o RUC registrado
                 $('#documento').val(response.dni || response.ruc);
 
-                // Mostrar el alerta de éxito
+                // 🔥 sincronizar con POS
+                if (window.setClienteVentaPOS) {
+                    window.setClienteVentaPOS({
+                        documento: response.dni || response.ruc,
+                        razon: response.nombre,
+                        direccion: response.direccion
+                    });
+                }
+
                 Swal.fire({
                     title: '¡Éxito!',
                     text: 'Cliente registrado correctamente',
                     icon: 'success',
                     confirmButtonText: 'Aceptar'
                 }).then(() => {
-                    // Limpiar los campos del modal después de cerrar
-                    $('#client_name').val('');
-                    $('#client_address').val('');
-                    $('#client_phone').val('');
-                    $('#client_dni').val('');
-                    $('#client_ruc').val('');
-
-                    // Cerrar el modal
+                    $('#clientForm')[0].reset();
                     $('#clientModal').modal('hide');
                 });
             },
-            error: function(xhr, status, error) {
-                alert('Error al registrar el cliente. Inténtalo nuevamente.');
+            error: function () {
+                Swal.fire(
+                    'Error',
+                    'Error al registrar el cliente. Inténtalo nuevamente.',
+                    'error'
+                );
             }
         });
     });
 });
-
 </script>
+
 @endpush

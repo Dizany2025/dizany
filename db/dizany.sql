@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 10-12-2025 a las 22:58:04
+-- Tiempo de generación: 19-12-2025 a las 23:01:43
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -47,7 +47,12 @@ INSERT INTO `categorias` (`id`, `nombre`) VALUES
 (30, 'RON'),
 (31, 'ACEITE'),
 (32, 'COCTEL'),
-(33, 'MERMELADA');
+(33, 'MERMELADA'),
+(34, 'GALLETA'),
+(35, 'PELOTAS'),
+(36, 'PELOTA'),
+(37, 'CACHOS'),
+(38, 'AGUA');
 
 -- --------------------------------------------------------
 
@@ -69,19 +74,21 @@ CREATE TABLE `clientes` (
 --
 
 INSERT INTO `clientes` (`id`, `nombre`, `direccion`, `telefono`, `ruc`, `dni`) VALUES
-(1, 'NEVADA ENTRETENIMIENTOS S.A.C.', 'JR. PARRA DEL RIEGO NRO. 367 DPTO. 603', '942356356', '20530811001', NULL),
-(2, 'ANALY CARRANZA ROMERO', 'No disponible', NULL, NULL, '71885485'),
-(3, 'DARWIN ALEXIS VASQUEZ DELGADO', 'No disponible', NULL, NULL, '75511073'),
-(5, 'RECREATIVOS FARGO SAC', 'JR. GMO.CACERES NRO. 284  CERCADO', NULL, '20526938535', NULL),
-(6, 'GRUPO DELTRON S.A.', 'CAL. RAUL REBAGLIATI NRO. 170 URB. SANTA CATALINA', NULL, '20212331377', NULL),
-(7, 'CABANILLAS RODRIGUEZ DILSER', 'Sin dirección', NULL, '10763633328', NULL),
-(8, 'DILSER CABANILLAS RODRIGUEZ', 'No disponible', NULL, NULL, '76363332'),
-(9, 'FABIAN', 'PACAYZAPA', '984456312', NULL, '93946268'),
-(10, 'ERICK JHAIR LINARES SABOYA', 'No disponible', NULL, NULL, '71885482'),
-(11, 'CMAC PIURA S.A.C.', 'JR. AYACUCHO NRO. 353  CENTRO PIURA.', NULL, '20113604248', NULL),
-(12, 'ELENA RODRIGUEZ SANCHEZ', 'No disponible', NULL, NULL, '00829710'),
-(13, 'CELINDA VICTORIA MENDOZA RENGIFO', 'No disponible', NULL, NULL, '00829716'),
-(14, 'SANDY ARACELI HURTADO HUERTAS', 'No disponible', NULL, NULL, '71885486');
+(19, 'DILSER', 'PACAYZAPA', NULL, NULL, '76363332'),
+(20, 'ANALY', 'PACAYZAPA', '935965841', NULL, '71885485'),
+(21, 'VICTOR', 'GOICOCHEA CARRANZA', '936584598', NULL, '27419354'),
+(22, 'CELINDA', 'MOYOBAMBA', NULL, NULL, '45950469'),
+(23, 'ELENA', 'GOZEN', NULL, NULL, '00829710'),
+(24, 'SILVIA', NULL, NULL, NULL, '71885486'),
+(25, 'JOSE', 'JLJL', '985456222', NULL, '98762315'),
+(26, 'DEYVIS', NULL, NULL, NULL, '71609740'),
+(27, 'DIANA CORDOBA', 'KKK', NULL, NULL, '71558985'),
+(28, 'EVER', NULL, NULL, NULL, '20152025'),
+(29, 'FABIAN', NULL, NULL, NULL, '92946268'),
+(30, 'IZAN', NULL, NULL, NULL, '96358488'),
+(31, 'SILVESTRE', 'DDDD', NULL, NULL, '27266552'),
+(32, 'ELICIA', 'KKKKK', NULL, NULL, '85848584'),
+(33, 'GERMAN', NULL, NULL, NULL, '45254525');
 
 -- --------------------------------------------------------
 
@@ -107,7 +114,7 @@ CREATE TABLE `configuracion` (
 --
 
 INSERT INTO `configuracion` (`id`, `nombre_empresa`, `ruc`, `logo`, `moneda`, `igv`, `direccion`, `telefono`, `correo`, `tema`) VALUES
-(1, 'DIZANY', '10763633328', 'uploads/logos/1752217103_logo.png', 'S/', 18.00, 'AV. MARGINAL - PACAYZAPA', '958196510', 'admin@dizany.com', 'claro');
+(1, 'DIZANY', '10763633328', 'uploads/logos/1752217103_logo.png', 'S/', 0.00, 'AV. MARGINAL - PACAYZAPA', '958196510', 'admin@dizany.com', 'claro');
 
 -- --------------------------------------------------------
 
@@ -134,9 +141,16 @@ CREATE TABLE `detalle_ventas` (
 --
 
 INSERT INTO `detalle_ventas` (`id`, `venta_id`, `producto_id`, `presentacion`, `cantidad`, `unidades_afectadas`, `precio_presentacion`, `precio_unitario`, `subtotal`, `ganancia`, `activo`) VALUES
-(132, 93, 22, 'unidad', 8, 1, 0.00, 2.50, 20.00, 12.00, 1),
-(133, 94, 24, 'unidad', 3, 1, 0.00, 96.76, 290.28, 269.28, 1),
-(134, 95, 26, 'unidad', 7, 1, 0.00, 7.50, 52.50, 17.50, 1);
+(214, 165, 32, 'unidad', 1, 1, 8.00, 8.00, 8.00, 2.30, 1),
+(215, 166, 31, 'unidad', 1, 1, 25.00, 25.00, 25.00, 10.00, 1),
+(216, 167, 31, 'unidad', 1, 1, 25.00, 25.00, 25.00, 10.00, 1),
+(217, 167, 32, 'unidad', 1, 1, 8.00, 8.00, 8.00, 2.30, 1),
+(218, 168, 32, 'unidad', 1, 1, 8.00, 8.00, 8.00, 2.30, 1),
+(219, 168, 33, 'unidad', 1, 1, 2.50, 2.50, 2.50, 1.50, 1),
+(220, 169, 31, 'unidad', 1, 1, 25.00, 25.00, 25.00, 10.00, 1),
+(221, 169, 34, 'caja', 1, 60, 48.00, 0.80, 48.00, 18.00, 1),
+(222, 169, 33, 'paquete', 1, 15, 35.00, 2.33, 35.00, 20.00, 1),
+(223, 169, 32, 'unidad', 1, 1, 8.00, 8.00, 8.00, 2.30, 1);
 
 -- --------------------------------------------------------
 
@@ -219,7 +233,11 @@ INSERT INTO `marcas` (`id`, `nombre`, `descripcion`) VALUES
 (16, 'GOLDEN', NULL),
 (17, 'PRIMOR', NULL),
 (18, 'COCHADO', NULL),
-(19, 'GLORIA', NULL);
+(19, 'GLORIA', NULL),
+(20, 'MIKASA', NULL),
+(21, 'VACA', NULL),
+(22, 'SAN LUIS', NULL),
+(23, 'SODA', NULL);
 
 -- --------------------------------------------------------
 
@@ -238,7 +256,39 @@ CREATE TABLE `migrations` (
 --
 
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
-(6, '2025_12_09_190818_add_timestamps_to_productos_table', 1);
+(6, '2025_12_09_190818_add_timestamps_to_productos_table', 1),
+(7, '2025_12_19_003109_add_indexes_to_movimientos_table', 2);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `movimientos`
+--
+
+CREATE TABLE `movimientos` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `fecha` date NOT NULL,
+  `hora` time DEFAULT NULL,
+  `tipo` enum('ingreso','egreso') NOT NULL COMMENT 'Ingreso = dinero que entra, Egreso = dinero que sale',
+  `subtipo` enum('venta','gasto','ajuste','otro') NOT NULL,
+  `concepto` varchar(255) NOT NULL,
+  `monto` decimal(12,2) NOT NULL,
+  `metodo_pago` enum('efectivo','yape','plin','transferencia','tarjeta','credito') NOT NULL,
+  `estado` enum('pagado','pendiente') NOT NULL DEFAULT 'pagado' COMMENT 'Pendiente = por cobrar o por pagar',
+  `referencia_id` bigint(20) UNSIGNED DEFAULT NULL COMMENT 'ID relacionado: venta_id, gasto_id, etc',
+  `referencia_tipo` varchar(50) DEFAULT NULL COMMENT 'venta, gasto, ajuste, compra',
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `movimientos`
+--
+
+INSERT INTO `movimientos` (`id`, `fecha`, `hora`, `tipo`, `subtipo`, `concepto`, `monto`, `metodo_pago`, `estado`, `referencia_id`, `referencia_tipo`, `created_at`, `updated_at`) VALUES
+(1, '2025-12-19', NULL, 'ingreso', 'venta', 'Venta Boleta B001-123', 150.00, 'efectivo', 'pagado', 123, 'venta', '2025-12-19 05:33:22', '2025-12-19 05:33:22'),
+(2, '2025-12-19', NULL, 'ingreso', 'venta', 'Venta crédito cliente Juan', 300.00, 'credito', 'pendiente', NULL, NULL, '2025-12-19 05:34:14', '2025-12-19 05:34:14'),
+(3, '2025-12-19', NULL, 'egreso', 'gasto', 'Pago proveedor', 500.00, 'transferencia', 'pendiente', NULL, NULL, '2025-12-19 05:34:14', '2025-12-19 05:34:14');
 
 -- --------------------------------------------------------
 
@@ -307,17 +357,10 @@ CREATE TABLE `productos` (
 --
 
 INSERT INTO `productos` (`id`, `codigo_barras`, `nombre`, `slug`, `descripcion`, `precio_compra`, `precio_venta`, `precio_paquete`, `unidades_por_paquete`, `paquetes_por_caja`, `tipo_paquete`, `precio_caja`, `stock`, `ubicacion`, `imagen`, `fecha_vencimiento`, `categoria_id`, `marca_id`, `activo`, `visible_en_catalogo`, `created_at`, `updated_at`) VALUES
-(16, '7750243000012', 'Coca Cola 500ml', NULL, 'Gaseosa sabor cola 500ml botella', 1.50, 2.50, 14.00, 15, 1, 'BOLSA', 55.00, 139, 'Bebidas / Estante 2', 'coca-cola-500ml-1764653377.webp', '2025-12-31', 24, 15, 1, 1, NULL, NULL),
-(17, '7750243000203', 'PILSEN', NULL, '355 ML', 3.00, 5.00, 28.00, 5, 1, 'BOLSA', NULL, 5, 'Estante 5', 'arroz-costeno-5kg-1763439600.webp', '2026-01-01', 25, 13, 1, 1, NULL, NULL),
-(18, '7750243000301', 'Detergente Ace 1kg', NULL, 'Detergente en polvo para ropa 1kg', 8.00, 9.00, 50.00, 15, 1, 'BOLSA', 200.00, 87, 'Limpieza / Estante 3', 'detergente-ace-1kg-1764733094.jpeg', '2025-12-30', 23, 12, 1, 1, NULL, NULL),
-(19, '760123456789', 'INCA KOLA', 'inca-kola', '355ML', 2.00, 3.00, 43.00, 15, 1, 'BOLSA', 45.00, 72, 'ESTANTE 5', 'inca-kola-1764286060.webp', NULL, 24, 12, 1, 1, NULL, NULL),
-(20, '44553523232332', 'VINO', 'vino', 'SEMI SECO', 10.00, 15.00, NULL, 15, NULL, 'CAJA', 180.00, 70, 'p3', 'vino-1764292334.jpeg', NULL, 23, 11, 1, 1, NULL, NULL),
-(21, '444445544', 'VISIO', 'visio', 'CHOCOLATE DE ALMENDRA', 1.00, 1.50, 16.00, 15, 2, 'CAJITA', 50.00, 293, 'p1', 'visio-1764546248.jpg', '2025-12-10', 24, 12, 1, 1, NULL, '2025-12-10 00:54:51'),
-(22, '201122222333', 'VOLT', 'volt', '255ML', 1.00, 2.50, 28.00, 15, 1, 'BOLSA', NULL, 6, 'pasillo 2', 'volt-1764546233.webp', '2026-01-30', 26, 14, 1, 1, NULL, '2025-12-10 01:01:26'),
-(23, '5232323556655', 'GOLDEN BEACH', 'golden-beach', 'Golden Beach Rojo', 30.00, 0.25, 4.00, 20, 1, 'CAJA', 40.00, 20, 'p3', 'golden-beach-1764714364.jpg', NULL, 28, 16, 1, 1, NULL, NULL),
-(24, '6565666556', 'PRIMOR', 'primor', 'Aceite Vegetal, Premium Botella 900ml', 7.00, 9.50, NULL, 12, 1, 'CAJA', 82.00, 24, 'P2', 'primor-1765254564.webp', '2026-02-12', 31, 17, 1, 1, NULL, '2025-12-10 01:01:56'),
-(25, '5451326596987', 'COCTEL DE CAFE', 'coctel-de-cafe', 'SABOR CAFE 255ML', 20.00, 25.00, NULL, 12, 1, 'CAJA', 250.00, 24, 'P1', 'coctel-de-cafe-1765326043.jpeg', '2026-03-15', 32, 18, 1, 1, NULL, '2025-12-10 00:27:44'),
-(26, '55666358596663', 'MERMELADA DE FRESA', 'mermelada-de-fresa', 'MERMELADA SABOR FRESA', 5.00, 7.50, NULL, 10, 1, 'CAJA', 50.00, 12, 'P1', 'mermelada-de-fresa-1765326776.webp', '2026-02-10', 33, 19, 1, 1, '2025-12-10 00:32:56', '2025-12-10 01:02:28');
+(31, '0000000001', 'PELOTA MIKASA', 'pelota-mikasa', 'MIKASA DE CUERO', 15.00, 25.00, NULL, NULL, NULL, NULL, NULL, 45, 'p1', 'pelota-mikasa-1765915389.jpeg', NULL, 36, 20, 1, 1, '2025-12-16 20:03:09', '2025-12-19 03:44:42'),
+(32, '0000000002', 'PILSEN', 'pilsen', 'PILSEN - CONT. 630 ml', 5.70, 8.00, NULL, 12, NULL, NULL, 96.00, 20, 'p2', 'pilsen-1765918555.jpg', '2027-03-18', 25, 13, 1, 1, '2025-12-16 20:55:55', '2025-12-19 03:44:42'),
+(33, '0000000003', 'SAN LUIS', 'san-luis', 'AGUA CONT. 625ml', 1.00, 2.50, 35.00, 15, NULL, NULL, NULL, 58, 'p3', 'san-luis-1765923081.jpg', '2026-02-15', 38, 22, 1, 1, '2025-12-16 20:59:24', '2025-12-19 03:44:42'),
+(34, '0000000004', 'SODA', 'soda', 'CROCANTES Y DORADITAS', 0.50, 1.00, 5.00, 6, 10, NULL, 48.00, 120, 'p1', 'soda-1765920842.webp', '2026-05-05', 34, 23, 1, 1, '2025-12-16 21:04:56', '2025-12-19 03:44:42');
 
 -- --------------------------------------------------------
 
@@ -392,7 +435,7 @@ CREATE TABLE `usuarios` (
 --
 
 INSERT INTO `usuarios` (`id`, `nombre`, `usuario`, `email`, `clave`, `rol_id`, `created_at`, `updated_at`) VALUES
-(4, 'Administrador', 'admin', 'dilser95@gmail.com', '$2y$12$zMKx97A4EIhk68ImMCWQXeMQnHCXmL1MiT3dmMoVqm.0JwoyLtq8K', 1, '2025-06-12 23:36:29', '2025-06-12 23:36:29'),
+(4, 'Dilser', 'admin', 'dilser95@gmail.com', '$2y$12$zMKx97A4EIhk68ImMCWQXeMQnHCXmL1MiT3dmMoVqm.0JwoyLtq8K', 1, '2025-06-12 23:36:29', '2025-06-12 23:36:29'),
 (9, 'any', 'any25', 'analy@gmail.com', '$2y$12$wUYveWN3vGhhOQRw4d342O43K2CFrMWnEgtpJSgtP6c/b45uLUwTS', 2, NULL, NULL);
 
 -- --------------------------------------------------------
@@ -427,9 +470,11 @@ CREATE TABLE `ventas` (
 --
 
 INSERT INTO `ventas` (`id`, `cliente_id`, `usuario_id`, `fecha`, `tipo_comprobante`, `serie`, `correlativo`, `metodo_pago`, `total`, `estado`, `estado_sunat`, `hash`, `xml_url`, `pdf_url`, `cdr_url`, `activo`, `op_gravadas`, `igv`) VALUES
-(93, 1, 4, '2025-12-09 20:01:25', 'boleta', 'B001', 1, 'tarjeta', 23.60, 'pagado', 'pendiente', NULL, NULL, 'http://localhost:8000/comprobantes/B001-000001.pdf', NULL, 1, 0.00, 0.00),
-(94, 8, 4, '2025-12-09 20:01:55', 'boleta', 'B001', 2, 'plin', 342.53, 'pagado', 'pendiente', NULL, NULL, 'http://localhost:8000/comprobantes/B001-000002.pdf', NULL, 1, 0.00, 0.00),
-(95, 1, 4, '2025-12-09 20:02:28', 'boleta', 'B001', 3, 'plin', 61.95, 'pagado', 'pendiente', NULL, NULL, 'http://localhost:8000/comprobantes/B001-000003.pdf', NULL, 1, 0.00, 0.00);
+(165, 19, 4, '2025-12-17 22:44:07', 'boleta', 'B001', 1, 'efectivo', 8.00, 'pagado', 'pendiente', NULL, NULL, NULL, NULL, 1, 8.00, 0.00),
+(166, 19, 4, '2025-12-17 22:44:53', 'boleta', 'B001', 2, 'efectivo', 25.00, 'pagado', 'pendiente', NULL, NULL, NULL, NULL, 1, 25.00, 0.00),
+(167, 19, 4, '2025-12-17 22:45:43', 'boleta', 'B001', 3, 'efectivo', 33.00, 'pagado', 'pendiente', NULL, NULL, NULL, NULL, 1, 33.00, 0.00),
+(168, 33, 4, '2025-12-18 22:00:45', 'boleta', 'B001', 4, 'efectivo', 10.50, 'pagado', 'pendiente', NULL, NULL, NULL, NULL, 1, 10.50, 0.00),
+(169, 20, 4, '2025-12-18 22:44:41', 'boleta', 'B001', 5, 'plin', 116.00, 'pagado', 'pendiente', NULL, NULL, NULL, NULL, 1, 116.00, 0.00);
 
 --
 -- Índices para tablas volcadas
@@ -496,6 +541,15 @@ ALTER TABLE `marcas`
 --
 ALTER TABLE `migrations`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indices de la tabla `movimientos`
+--
+ALTER TABLE `movimientos`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_movimientos_fecha` (`fecha`),
+  ADD KEY `idx_movimientos_tipo_estado` (`tipo`,`estado`),
+  ADD KEY `idx_movimientos_metodo_pago` (`metodo_pago`);
 
 --
 -- Indices de la tabla `password_resets`
@@ -565,19 +619,19 @@ ALTER TABLE `ventas`
 -- AUTO_INCREMENT de la tabla `categorias`
 --
 ALTER TABLE `categorias`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
 
 --
 -- AUTO_INCREMENT de la tabla `clientes`
 --
 ALTER TABLE `clientes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- AUTO_INCREMENT de la tabla `detalle_ventas`
 --
 ALTER TABLE `detalle_ventas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=135;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=224;
 
 --
 -- AUTO_INCREMENT de la tabla `facturas`
@@ -601,13 +655,19 @@ ALTER TABLE `gastos`
 -- AUTO_INCREMENT de la tabla `marcas`
 --
 ALTER TABLE `marcas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT de la tabla `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT de la tabla `movimientos`
+--
+ALTER TABLE `movimientos`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `personal_access_tokens`
@@ -619,7 +679,7 @@ ALTER TABLE `personal_access_tokens`
 -- AUTO_INCREMENT de la tabla `productos`
 --
 ALTER TABLE `productos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
 
 --
 -- AUTO_INCREMENT de la tabla `proveedores`
@@ -649,7 +709,7 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `ventas`
 --
 ALTER TABLE `ventas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=96;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=170;
 
 --
 -- Restricciones para tablas volcadas

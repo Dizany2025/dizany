@@ -46,6 +46,12 @@
                 </li>
             </ul>
         </div>
+        <!-- 👤 Usuario logueado (solo informativo) -->
+        <div class="user-info-header ms-3">
+            <i class="fa-solid fa-user-check"></i>
+            <span class="user-name">{{ Auth::user()->nombre }}</span>
+        </div>
+
 </header>
 @push('scripts')
 <script>

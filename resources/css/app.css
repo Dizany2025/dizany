@@ -1,7 +1,2 @@
-/* app.css */
-@import 'bootstrap/dist/css/bootstrap.min.css';
-
-/* Estilos globales pequeños que NO afectan sidebar ni layout */
-body {
-    font-family: Arial, sans-serif;
-}
+@import "bootstrap/dist/css/bootstrap.min.css";
+@import "./estilos_vista.css";

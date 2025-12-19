@@ -103,7 +103,7 @@ public function filtrarPorCategoria(Request $request)
     });
 
         // Pasar los datos a la vista
-        return view('ventas.list', compact('ventas', 'balance', 'ventasTotales', 'ganancias', 'fecha', 'cliente', 'usuarios', 'rango')); // Pasamos $usuarios a la vista
+        return view('ventas.movimientos', compact('ventas', 'balance', 'ventasTotales', 'ganancias', 'fecha', 'cliente', 'usuarios', 'rango')); // Pasamos $usuarios a la vista
     } catch (\Exception $e) {
         \Log::error('Error al cargar ventas filtradas: ' . $e->getMessage());
         return response()->json(['error' => 'Ocurrió un error al cargar las ventas filtradas.'], 500);
@@ -112,241 +112,218 @@ public function filtrarPorCategoria(Request $request)
 
 public function registrarVenta(Request $request)
 {
-    // ==============================
-    //   VALIDACIÓN
-    // ==============================
     $request->validate([
         'tipo_comprobante' => 'required|string',
         'documento'        => 'required|string',
-        'total_venta'      => 'required|numeric',
         'fecha'            => 'required|date',
         'hora'             => 'required',
         'metodo_pago'      => 'required|string',
         'estado_pago'      => 'required|string',
         'productos'        => 'required|array|min:1',
-        'formato'          => 'nullable|string|in:a4,ticket'
     ]);
 
-    if (!auth()->check()) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Sesión expirada. Por favor, inicie sesión nuevamente.'
-        ]);
-    }
+    DB::beginTransaction();
 
     try {
-        DB::beginTransaction();
-
-        // ==============================
-        //   CLIENTE
-        // ==============================
+        // ================= CLIENTE =================
         $cliente = Cliente::where('ruc', $request->documento)
-                          ->orWhere('dni', $request->documento)
-                          ->first();
+            ->orWhere('dni', $request->documento)
+            ->firstOrFail();
 
-        if (!$cliente) {
-            return response()->json(['success' => false, 'message' => 'Cliente no encontrado.']);
-        }
+        // ================= FECHA =================
+        $hora = strlen($request->hora) === 5 ? $request->hora . ':00' : $request->hora;
+        $fechaHora = Carbon::createFromFormat('Y-m-d H:i:s', "{$request->fecha} {$hora}");
 
-        // ==============================
-        //   FECHA Y HORA
-        // ==============================
-        $horaReal = strlen($request->hora) === 5 
-            ? $request->hora . ':00'
-            : $request->hora;
-
-        $fechaHora = Carbon::createFromFormat('Y-m-d H:i:s', "{$request->fecha} {$horaReal}");
-
-        // ==============================
-        //   SERIE Y CORRELATIVO
-        // ==============================
+        // ================= SERIE =================
         $tipo = $request->tipo_comprobante;
-
         $serie = match ($tipo) {
-            'boleta'     => 'B001',
-            'factura'    => 'F001',
-            'nota_venta' => 'NV01',
-            default      => 'ND00',
+            'boleta' => 'B001',
+            'factura' => 'F001',
+            default => 'NV01',
         };
 
-        $ultimoCorrelativo = Venta::where('tipo_comprobante', $tipo)
-                                  ->where('serie', $serie)
-                                  ->max('correlativo');
+        $correlativo = Venta::where('serie', $serie)->max('correlativo') + 1;
 
-        $nuevoCorrelativo = $ultimoCorrelativo ? $ultimoCorrelativo + 1 : 1;
-
-        // ==============================
-        //   CREAR VENTA (TEMPORAL)
-        // ==============================
+        // ================= VENTA =================
         $venta = Venta::create([
             'cliente_id'       => $cliente->id,
             'usuario_id'       => auth()->id(),
-            'tipo_comprobante' => $tipo,
-            'total'            => 0,
             'fecha'            => $fechaHora,
+            'tipo_comprobante' => $tipo,
+            'serie'            => $serie,
+            'correlativo'      => $correlativo,
             'metodo_pago'      => $request->metodo_pago,
             'estado'           => $request->estado_pago,
             'estado_sunat'     => 'pendiente',
-            'serie'            => $serie,
-            'correlativo'      => $nuevoCorrelativo,
+            'op_gravadas'      => 0,
+            'igv'              => 0,
+            'total'            => 0,
+            'activo'           => 1
         ]);
 
-        // ==============================
-        //   DETALLE DE VENTA
-        // ==============================
-        $totalVenta = 0;
+        // ================= CONFIG =================
+        $config = Configuracion::first();
+        $igvPercent = $config->igv ?? 0;
+
+        $opGravadas = 0;
+
+        // ================= DETALLE =================
+        $totalBase = 0;
 
         foreach ($request->productos as $item) {
 
-            $producto = Producto::find($item['producto_id']);
-            if (!$producto) continue;
+            $producto = Producto::findOrFail($item['producto_id']);
 
-            $cantidad = (int) $item['cantidad'];
-            $tipoVenta = $item['tipo_venta'];
-            $precioAplicado = floatval($item['precio_unitario']);
+            $cantidad     = (int) $item['cantidad'];
+            $presentacion = $item['presentacion']; // 🔥 AHORA SÍ
 
-            $u_paquete = $producto->unidades_por_paquete ?: 1;
-            $p_caja    = $producto->paquetes_por_caja ?: 1;
+            $uPaquete = $producto->unidades_por_paquete ?? 1;
+            $pCaja    = $producto->paquetes_por_caja ?? 1;
 
-            // UNIDADES REALES SEGÚN PRESENTACIÓN
-            $unidadesAfectadas =
-                $tipoVenta === 'unidad'  ? $cantidad :
-                ($tipoVenta === 'paquete' ? $cantidad * $u_paquete :
-                $cantidad * $u_paquete * $p_caja);
+            // =========================
+            // UNIDADES AFECTADAS
+            // =========================
+            $unidadesAfectadas = match ($presentacion) {
+                'unidad'  => $cantidad,
+                'paquete' => $cantidad * $uPaquete,
+                'caja'    => $cantidad * $uPaquete * $pCaja,
+                default   => $cantidad
+            };
 
             if ($producto->stock < $unidadesAfectadas) {
-                throw new \Exception("Stock insuficiente para {$producto->nombre}");
+                throw new Exception("Stock insuficiente para {$producto->nombre}");
             }
 
-            $subtotal = $cantidad * $precioAplicado;
-            $totalVenta += $subtotal;
+            // =========================
+            // PRECIO POR PRESENTACIÓN
+            // =========================
+            $precioPresentacion = match ($presentacion) {
+                'unidad'  => $producto->precio_venta,
+                'paquete' => $producto->precio_paquete,
+                'caja'    => $producto->precio_caja,
+                default   => $producto->precio_venta
+            };
 
-            $ganancia = ($precioAplicado - $producto->precio_compra) * $cantidad;
+            $subtotal = $precioPresentacion * $cantidad;
+
+            $opGravadas += $subtotal;   // 🔥 ESTO FALTABA
+            $totalBase += $subtotal;
+
+            // =========================
+            // GANANCIA REAL
+            // =========================
+            $costoUnitario = $producto->precio_compra;
+            $costoTotal    = $costoUnitario * $unidadesAfectadas;
+            $ganancia      = $subtotal - $costoTotal;
 
             DetalleVenta::create([
-                'venta_id'           => $venta->id,
-                'producto_id'        => $producto->id,
-                'presentacion'       => $tipoVenta,
-                'cantidad'           => $cantidad,
-                'unidades_afectadas' => $unidadesAfectadas,
-                'precio_presentacion'=> $precioAplicado,
-                'precio_unitario'    => $precioAplicado,
-                'subtotal'           => $subtotal,
-                'ganancia'           => $ganancia,
-                'activo'             => 1
+                'venta_id'            => $venta->id,
+                'producto_id'         => $producto->id,
+                'presentacion'        => $presentacion,
+                'cantidad'            => $cantidad,
+                'unidades_afectadas'  => $unidadesAfectadas,
+                'precio_presentacion' => $precioPresentacion,
+                'precio_unitario'     => round($precioPresentacion / $unidadesAfectadas, 4),
+                'subtotal'            => $subtotal,
+                'ganancia'            => $ganancia,
+                'activo'              => 1
             ]);
 
-            // RESTAR STOCK
-            $producto->stock -= $unidadesAfectadas;
-            $producto->save();
+            $producto->decrement('stock', $unidadesAfectadas);
         }
 
-        // ==============================
-        //   CALCULAR IGV Y SUBTOTAL
-        // ==============================
-        // Después del foreach
-        $config     = Configuracion::first();
-        $igvPercent = floatval($config->igv ?? 0);
+                // ================= IGV =================
+                $igvMonto = $opGravadas * ($igvPercent / 100);
+                $total = $opGravadas + $igvMonto;
 
-        $subtotalBase = $totalVenta;                       // suma de precios sin IGV
-        $igvMonto     = $subtotalBase * $igvPercent / 100; // IGV
-        $totalFinal   = $subtotalBase + $igvMonto;         // total con IGV
+                $venta->update([
+                    'op_gravadas' => round($opGravadas, 2),
+                    'igv'         => round($igvMonto, 2),
+                    'total'       => round($total, 2),
+                ]);
 
-        $venta->update([
-            'op_gravadas' => round($subtotalBase, 2),
-            'igv'         => round($igvMonto, 2),
-            'total'       => round($totalFinal, 2),
-        ]);
+                // ==============================
+                //   GENERAR PDF
+                // ==============================
+                $formato = $request->input('formato', 'a4');
 
-        // ==============================
-        //   GENERAR PDF
-        // ==============================
-        $formato = $request->input('formato', 'a4');
+                $vista = match ($formato) {
+                    'ticket' => "comprobantes.{$tipo}_ticket",
+                    default  => "comprobantes.{$tipo}_a4",
+                };
 
-        $vista = match ($formato) {
-            'ticket' => "comprobantes.{$tipo}_ticket",
-            default  => "comprobantes.{$tipo}_a4",
-        };
+                if (!view()->exists($vista)) {
+                    throw new \Exception("La vista [$vista] no existe.");
+                }
 
-        if (!view()->exists($vista)) {
-            throw new \Exception("La vista [$vista] no existe.");
-        }
+                $venta->load(['cliente', 'detalleVentas.producto']);
 
-        $venta->load(['cliente', 'detalleVentas.producto']);
+                // LOGO
+                $logoBase64 = null;
+                if ($config && $config->logo && file_exists(public_path($config->logo))) {
+                    $path = public_path($config->logo);
+                    $logoBase64 = 'data:image/' . pathinfo($path, PATHINFO_EXTENSION) .
+                        ';base64,' . base64_encode(file_get_contents($path));
+                }
 
-        // LOGO
-        $logoBase64 = null;
-        if ($config->logo && file_exists(public_path($config->logo))) {
-            $path = public_path($config->logo);
-            $logoBase64 = 'data:image/' . pathinfo($path, PATHINFO_EXTENSION) .
-                          ';base64,' . base64_encode(file_get_contents($path));
-        }
+                // QR (hash puede ser null si no lo generas en otro lado)
+                $qrData = "{$config->ruc}|{$tipo}|{$serie}|{$correlativo}|{$venta->total}|{$venta->igv}|{$venta->fecha->format('d/m/Y')}|{$venta->hash}";
+                $qr = base64_encode(\QrCode::format('png')->size(120)->generate($qrData));
 
-        // QR
-        $qrData = "{$config->ruc}|{$tipo}|{$serie}|{$nuevoCorrelativo}|{$venta->total}|{$venta->igv}|{$venta->fecha->format('d/m/Y')}|{$venta->hash}";
-        $qr = base64_encode(\QrCode::format('png')->size(120)->generate($qrData));
+                $pdf = \PDF::setOptions([
+                    'isRemoteEnabled'  => true,
+                    'dpi'              => 96,
+                    'defaultMediaType' => 'screen',
+                ])->loadView($vista, [
+                    'venta'      => $venta,
+                    'config'     => $config,
+                    'qr'         => $qr,
+                    'logoBase64' => $logoBase64,
+                    'subtotal'   => $venta->op_gravadas,
+                    'igv'        => $venta->igv,
+                    'total'      => $venta->total,
+                ]);
 
-        $pdf = \PDF::setOptions([
-            'isRemoteEnabled'   => true,
-            'dpi'               => 96,
-            'defaultMediaType'  => 'screen',
-        ])->loadView($vista, [
-            'venta'      => $venta,
-            'config'     => $config,
-            'qr'         => $qr,
-            'logoBase64' => $logoBase64,
+                if ($formato === 'ticket') {
+                    $alto = max(400, count($venta->detalleVentas) * 35 + 400);
+                    $pdf->setPaper([0, 0, 226.77, $alto]);
+                } else {
+                    $pdf->setPaper('A4');
+                }
 
-            // Estos valores YA vienen del cálculo que hicimos antes
-            'subtotal'   => $venta->op_gravadas, // base sin IGV
-            'igv'        => $venta->igv,         // monto IGV
-            'total'      => $venta->total,       // total final con IGV
-        ]);
+                $nombreArchivo = "{$serie}-" . str_pad($correlativo, 6, '0', STR_PAD_LEFT) . ".pdf";
+                $ruta = public_path("comprobantes");
 
-        if ($formato === 'ticket') {
-            $alto = max(400, count($venta->detalleVentas) * 35 + 400);
-            $pdf->setPaper([0, 0, 226.77, $alto]);
-        } else {
-            $pdf->setPaper('A4');
-        }
+                if (!is_dir($ruta)) mkdir($ruta, 0775, true);
 
-        $nombreArchivo = "{$serie}-" . str_pad($nuevoCorrelativo, 6, '0', STR_PAD_LEFT) . ".pdf";
-        $ruta = public_path("comprobantes");
+                $pdf->save("$ruta/$nombreArchivo");
 
-        if (!is_dir($ruta)) mkdir($ruta, 0775, true);
+                $pdfUrl = asset("comprobantes/$nombreArchivo");
 
-        $pdf->save("$ruta/$nombreArchivo");
+                $venta->update(['pdf_url' => $pdfUrl]);
 
-        $pdfUrl = asset("comprobantes/$nombreArchivo");
+                DB::commit();
 
-        $venta->update(['pdf_url' => $pdfUrl]);
+                return response()->json([
+                'success'        => true,
+                'message'        => 'Venta registrada correctamente.',
+                'serie'          => $serie,
+                'correlativo'    => str_pad($correlativo, 6, '0', STR_PAD_LEFT),
+                'pdf_url'        => $pdfUrl,
+                'nombre_archivo' => $nombreArchivo
+                    ]);
 
-        // ==============================
-        //   FINALIZAR
-        // ==============================
-        DB::commit();
+                } catch (\Exception $e) {
 
-        return response()->json([
-            'success'        => true,
-            'message'        => 'Venta registrada correctamente.',
-            'serie'          => $serie,
-            'correlativo'    => str_pad($nuevoCorrelativo, 6, '0', STR_PAD_LEFT),
-            'pdf_url'        => $pdfUrl,
-            'nombre_archivo' => $nombreArchivo
-        ]);
+                    DB::rollBack();
+                    \Log::error("Error registrarVenta: " . $e->getMessage());
 
-    } catch (\Exception $e) {
-
-        DB::rollBack();
-        \Log::error("Error registrarVenta: " . $e->getMessage());
-
-        return response()->json([
-            'success' => false,
-            'message' => $e->getMessage()
-        ], 500);
-    }
+                    return response()->json([
+                        'success' => false,
+                        'message' => $e->getMessage()
+                    ], 500);
+                }
 }
-
-
 
 public function obtenerSerieCorrelativo(Request $request)
 {
@@ -372,7 +349,6 @@ public function obtenerSerieCorrelativo(Request $request)
         'correlativo' => $correlativoFormateado,
     ]);
 }
-
 
 
 public function show($id)

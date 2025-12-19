@@ -1,288 +1,344 @@
 /* ============================================
-   RESET GENERAL
+   VARIABLES
 ============================================ */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+:root {
+    /* 🔹 Sidebar más delgado */
+    --sidebar-width: 220px;
+    --sidebar-width-collapsed: 70px;
 
-html, body {
-    height: 100%;
-    font-family: Arial, sans-serif;
-    background: #f5f6fa;
-}
-
-/* Layout base */
-body {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
+    --header-height: 70px;
+    --sidebar-bg: #0b2447;
+    --sidebar-bg-hover: #19376d;
+    --sidebar-text: #ffffff;
+    --content-bg: #f5f7fa;
 }
 
 /* ============================================
-   HEADER FIJO
+   LAYOUT GENERAL
 ============================================ */
-#header {
-    height: 60px;
-    background: #06192c;
-    color: white;
+body {
+    margin: 0;
+    padding: 0;
+    background: var(--content-bg);
+    font-family: 'Segoe UI', sans-serif;
+    padding-top: var(--header-height); /* evitar que el header tape el contenido */
+    min-height: 100vh;
     display: flex;
-    align-items: center;
-    padding: 0 1rem;
+    flex-direction: column;
+}
+
+/* CONTENIDO PRINCIPAL */
+#content {
+    padding: 20px;
+    flex: 1;
+    padding-bottom: 80px; /* evitar que el footer tape contenido */
+}
+
+/* ============================================
+   HEADER — FIJO Y CON ESTILO
+============================================ */
+header {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
-    z-index: 1000;
+    height: var(--header-height);
+    background: #0b2447;
+    color: white;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    z-index: 1030;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+header .logo {
+    height: 48px;
+}
+
+header .nav-btn {
+    margin-right: 15px;
+    font-size: 22px;
+    cursor: pointer;
+}
+.user-info-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    padding: 4px 10px;
+    height: 34px;
+
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 999px;
+
+    color: #fff;
+    font-size: 13px;
+    opacity: 0.95;
+}
+
+.user-info-header i {
+    font-size: 15px;
+}
+
+@media (max-width: 768px) {
+    .user-info-header .user-name {
+        display: none;
+    }
+}
+
+/* BOTÓN HAMBURGUESA MINIMAL */
+#btn-toggle-sidebar {
+    background: transparent !important;     /* quitar fondo azul */
+    border: 2px solid rgba(255,255,255,0.85) !important;
+    color: #fff !important;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px; /* icono más elegante */
+    padding: 0 !important;
+    transition: 0.25s ease;
+}
+
+/* Hover suave */
+#btn-toggle-sidebar:hover {
+    background: rgba(255,255,255,0.12) !important;
+    border-color: #fff !important;
+}
+
+/* Quitar estilos heredados de Bootstrap (.btn, .btn-primary) */
+#btn-toggle-sidebar.btn,
+#btn-toggle-sidebar.btn-primary {
+    box-shadow: none !important;
 }
 
 /* ============================================
-   SIDEBAR (ESTILO TREINTA)
+   SIDEBAR
 ============================================ */
 #sidebar {
     position: fixed;
-    top: 60px;
+    top: var(--header-height);
     left: 0;
-    width: 230px;
-    height: calc(100% - 60px);
-    background: #0c2b4b;
-    padding: 0.8rem 0.7rem;
-    color: white;
+    width: var(--sidebar-width);
+    height: calc(100vh - var(--header-height));
+    background: var(--sidebar-bg);
+    color: var(--sidebar-text);
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-start;
+    /* 🔹 el scroll se lo pasamos al contenido, no al aside */
     overflow: hidden;
-    transition: transform .3s ease, width .3s ease;
+    transition: width 0.25s ease, left 0.25s ease;
+    z-index: 1020;
 }
 
-#sidebar a {
-    color: white;
-    text-decoration: none;
-    padding: 10px 12px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 15px;
-    border-radius: 6px;
-    transition: background .2s ease;
-}
-
-#sidebar a:hover,
-#sidebar a.active {
-    background: #1b4167;
-}
-
+/* 🔹 Zona scrollable del menú (no incluye el botón Cerrar sesión) */
 .sidebar-content {
+    flex: 1;
     overflow-y: auto;
-    padding-right: 6px;
 }
 
+/* Scroll bonito en el menú */
 .sidebar-content::-webkit-scrollbar {
-    width: 5px;
+    width: 6px;
 }
 .sidebar-content::-webkit-scrollbar-thumb {
-    background: #1a3d60;
+    background: rgba(255,255,255,0.25);
     border-radius: 4px;
 }
 
-/* ============================================
-   SUBMENÚS DESPLEGABLES
-============================================ */
-.submenu-toggle {
-    background: none;
-    border: none;
-    color: white;
-    width: 100%;
-    padding: 10px 12px;
-    font-size: 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
+#sidebar a {
+    color: #fff;
+    padding: 12px 20px;
+    display: block;
+    text-decoration: none;
+    font-size: 16px;
 }
 
-.submenu-toggle:hover {
-    background: #1b4167;
+#sidebar a:hover,
+#sidebar .active {
+    background: var(--sidebar-bg-hover);
+}
+
+/* SUBMENÚS */
+.submenu-toggle {
+    width: 100%;
+    text-align: left;
+    color: white;
+    background: none;
+    border: none;
+    padding: 12px 20px;
+    font-size: 16px;
+    cursor: pointer;
 }
 
 .submenu-items {
     display: none;
-    flex-direction: column;
-    padding-left: 20px;
+    background: #102c54;
 }
 
 .submenu-items.show {
-    display: flex;
+    display: block;
 }
 
-.toggle-icon {
-    transition: transform .25s ease;
+.submenu-items a {
+    padding-left: 40px;
 }
+
 .toggle-icon.rotated {
     transform: rotate(180deg);
 }
+/**/
+/* ===============================
+      SIDEBAR COLAPSADO
+   =============================== */
+
+.sidebar-collapsed #sidebar {
+    width: 70px !important;   /* ancho compacto */
+}
+
+/* Ocultar textos */
+.sidebar-collapsed #sidebar .menu-text {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+    visibility: hidden;
+    transition: opacity .2s ease, width .2s ease;
+}
+
+/* Cada item del menú en modo colapsado */
+.sidebar-collapsed #sidebar .sidebar-content a,
+.sidebar-collapsed #sidebar .sidebar-content .submenu-toggle {
+    display: flex;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 0 !important;
+    padding: 12px 0 !important;
+}
+
+/* Iconos centrados y más grandes */
+.sidebar-collapsed #sidebar i {
+    font-size: 20px !important;
+    margin: 0 !important;
+}
+
+/* Submenús ocultos automáticamente en colapsado */
+.sidebar-collapsed #sidebar .submenu-items {
+    display: none !important;
+}
+
+/* Ajuste del caret (flecha) cuando colapsado */
+.sidebar-collapsed #sidebar .submenu-toggle .toggle-icon {
+    display: none !important;
+}
+
+/* Footer (Cerrar sesión) centrado también */
+.sidebar-collapsed #sidebar .sidebar-footer {
+    justify-content: center !important;
+}
+/* Contenedor ícono + texto */
+.submenu-left {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Ajusta el espacio entre el icono y el texto */
+}
+
+/* Botón de submenu */
+.submenu-toggle {
+    width: 100%;
+    padding: 10px 18px;
+    background: transparent;
+    border: none;
+    color: #fff;
+    display: flex;
+    justify-content: space-between; /* texto izquierda, flecha derecha */
+    align-items: center;
+    cursor: pointer;
+}
+
+/* Íconos más alineados */
+.submenu-toggle i {
+    font-size: 1rem;
+}
 
 /* ============================================
-   BOTÓN CERRAR SESIÓN
+   SIDEBAR — COLAPSADO EN PC
+============================================ */
+body.sidebar-collapsed #sidebar {
+    width: var(--sidebar-width-collapsed);
+}
+
+/* ============================================
+   SIDEBAR — MODO MÓVIL (deslizable)
+============================================ */
+@media (max-width: 768px) {
+    #sidebar {
+        left: -100%;
+    }
+
+    body.sidebar-visible #sidebar {
+        left: 0;
+    }
+}
+
+/* ============================================
+   BOTÓN CERRAR SESIÓN — FIJO AL FONDO
 ============================================ */
 .sidebar-footer {
-    padding: 12px;
-    background: #0c2b4b;
-    border-top: 1px solid #1a3d60;
+    /* 🔹 siempre al fondo del sidebar */
+    margin-top: auto;
+    padding: 15px 20px;
+    background: #132a4c;
     text-align: left;
-    font-weight: bold;
+    color: white;
+    display: block;
+    font-size: 16px;
+    text-decoration: none;
+    flex-shrink: 0; /* que no se comprima */
 }
 
 .sidebar-footer:hover {
-    background: #1b4167;
+    background: #1d3a6b;
 }
 
 /* ============================================
-   CONTENIDO PRINCIPAL
+   FOOTER — RESTAURADO
 ============================================ */
-#content {
-    flex: 1;
-    margin-top: 60px;
-    margin-left: 230px;
-    padding: 20px;
-    transition: margin-left .3s ease;
-}
-
-/* ============================================
-   FOOTER SIEMPRE AL FINAL
-============================================ */
-#footer {
-    background: #06192c;
-    color: white;
+footer {
+    width: 100%;
+    background: #0b2447;
+    color: #fff;
     text-align: center;
-    padding: 12px;
-    margin-left: 230px;
-    transition: margin-left .3s ease;
+    padding: 15px 10px;
+    font-size: 15px;
+    border-top: 2px solid rgba(255,255,255,0.15);
+}
+
+footer a {
+    color: #fff;
+    text-decoration: underline;
 }
 
 /* ============================================
-   SIDEBAR COLAPSADO (DESKTOP)
+   FIXES ESPECIALES
 ============================================ */
-body.sidebar-collapsed #sidebar {
-    transform: translateX(-100%);
-}
 
-body.sidebar-collapsed #content,
-body.sidebar-collapsed #footer {
-    margin-left: 0;
-}
-
-/* ============================================
-   MODO MÓVIL
-============================================ */
-@media (max-width: 768px) {
-    #sidebar {
-        transform: translateX(-100%);
-        width: 240px;
-    }
-
-    body.sidebar-visible #sidebar {
-        transform: translateX(0);
-    }
-
+/* El contenido no debe meterse debajo del sidebar */
+@media (min-width: 769px) {
     #content {
-        margin-left: 0 !important;
+        margin-left: var(--sidebar-width);
     }
 
-    #footer {
-        margin-left: 0 !important;
+    body.sidebar-collapsed #content {
+        margin-left: var(--sidebar-width-collapsed);
     }
 }
 
-/* ============================================
-   MODO OSCURO (SE ADAPTA AUTOMÁTICO)
-============================================ */
-body.theme-dark {
-    background: #121e2a;
-    color: #e0e0e0;
-}
-
-body.theme-dark #header,
-body.theme-dark #footer {
-    background: #04101d;
-}
-
-body.theme-dark #sidebar {
-    background: #071a2c;
-}
-
-body.theme-dark #sidebar a:hover,
-body.theme-dark #sidebar a.active,
-body.theme-dark .submenu-toggle:hover {
-    background: #0f2d47;
-}
-
-body.theme-dark .sidebar-footer {
-    background: #071a2c;
-    border-color: #103459;
-}
-
-body.theme-dark #content {
-    background: #121e2a;
-}
-
-/* ================================
-   SIDEBAR — MODO MÓVIL (FINAL FIX)
-   ================================ */
-@media (max-width: 768px) {
-
-    #sidebar {
-        position: fixed;
-        top: 0;
-        left: -260px;
-        width: 260px;
-        height: 100vh; /* Usa toda la altura real del móvil */
-        background-color: #0f2a45;
-        z-index: 9999;
-        transition: left .3s ease;
-
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        padding-top: 70px; /* 🔥 espacio para que no tape el header */
-    }
-
-    /* área de scroll */
-    #sidebar .sidebar-content {
-        flex: 1 1 auto;
-        overflow-y: auto;
-        padding: 10px 0;
-    }
-
-    /* footer siempre visible */
-    #sidebar .sidebar-footer {
-        flex-shrink: 0;
-        padding: 15px 20px;
-        width: 100%;
-        color: #fff;
-        background-color: rgba(255,255,255,0.05);
-        border-top: 1px solid rgba(255,255,255,0.12);
-    }
-
-    /* sidebar visible */
-    body.sidebar-visible #sidebar {
-        left: 0;
-    }
-
-    /* fondo oscuro */
-    body.sidebar-visible::before {
-        content: "";
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.45);
-        z-index: 9990;
-    }
-
-    body.sidebar-visible {
-        overflow: hidden;
-    }
+/* Evitar que el sidebar se pegue demasiado al header internamente */
+#sidebar {
+    padding-top: 10px;
 }

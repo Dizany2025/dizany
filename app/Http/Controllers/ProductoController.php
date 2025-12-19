@@ -60,70 +60,91 @@ class ProductoController extends Controller
         'precio_venta'         => 'required|numeric|min:0',
 
         'precio_paquete'       => 'nullable|numeric|min:0',
-        'unidades_por_paquete' => 'nullable|integer|min:1',
-        'paquetes_por_caja'    => 'nullable|integer|min:1',
-        'tipo_paquete'         => 'nullable|string|max:50',
         'precio_caja'          => 'nullable|numeric|min:0',
 
-        'cantidad_cajas'       => 'nullable|integer|min:1',   // SOLO para cálculo, no está en BD
-        'stock'                => 'nullable|integer|min:0',
+        // Conversiones
+        'unidades_por_paquete' => 'nullable|integer|min:1',
+        'paquetes_por_caja'    => 'nullable|integer|min:1',
+
+        // Stock (solo visual, pero validamos)
+        'cantidad_ingresada'   => 'required|integer|min:1',
+        'nivel_ingreso'        => 'required|in:unidad,paquete,caja',
 
         'ubicacion'            => 'nullable|string|max:255',
         'imagen'               => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,avif|max:2048',
         'fecha_vencimiento'    => 'nullable|date',
         'categoria_id'         => 'required|exists:categorias,id',
-        'marca_id'             => 'nullable|exists:marcas,id',   // la dejo opcional para evitar error
+        'marca_id'             => 'nullable|exists:marcas,id',
     ]);
 
-    // ==== CÁLCULO DE STOCK AUTOMÁTICO ====
-    $cajas     = $request->input('cantidad_cajas');       // cuántas cajas compraste
-    $paquetes  = $request->input('paquetes_por_caja');    // cuántos paquetes trae cada caja
-    $unidades  = $request->input('unidades_por_paquete'); // cuántas unidades trae cada paquete
+    // ================== CÁLCULO DE STOCK (BACKEND) ==================
 
-    $stock_total = 0;
+    $cantidad = (int) $validated['cantidad_ingresada'];
+    $nivel    = $validated['nivel_ingreso'];
 
-    if ($cajas && $paquetes && $unidades) {
-        // Caso 1: Caja -> Paquete -> Unidad  (galletas, cigarro, etc.)
-        $stock_total = $cajas * $paquetes * $unidades;
-    } elseif ($cajas && $unidades && !$paquetes) {
-        // Caso 2: Caja -> Unidad directo (vino: caja de 12 botellas)
-        $stock_total = $cajas * $unidades;
-    } elseif ($paquetes && $unidades && !$cajas) {
-        // Caso 3: Solo Paquete -> Unidad (agua/gaseosa en fardos, sin caja)
-        $stock_total = $paquetes * $unidades;
-    } else {
-        // Caso 4: stock manual
-        $stock_total = $request->input('stock', 0);
+    $up = (int) ($validated['unidades_por_paquete'] ?? 0);
+    $pc = (int) ($validated['paquetes_por_caja'] ?? 0);
+
+    $stock = 0;
+
+    // UNIDAD
+    if ($nivel === 'unidad') {
+        $stock = $cantidad;
     }
 
-    $validated['stock'] = $stock_total;
+    // PAQUETE
+    if ($nivel === 'paquete') {
+        if ($up <= 0) {
+            return back()->withErrors([
+                'unidades_por_paquete' => 'Debe indicar las unidades por paquete.'
+            ])->withInput();
+        }
+        $stock = $cantidad * $up;
+    }
 
-    // Activo / visible
+    // CAJA
+    if ($nivel === 'caja') {
+
+        // Caja -> Paquete -> Unidad
+        if ($pc > 0 && $up > 0) {
+            $stock = $cantidad * $pc * $up;
+        }
+        // Caja -> Unidad directo (vino, aceite)
+        elseif ($up > 0) {
+            $stock = $cantidad * $up;
+        }
+        else {
+            return back()->withErrors([
+                'unidades_por_paquete' => 'Debe indicar cuántas unidades trae la caja.'
+            ])->withInput();
+        }
+    }
+
+    $validated['stock'] = $stock;
+
+    // ================== EXTRAS ==================
+
     $validated['activo'] = $request->has('activo') ? 1 : 0;
     $validated['visible_en_catalogo'] = $request->has('visible_en_catalogo') ? 1 : 0;
-
-    // Slug
     $validated['slug'] = Str::slug($validated['nombre']);
 
     // Imagen
     if ($request->hasFile('imagen')) {
         $image = $request->file('imagen');
         $imageName = Str::slug($validated['nombre']) . '-' . time() . '.' . $image->getClientOriginalExtension();
-        $destinationPath = public_path('uploads/productos');
-        $image->move($destinationPath, $imageName);
+        $image->move(public_path('uploads/productos'), $imageName);
         $validated['imagen'] = $imageName;
     }
 
-    // Este campo NO existe en la BD
-    unset($validated['cantidad_cajas']);
+    // Campos SOLO visuales → fuera
+    unset($validated['cantidad_ingresada'], $validated['nivel_ingreso']);
 
     Producto::create($validated);
 
-    return redirect()->route('productos.create')
+    return redirect()
+        ->route('productos.create')
         ->with('success', 'Producto creado correctamente.');
 }
-
-
 
     public function edit($id)
     {
@@ -135,6 +156,8 @@ class ProductoController extends Controller
 
     public function update(Request $request, $id)
     {
+        $producto = Producto::findOrFail($id);
+
         $validated = $request->validate([
             'codigo_barras'        => 'nullable|string|max:50|unique:productos,codigo_barras,' . $id,
             'nombre'               => 'required|string|max:255',
@@ -149,7 +172,10 @@ class ProductoController extends Controller
             'tipo_paquete'         => 'nullable|string|max:50',
             'precio_caja'          => 'nullable|numeric|min:0',
 
-            'cantidad_cajas'       => 'nullable|integer|min:1',  // solo cálculo
+            // 👉 ingreso de stock (solo si el usuario lo usa)
+            'cantidad_cajas'       => 'nullable|integer|min:1',
+
+            // stock manual (opción A)
             'stock'                => 'nullable|integer|min:0',
 
             'ubicacion'            => 'nullable|string|max:255',
@@ -159,45 +185,56 @@ class ProductoController extends Controller
             'marca_id'             => 'nullable|exists:marcas,id',
         ]);
 
-        $producto = Producto::findOrFail($id);
+        /* =====================================================
+        * 🧮 CÁLCULO DE STOCK (SUMAR EN EDITAR)
+        * ===================================================== */
 
-        // ==========
-        // 🧮 CALCULAR STOCK
-        // ==========
-        $cajas     = $request->input('cantidad_cajas');
-        $paquetes  = $request->input('paquetes_por_caja');
-        $unidades  = $request->input('unidades_por_paquete');
+        $stockActual = (int) $producto->stock;
 
-        if ($cajas && $paquetes && $unidades) {
-            // Caja → Paquete → Unidad
-            $validated['stock'] = $cajas * $paquetes * $unidades;
-        } elseif ($cajas && $unidades && !$paquetes) {
-            // Caja → Unidad (vino)
-            $validated['stock'] = $cajas * $unidades;
-        } elseif ($paquetes && $unidades && !$cajas) {
-            // Paquete → Unidad (fardos)
-            $validated['stock'] = $paquetes * $unidades;
-        } else {
-            // Stock manual
-            $validated['stock'] = $request->input('stock', $producto->stock);
+        $cajas    = (int) $request->input('cantidad_cajas');
+        $paquetes = (int) $request->input('paquetes_por_caja');
+        $unidades = (int) $request->input('unidades_por_paquete');
+
+        $nuevoIngreso = 0;
+
+        // Caja → Paquete → Unidad (galletas, cigarro)
+        if ($cajas > 0 && $paquetes > 0 && $unidades > 0) {
+            $nuevoIngreso = $cajas * $paquetes * $unidades;
+        }
+        // Caja → Unidad directo (vino, aceite)
+        elseif ($cajas > 0 && $unidades > 0 && $paquetes === 0) {
+            $nuevoIngreso = $cajas * $unidades;
+        }
+        // Paquete → Unidad (fardos)
+        elseif ($cajas === 0 && $paquetes > 0 && $unidades > 0) {
+            $nuevoIngreso = $paquetes * $unidades;
         }
 
-        // ==========
-        // ESTADO CHECKBOX
-        // ==========
+        if ($nuevoIngreso > 0) {
+            // 👉 SUMAR al stock actual
+            $validated['stock'] = $stockActual + $nuevoIngreso;
+        } else {
+            // 👉 Stock manual o sin cambios
+            $validated['stock'] = $request->input('stock', $stockActual);
+        }
+
+        /* =====================================================
+        * ESTADO / SLUG
+        * ===================================================== */
+
         $validated['activo'] = $request->has('activo') ? 1 : 0;
         $validated['visible_en_catalogo'] = $request->has('visible_en_catalogo') ? 1 : 0;
 
-        // ==========
-        // SLUG — NO CAMBIAR EN UPDATE
-        // ==========
+        // 🔒 Slug NO se cambia en update
         $validated['slug'] = $producto->slug;
 
-        // ==========
-        // IMAGEN NUEVA
-        // ==========
+        /* =====================================================
+        * 🖼️ IMAGEN
+        * ===================================================== */
+
         if ($request->hasFile('imagen')) {
-            // borrar anterior
+
+            // borrar imagen anterior
             if ($producto->imagen && file_exists(public_path('uploads/productos/' . $producto->imagen))) {
                 unlink(public_path('uploads/productos/' . $producto->imagen));
             }
@@ -209,19 +246,22 @@ class ProductoController extends Controller
             $validated['imagen'] = $imageName;
         }
 
-        // No guardar este campo (no existe en BD)
+        /* =====================================================
+        * LIMPIEZA (campos que no existen en BD)
+        * ===================================================== */
+
         unset($validated['cantidad_cajas']);
 
-        // ==========
-        // ACTUALIZAR PRODUCTO
-        // ==========
+        /* =====================================================
+        * ACTUALIZAR
+        * ===================================================== */
+
         $producto->update($validated);
 
         return redirect()
             ->route('productos.edit', $producto->id)
             ->with('success', 'Producto actualizado correctamente.');
     }
-
 
 public function toggleEstado($id)
 {

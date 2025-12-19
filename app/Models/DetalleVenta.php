@@ -12,26 +12,21 @@ class DetalleVenta extends Model
     protected $fillable = [
         'venta_id',
         'producto_id',
+        'presentacion',        // ✅ CORRECTO
         'cantidad',
-        'tipo_venta',           // ← NUEVO
+        'unidades_afectadas',  // ✅ CORRECTO
+        'precio_presentacion', // ✅ CORRECTO
         'precio_unitario',
-        'precio_mayor',
         'subtotal',
         'ganancia',
-        'unidades_descuento'    // ← NUEVO
+        'activo'
     ];
 
-    /**
-     * Relación: Un detalle de venta pertenece a una venta
-     */
     public function venta()
     {
         return $this->belongsTo(Venta::class, 'venta_id');
     }
 
-    /**
-     * Relación: Un detalle de venta pertenece a un producto
-     */
     public function producto()
     {
         return $this->belongsTo(Producto::class, 'producto_id');
