@@ -20,6 +20,7 @@ use App\Http\Controllers\ParametrosController;
 use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\MarcaController;
+use App\Http\Controllers\DashboardAdminController;
 use App\Http\Controllers\MovimientoController;
 //consultar dni y ruc
 use Illuminate\Support\Facades\Http;
@@ -35,8 +36,8 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 // Rutas exclusivas para Administrador
 Route::middleware(['auth', 'role:Administrador'])->group(function () {
-    Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
-    Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    Route::get('/admin/dashboard', [DashboardAdminController::class, 'index'])
+    ->name('admin.dashboard');
     // Otras rutas solo para admin...
     Route::get('/usuarios', [UsuarioController::class, 'index'])->name('usuarios.index');
     Route::get('/productos', [ProductoController::class, 'index'])->name('productos.index');
@@ -52,6 +53,9 @@ Route::middleware(['auth', 'role:Administrador'])->group(function () {
     Route::get('/reportes/ganancias', [ReporteController::class, 'ganancias'])->name('reportes.ganancias');
     Route::get('/reportes/resumen', [ReporteController::class, 'resumen'])
      ->name('reportes.resumen');
+    Route::get('/movimientos', [MovimientoController::class, 'index'])
+    ->name('movimientos.index');
+
 
     Route::get('/configuracion', [ConfiguracionController::class, 'index'])->name('configuracion.index');
     Route::put('/configuracion', [ConfiguracionController::class, 'update'])->name('configuracion.update');
@@ -72,10 +76,8 @@ Route::middleware(['auth', 'role:Administrador,Empleado'])->group(function () {
     Route::get('/gastos', [GastoController::class, 'index'])->name('gastos.index');
     Route::get('/gastos/crear', [GastoController::class, 'create'])->name('gastos.create');
     Route::post('/gastos', [GastoController::class, 'store'])->name('gastos.store');
-
-    Route::get('/movimientos', [MovimientoController::class, 'index'])
-    ->name('movimientos.index');
-   
+    Route::get('/ventas/lista', [VentaController::class, 'listar'])->name('ventas.listar');
+    
 
     // Otras rutas comunes aquí...
     Route::get('/ventas/exportar-excel', [VentaController::class, 'exportarExcel'])->name('ventas.exportarExcel');

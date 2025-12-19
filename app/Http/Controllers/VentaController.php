@@ -19,6 +19,8 @@ use App\Models\Producto;
 use App\Models\Factura;
 use App\Models\Configuracion;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use App\Models\Movimiento;
+
 
 class VentaController extends Controller
 {
@@ -48,66 +50,6 @@ public function filtrarPorCategoria(Request $request)
         ->get();
 
     return response()->json($productos);
-}
-
-   //FILTRAR VENTAS
-    public function listar(Request $request)
-{
-    try {
-        // Obtener los parámetros del filtro
-        $rango = $request->input('filter-type', 'diario');
-        $fecha = $request->input('filter-date', Carbon::today()->toDateString());
-        $usuarioId = $request->input('filter-user', null);
-        $cliente = $request->input('filter-client', null);
-
-        // Iniciar la consulta de ventas
-        $ventas = Venta::with(['cliente', 'usuario']);
-
-        // Filtrar ventas por rango de fecha
-        if ($rango == 'diario') {
-            $ventas->whereDate('fecha', Carbon::parse($fecha));
-        } elseif ($rango == 'semanal') {
-            $startOfWeek = Carbon::parse($fecha)->startOfWeek();
-            $endOfWeek = Carbon::parse($fecha)->endOfWeek();
-            $ventas->whereBetween('fecha', [$startOfWeek, $endOfWeek]);
-        } elseif ($rango == 'mensual') {
-            $ventas->whereMonth('fecha', Carbon::parse($fecha)->month)
-                   ->whereYear('fecha', Carbon::parse($fecha)->year);
-        }
-
-        // Filtrar por usuario, si se selecciona un usuario
-        if ($usuarioId) {
-            $ventas->where('usuario_id', $usuarioId);
-        }
-
-        // Filtrar por cliente, si se selecciona un cliente
-        if ($cliente) {
-            $ventas->whereHas('cliente', function($query) use ($cliente) {
-                $query->where('nombre', 'LIKE', "%{$cliente}%")
-                      ->orWhere('dni', 'LIKE', "%{$cliente}%")
-                      ->orWhere('ruc', 'LIKE', "%{$cliente}%");
-            });
-        }
-
-        // Obtener las ventas filtradas con paginación
-        $ventas = $ventas->orderByDesc('fecha')->paginate(10);
-
-        // Obtener los usuarios para el filtro
-        $usuarios = User::all(); // Recuperamos todos los usuarios
-
-        // Calcular balance, ventas totales y ganancias
-        $balance = $ventas->sum('total');
-        $ventasTotales = $ventas->sum('total');
-        $ganancias = $ventas->sum(function($venta) {
-        return $venta->detalleVentas->sum('ganancia'); // Sumar las ganancias de cada venta
-    });
-
-        // Pasar los datos a la vista
-        return view('ventas.movimientos', compact('ventas', 'balance', 'ventasTotales', 'ganancias', 'fecha', 'cliente', 'usuarios', 'rango')); // Pasamos $usuarios a la vista
-    } catch (\Exception $e) {
-        \Log::error('Error al cargar ventas filtradas: ' . $e->getMessage());
-        return response()->json(['error' => 'Ocurrió un error al cargar las ventas filtradas.'], 500);
-    }
 }
 
 public function registrarVenta(Request $request)
@@ -301,6 +243,22 @@ public function registrarVenta(Request $request)
                 $pdfUrl = asset("comprobantes/$nombreArchivo");
 
                 $venta->update(['pdf_url' => $pdfUrl]);
+                // =========================
+                // REGISTRAR MOVIMIENTO
+                // =========================
+
+                Movimiento::create([
+                    'fecha'            => $fechaHora->toDateString(),
+                    'tipo'             => 'ingreso',
+                    'subtipo'          => 'venta',
+                    'concepto'         => "Venta {$tipo} {$serie}-" . str_pad($correlativo, 6, '0', STR_PAD_LEFT),
+                    'monto'            => $total,
+                    'metodo_pago'      => $request->metodo_pago,
+                    'estado'           => $request->estado_pago === 'pagado' ? 'pagado' : 'pendiente',
+                    'referencia_id'    => $venta->id,
+                    'referencia_tipo'  => 'venta',
+                ]);
+
 
                 DB::commit();
 
