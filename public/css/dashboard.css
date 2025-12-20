@@ -89,58 +89,74 @@ body {
 }
 
 /* ===============================
-   KPI CARDS – BARRA CURVA REAL
+   KPI CARDS – FINAL PRO
    =============================== */
 
 .kpi-card {
     position: relative;
     background: #ffffff;
-    border-radius: 16px;
-    padding: 18px 20px 18px 40px; /* espacio para la barra */
-    box-shadow: 0 8px 22px rgba(0,0,0,.08);
-    overflow: hidden; /* 👈 CLAVE */
+    border-radius: 18px;
+    padding: 18px 22px 18px 46px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.08);
+    transition: all .25s ease;
+
+    /* 🔒 CLAVE */
+    height: 110px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
-/* BARRA CURVA LATERAL */
+/* Barra curva */
 .kpi-card::before {
     content: "";
     position: absolute;
-    left: 0;
-    top: 8px;
-    bottom: 8px;
-    width: 8px;
-    border-radius: 0 20px 20px 0; /* 👈 CURVA REAL */
+    left: 14px;
+    top: 12px;
+    bottom: 12px;
+    width: 6px;
+    border-radius: 999px;
 }
 
-/* COLORES */
-.kpi-success::before {
-    background: #16a34a;
+/* Contenido centrado */
+.kpi-main {
+    display: flex;
+    align-items: center;
+    min-height: 42px;
 }
 
-.kpi-balance::before {
-    background: #2563eb;
-}
+/* Colores */
+.kpi-primary::before { background: #2563eb; }
+.kpi-success::before { background: #16a34a; }
+.kpi-danger::before  { background: #dc2626; }
+.kpi-warning::before { background: #f59e0b; }
 
-.kpi-danger::before {
-    background: #dc2626;
-}
-
-.kpi-warning::before {
-    background: #f59e0b;
-}
-
-/* TEXTO */
+/* Texto */
 .kpi-label {
     font-size: 14px;
     color: #64748b;
+    margin-bottom: 6px;
 }
 
 .kpi-value {
     font-size: 26px;
     font-weight: 700;
-    margin-top: 4px;
+    line-height: 1;
 }
 
 .kpi-value.success { color: #16a34a; }
 .kpi-value.danger  { color: #dc2626; }
-.kpi-sub.warning   { color: #f59e0b; }
+
+.kpi-sub {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.kpi-sub.warning { color: #f59e0b; }
+
+/* Hover */
+.kpi-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 32px rgba(0,0,0,0.12);
+}
