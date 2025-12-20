@@ -1,0 +1,263 @@
+/* Cards suaves */
+.card-soft{
+  border: 1px solid rgba(0,0,0,.06);
+  border-radius: 14px;
+  box-shadow: 0 8px 20px rgba(0,0,0,.06);
+}
+.nav-tabs .nav-link{
+  border: none;
+  color:#556;
+  padding: 10px 16px;
+  border-radius: 10px;
+}
+.nav-tabs .nav-link.active{
+  background:#0f172a;
+  color:#fff;
+}
+.table thead th{
+  font-weight:600;
+  color:#334155;
+  background:#f8fafc;
+}
+/*PANEL*/
+.detalle-venta-panel {
+    width: 420px;
+    background: #fff;
+}
+
+.icon-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #e6f7ee;
+    color: #16a34a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.divider-green {
+    height: 3px;
+    background: #16a34a;
+    margin: 0 16px;
+    border-radius: 3px;
+}
+
+.detalle-cliente h6 {
+    margin-bottom: 0;
+}
+
+.detalle-card {
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    padding: 14px;
+}
+
+.detalle-total {
+    font-size: 26px;
+    font-weight: 700;
+    margin: 6px 0;
+}
+
+.badge-success-soft {
+    background: #e6f7ee;
+    color: #16a34a;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 8px;
+}
+
+.detalle-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.detalle-item i {
+    width: 18px;
+    color: #6b7280;
+}
+
+.detalle-item span {
+    flex: 1;
+    color: #6b7280;
+}
+
+.producto-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.producto-item img {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+}
+
+.acciones-detalle {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.accion-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    border: 2px solid #0f172a;
+    background: white;
+    border-radius: 50%;
+    width: 58px;
+    height: 58px;
+    font-size: 12px;
+    justify-content: center;
+}
+
+.accion-btn i {
+    font-size: 18px;
+}
+
+.accion-btn.dark {
+    background: #0f172a;
+    color: white;
+}
+
+.accion-btn.danger {
+    border-color: #ef4444;
+    color: #ef4444;
+}
+/**/
+.listado-productos {
+    max-height: calc(100vh - 420px); /* espacio dinámico */
+    overflow-y: auto;
+    padding-right: 6px;
+    padding-bottom: 90px; /* 🔥 espacio para botones */
+}
+
+
+/* Scroll fino */
+.listado-productos::-webkit-scrollbar {
+    width: 6px;
+}
+
+.listado-productos::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.listado-productos::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.25);
+    border-radius: 6px;
+}
+
+.theme-dark .listado-productos::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+
+.estado-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    min-width: 90px;
+}
+
+/* ================= PAGADO ================= */
+.estado-pagado {
+    background-color: #22c55e; /* verde fuerte */
+    color: #ffffff;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.05);
+}
+
+/* ================= PENDIENTE ================= */
+.estado-pendiente {
+    background-color: #facc15; /* amarillo real */
+    color: #3f2d00;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
+}
+
+/* ================= DARK MODE ================= */
+.theme-dark .estado-pagado {
+    background-color: #16a34a;
+    color: #ffffff;
+}
+
+.theme-dark .estado-pendiente {
+    background-color: #eab308;
+    color: #1f1f1f;
+}
+/* Quitar scroll del panel lateral */
+.detalle-venta-panel .offcanvas-body {
+    overflow: hidden;
+    padding-bottom: 90px; /* espacio para botones fijos */
+}
+.sticky-actions {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+
+    display: flex;
+    justify-content: space-around;
+    gap: 10px;
+
+    padding: 12px 10px;
+    background: #fff;
+    border-top: 1px solid #e5e7eb;
+    z-index: 10;
+}
+.producto-item-pro {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid #eef2f6;
+}
+
+.producto-img {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.producto-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.producto-nombre {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.producto-desc {
+    font-size: 12px;
+    color: #6b7280;
+    line-height: 1.2;
+}
+
+.producto-cantidad {
+    font-size: 12px;
+    color: #374151;
+    margin-top: 2px;
+}
+
+.producto-precio {
+    font-weight: 700;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+
+

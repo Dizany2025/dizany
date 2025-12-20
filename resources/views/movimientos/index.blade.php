@@ -27,26 +27,36 @@
     </div>
 
     {{-- ================= FILTROS ================= --}}
-    <div class="d-flex flex-wrap gap-2 align-items-center mb-4">
+    <form method="GET" action="{{ route('movimientos.index') }}" class="row g-2 mb-3">
 
-        <button class="btn btn-outline-secondary">
-            🔍 Filtrar
-        </button>
+        <input type="hidden" name="tab" value="{{ $tab }}">
 
-        <select class="form-select w-auto">
-            <option>Diario</option>
-            <option>Semanal</option>
-            <option>Mensual</option>
-            <option>Rango</option>
-        </select>
-
-        <input type="date" class="form-control w-auto">
-
-        <div class="input-group w-auto">
-            <span class="input-group-text">🔎</span>
-            <input type="text" class="form-control" placeholder="Buscar concepto...">
+        <div class="col-md-2">
+            <select name="rango" class="form-select" onchange="this.form.submit()">
+                <option value="diario" {{ $rango === 'diario' ? 'selected' : '' }}>Diario</option>
+                <option value="mensual" {{ $rango === 'mensual' ? 'selected' : '' }}>Mensual</option>
+            </select>
         </div>
-    </div>
+
+        <div class="col-md-2">
+            <input type="date"
+                name="fecha"
+                value="{{ $fecha }}"
+                class="form-control"
+                onchange="this.form.submit()">
+        </div>
+
+        <div class="col-md-4">
+            <input type="text"
+                name="buscar"
+                value="{{ request('buscar') }}"
+                class="form-control"
+                placeholder="Buscar concepto..."
+                onkeydown="if(event.key==='Enter'){ this.form.submit(); }">
+        </div>
+
+    </form>
+
 
     {{-- ================= KPIs ================= --}}
     <div class="row mb-4">
@@ -98,16 +108,31 @@
     {{-- ================= SUB TABS ================= --}}
     <ul class="nav nav-tabs mb-3">
         <li class="nav-item">
-            <a class="nav-link active" href="#">Ingresos</a>
+            <a class="nav-link {{ $tab === 'ingresos' ? 'active' : '' }}"
+            href="{{ route('movimientos.index', array_merge(request()->query(), ['tab' => 'ingresos'])) }}">
+                Ingresos
+            </a>
         </li>
+
         <li class="nav-item">
-            <a class="nav-link" href="#">Egresos</a>
+            <a class="nav-link {{ $tab === 'egresos' ? 'active' : '' }}"
+            href="{{ route('movimientos.index', array_merge(request()->query(), ['tab' => 'egresos'])) }}">
+                Egresos
+            </a>
         </li>
+
         <li class="nav-item">
-            <a class="nav-link" href="#">Por cobrar</a>
+            <a class="nav-link {{ $tab === 'por_cobrar' ? 'active' : '' }}"
+            href="{{ route('movimientos.index', array_merge(request()->query(), ['tab' => 'por_cobrar'])) }}">
+                Por cobrar
+            </a>
         </li>
+
         <li class="nav-item">
-            <a class="nav-link" href="#">Por pagar</a>
+            <a class="nav-link {{ $tab === 'por_pagar' ? 'active' : '' }}"
+            href="{{ route('movimientos.index', array_merge(request()->query(), ['tab' => 'por_pagar'])) }}">
+                Por pagar
+            </a>
         </li>
     </ul>
 
@@ -127,10 +152,17 @@
                 </thead>
                 <tbody>
 
-                @forelse ($movimientos ?? [] as $movimiento)
-                    <tr>
-                        <td>{{ $movimiento->fecha }}</td>
+                @forelse ($movimientos as $movimiento)
+                    <tr class="mov-row"
+                        style="cursor:pointer"
+                        data-ref-id="{{ $movimiento->referencia_id }}"
+                        data-ref-tipo="{{ $movimiento->referencia_tipo }}"
+                        data-mov-id="{{ $movimiento->id }}">
+
+                        <td>{{ \Carbon\Carbon::parse($movimiento->fecha)->format('d/m/Y') }}</td>
+
                         <td>{{ $movimiento->concepto }}</td>
+
                         <td>{{ ucfirst($movimiento->metodo_pago) }}</td>
 
                         <td>
@@ -162,21 +194,49 @@
                 </tbody>
             </table>
         </div>
+
+        {{-- ================= PAGINACIÓN ================= --}}
+        @if($movimientos instanceof \Illuminate\Pagination\LengthAwarePaginator)
+            <div class="card-footer d-flex justify-content-end">
+                {{ $movimientos->appends(request()->query())->links() }}
+            </div>
+        @endif
+    </div>
+{{-- =============panel derecho ================= --}}
+<div class="offcanvas offcanvas-end detalle-venta-panel"
+     tabindex="-1"
+     id="offcanvasDetalle"
+     aria-labelledby="offcanvasDetalleLabel">
+
+    <div class="offcanvas-header pb-2">
+        <div class="d-flex align-items-center gap-2">
+            <div class="icon-circle">
+                <i class="fas fa-store"></i>
+            </div>
+            <h5 class="offcanvas-title mb-0">Detalle de la venta</h5>
+        </div>
+
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
     </div>
 
+    <div class="divider-green"></div>
+
+    <div class="offcanvas-body" id="detalleContenido">
+        {{-- JS inyecta aquí --}}
+    </div>
 </div>
+
+
 @endsection
 
 
-@push('scripts')
-    <!-- Agregar jQuery primero -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Luego, agregar tu script de validación -->
-    <script src="{{ asset('js/detalle_list_ventas.js') }}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13"></script>
-    <script src="{{ asset('js/filtros_ventas.js') }}"></script>
-   
-
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/movimientos.css') }}">
 @endpush
+
+@push('scripts')
+<script src="{{ asset('js/movimientos.js') }}"></script>
+@endpush
+
 
 

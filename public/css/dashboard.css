@@ -1,0 +1,146 @@
+/*DASHB*/
+@media (max-width: 768px) {
+    #flujoCajaChart {
+        height: 220px;
+    }
+}
+:root {
+  --primary: #0d6efd;      /* Azul principal */
+  --success: #16a34a;      /* Verde ingresos */
+  --danger:  #dc2626;      /* Rojo egresos */
+  --warning: #f59e0b;      /* Pendientes */
+  --bg-soft: #f8fafc;      /* Fondo suave */
+  --card:    #ffffff;     /* Cards */
+  --border:  #e5e7eb;     /* Bordes */
+  --text:    #0f172a;     /* Texto fuerte */
+  --muted:   #64748b;     /* Texto secundario */
+}
+body {
+  background-color: var(--bg-soft);
+  color: var(--text);
+}
+
+
+.mov-item {
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--border);
+}
+
+.mov-item:last-child {
+  border-bottom: none;
+}
+.btn-soft {
+  background: #f1f5f9;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.btn-soft:hover {
+  background: #e2e8f0;
+}
+
+.card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    box-shadow: 0 8px 20px rgba(0,0,0,.04);
+    transition: all .25s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 28px rgba(0,0,0,.08);
+}
+
+
+/* Fondo general del contenido */
+#content {
+    background: #f4f6f9; /* gris suave */
+    min-height: 100vh;
+}
+.chart-wrapper {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 14px;
+    height: 280px;
+}
+.ult-mov-item {
+    padding: 10px 0;
+    border-bottom: 1px dashed #e5e7eb;
+}
+
+.ult-mov-item:last-child {
+    border-bottom: none;
+}
+.section-title {
+    font-weight: 600;
+    font-size: 15px;
+    color: #0f172a;
+    margin-bottom: 12px;
+}
+
+
+/* ==============================
+   CONTENEDOR GENERAL
+================================ */
+body {
+    background-color: var(--bg-page);
+    color: var(--text-main);
+}
+
+/* ===============================
+   KPI CARDS – BARRA CURVA REAL
+   =============================== */
+
+.kpi-card {
+    position: relative;
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 18px 20px 18px 40px; /* espacio para la barra */
+    box-shadow: 0 8px 22px rgba(0,0,0,.08);
+    overflow: hidden; /* 👈 CLAVE */
+}
+
+/* BARRA CURVA LATERAL */
+.kpi-card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 8px;
+    bottom: 8px;
+    width: 8px;
+    border-radius: 0 20px 20px 0; /* 👈 CURVA REAL */
+}
+
+/* COLORES */
+.kpi-success::before {
+    background: #16a34a;
+}
+
+.kpi-balance::before {
+    background: #2563eb;
+}
+
+.kpi-danger::before {
+    background: #dc2626;
+}
+
+.kpi-warning::before {
+    background: #f59e0b;
+}
+
+/* TEXTO */
+.kpi-label {
+    font-size: 14px;
+    color: #64748b;
+}
+
+.kpi-value {
+    font-size: 26px;
+    font-weight: 700;
+    margin-top: 4px;
+}
+
+.kpi-value.success { color: #16a34a; }
+.kpi-value.danger  { color: #dc2626; }
+.kpi-sub.warning   { color: #f59e0b; }

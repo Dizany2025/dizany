@@ -308,34 +308,46 @@ public function obtenerSerieCorrelativo(Request $request)
     ]);
 }
 
-
 public function show($id)
 {
-    $venta = Venta::with(['cliente', 'usuario', 'detalleVentas.producto'])->findOrFail($id);
-
-    // Usar el campo guardado "ganancia" directamente
-    $ganancia = $venta->detalleVentas->sum('ganancia');
+    $venta = Venta::with(['cliente', 'detalleVentas.producto'])->findOrFail($id);
 
     return response()->json([
-        'cliente'          => $venta->cliente->nombre ?? $venta->documento,
-        'tipo_comprobante' => $venta->tipo_comprobante,
-        'total'            => $venta->total,
-        'fecha'            => Carbon::parse($venta->fecha)->format('d/m/Y H:i'),
-        'usuario'          => $venta->usuario->nombre,
-        'ganancia'         => $ganancia,
-        'estado'           => $venta->estado,
-        'productos'        => $venta->detalleVentas->map(function ($item) {
+        'id'            => $venta->id,
+        'cliente'       => $venta->cliente->nombre ?? '—',
+        'tipo'          => $venta->tipo_comprobante,
+        'serie'         => $venta->serie,
+        'correlativo'   => $venta->correlativo,
+        'estado'        => $venta->estado,
+        'total'         => (float) $venta->total,
+        'metodo_pago'   => ucfirst($venta->metodo_pago),
+        'fecha_formato' => $venta->fecha
+                                ? Carbon::parse($venta->fecha)->format('h:i A | d F Y')
+                                : '—',
+        'ganancia'      => (float) $venta->detalleVentas->sum('ganancia'),
+
+        'productos' => $venta->detalleVentas->map(function ($item) {
+
+            $cantidadTxt = match ($item->presentacion) {
+                'caja'    => $item->cantidad . ' caja x' . $item->unidades_afectadas,
+                'paquete' => $item->cantidad . ' paquete x' . $item->unidades_afectadas,
+                default   => $item->cantidad . ' unidad'
+            };
+
             return [
-                'nombre'          => $item->producto->nombre,
-                'cantidad'        => $item->cantidad,
-                'precio_unitario' => $item->precio_unitario,
-                'subtotal'        => $item->subtotal,
-                'ganancia'        => $item->ganancia,
-                'precio_compra'   => $item->producto->precio_compra,
+                'nombre'        => $item->producto->nombre,
+                'descripcion'   => $item->producto->descripcion ?? '',
+                'imagen' => $item->producto->imagen
+                ? asset('uploads/productos/' . basename($item->producto->imagen))
+                : asset('images/producto-default.png'),
+                'cantidad_txt'  => $cantidadTxt,
+                'subtotal'      => $item->subtotal,
             ];
         }),
+
     ]);
 }
+
 
 
     public function destroy($id)
