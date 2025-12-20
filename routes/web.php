@@ -28,7 +28,6 @@ use App\Models\Producto;
 use App\Models\Marca;
 use App\Models\Categoria;
 
-
 // Rutas autenticación
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
