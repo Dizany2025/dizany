@@ -160,3 +160,14 @@ body {
     transform: translateY(-3px);
     box-shadow: 0 14px 32px rgba(0,0,0,0.12);
 }
+.chart-wrapper {
+    background: #f8fafc;
+    border-radius: 14px;
+    padding: 16px;
+    height: 280px;
+}
+
+/* Suaviza grid del gráfico */
+.chart-wrapper canvas {
+    background: transparent;
+}

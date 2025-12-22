@@ -1,93 +1,71 @@
-(() => {
-    // ⛔ Evita ejecutar 2 veces el script
-    if (window.__dashboardLoaded) return;
-    window.__dashboardLoaded = true;
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof Chart === 'undefined') return;
 
-    document.addEventListener('DOMContentLoaded', () => {
+    const canvas = document.getElementById('flujoCajaChart');
+    if (!canvas) return;
 
-        // 1️⃣ Chart.js debe existir
-        if (typeof window.Chart === 'undefined') {
-            console.warn('Chart.js no está cargado (dashboard)');
-            return;
-        }
+    const ctx = canvas.getContext('2d');
 
-        // 2️⃣ Canvas debe existir (solo dashboard)
-        const canvas = document.getElementById('flujoCajaChart');
-        if (!canvas) return;
+    if (window.flujoChart) {
+        window.flujoChart.destroy();
+    }
 
-        // 3️⃣ Datos deben existir
-        if (
-            !Array.isArray(window.dashboardLabels) ||
-            !Array.isArray(window.dashboardIngresos) ||
-            !Array.isArray(window.dashboardEgresos)
-        ) {
-            console.warn('Datos del dashboard incompletos');
-            return;
-        }
-
-        const ctx = canvas.getContext('2d');
-
-        // 4️⃣ Destruir gráfico previo si existe
-        if (window.flujoChart instanceof Chart) {
-            window.flujoChart.destroy();
-        }
-
-        // 5️⃣ Crear gráfico
-        window.flujoChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: window.dashboardLabels,
-                datasets: [
-                    {
-                        label: 'Ingresos',
-                        data: window.dashboardIngresos,
-                        borderColor: '#16a34a',
-                        backgroundColor: 'rgba(22,163,74,0.15)',
-                        tension: 0.4,
-                        fill: true,
-                        pointRadius: 3
-                    },
-                    {
-                        label: 'Egresos',
-                        data: window.dashboardEgresos,
-                        borderColor: '#dc2626',
-                        backgroundColor: 'rgba(220,38,38,0.15)',
-                        tension: 0.4,
-                        fill: true,
-                        pointRadius: 3
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: {
-                    mode: 'index',
-                    intersect: false
+    window.flujoChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: window.dashboardLabels,
+            datasets: [
+                {
+                    label: 'Ingresos',
+                    data: window.dashboardIngresos,
+                    backgroundColor: '#22c55e',
+                    borderRadius: 8,
+                    barThickness: 24
                 },
-                plugins: {
-                    legend: {
-                        position: 'top',
-                        labels: {
-                            boxWidth: 14,
-                            usePointStyle: true
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: (ctx) => ` S/ ${ctx.parsed.y.toFixed(2)}`
-                        }
+                {
+                    label: 'Egresos',
+                    data: window.dashboardEgresos,
+                    backgroundColor: '#ef4444',
+                    borderRadius: 8,
+                    barThickness: 24
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        boxWidth: 10
                     }
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: (value) => `S/ ${value}`
+                tooltip: {
+                    callbacks: {
+                        label: function (ctx) {
+                            return `${ctx.dataset.label}: S/ ${ctx.parsed.y.toFixed(2)}`;
                         }
                     }
                 }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: '#e5e7eb'
+                    },
+                    ticks: {
+                        callback: value => `S/ ${value}`
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
             }
-        });
+        }
     });
-})();
+});
