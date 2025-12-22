@@ -202,6 +202,7 @@
                                     <select id="estado_pago" class="form-select">
                                         <option value="pagado">Pagado</option>
                                         <option value="pendiente">Pendiente</option>
+                                        <option value="credito">Credito</option>
                                     </select>
                                 </div>
 
@@ -280,6 +281,11 @@
                         </button>
                         <button id="btn-ir-step3" class="btn btn-success">
                             Continuar venta <i class="fas fa-arrow-right ms-2"></i>
+                        </button>
+                        <button id="btn-confirmar-venta-directo"
+                            class="btn btn-success"
+                            style="display:none">
+                        ✅ Confirmar venta
                         </button>
                     </div>
                 </div>

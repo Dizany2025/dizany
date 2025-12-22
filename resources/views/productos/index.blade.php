@@ -21,7 +21,7 @@
 <link href="{{ asset('css/mostrar_detalles_productos.css') }}" rel="stylesheet" />
 <div class="card mx-auto my-4" style="max-width: 1000px;">
     <div class="card-header text-center bg-primary text-white">
-        <h4 class="mb-0"><i class="fa-solid fa-receipt"></i> Lista de Productos Registrados</h4>
+        <h4 class="mb-0"><i class="fa-solid fa-receipt"></i> Lista de Productos</h4>
     </div>
     <div class="card-body">
 

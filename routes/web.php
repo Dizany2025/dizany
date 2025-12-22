@@ -194,3 +194,5 @@ Route::get('/productos/iniciales', [ProductoController::class, 'productosInicial
 // ORDENAR VENTAS (F)
 Route::get('/productos/ordenar', [ProductoController::class, 'ordenar'])
     ->name('productos.ordenar');
+
+Route::post('/ventas/{venta}/cerrar-pendiente', [VentaController::class, 'cerrarPendiente']);

@@ -184,15 +184,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const documentoInput = document.getElementById("documento");
     const razonInput     = document.getElementById("razon_social");
     const direccionInput = document.getElementById("direccion");
+    const hiddenMetodoPago = document.getElementById("metodo_pago");
 
     // Comprobante
     const tipoComprobanteSelect = document.getElementById("tipo_comprobante");
     const inputSerieCorrelativo = document.getElementById("serie_correlativo");
     const estadoPagoSelect      = document.getElementById("estado_pago");
-    const formatoSelect         = document.getElementById("formato_pdf");
+    estadoPagoSelect?.addEventListener("change", manejarEstadoVenta);
+    manejarEstadoVenta(); // al cargar la pantalla
 
-    // Método pago
-    const hiddenMetodoPago = document.getElementById("metodo_pago");
+    const formatoSelect         = document.getElementById("formato_pdf");
 
     // Fase 3 vuelto
     const inputTotalVenta = document.getElementById("vuelto-total-venta");
@@ -1007,6 +1008,95 @@ document.addEventListener("DOMContentLoaded", () => {
         if (montoPagadoInput) montoPagadoInput.value = total.toFixed(2);
     }
 
+// ============================
+// Estado de venta: PAGADO / PENDIENTE / CREDITO
+// ============================
+function manejarEstadoVenta() {
+
+    const estado = (estadoPagoSelect?.value || "pagado").toLowerCase();
+
+    const items = document.querySelectorAll(".metodo-pago-item");
+    const btnIrStep3 = document.getElementById("btn-ir-step3");
+    const btnConfirmarDirecto = document.getElementById("btn-confirmar-venta-directo");
+
+    console.log("ESTADO ACTUAL:", estado);
+    /* ==========================
+       RESET GENERAL (CLAVE)
+    ========================== */
+    items.forEach(i => i.classList.remove("d-none", "active"));
+
+    if (btnIrStep3) {
+        btnIrStep3.style.display = "";
+        btnIrStep3.innerHTML = `Continuar venta <i class="fas fa-arrow-right ms-2"></i>`;
+    }
+
+    if (btnConfirmarDirecto) {
+        btnConfirmarDirecto.style.display = "none";
+    }
+
+    if (hiddenMetodoPago) hiddenMetodoPago.value = "";
+
+    /* ==========================
+       🟡 PENDIENTE
+       - NO step 3
+       - Confirmar directo
+    ========================== */
+    if (estado === "pendiente") {
+        items.forEach(i => {
+            if (i.dataset.value !== "otro") {
+                i.classList.add("d-none");
+            } else {
+                i.classList.add("active");
+            }
+        });
+
+        hiddenMetodoPago.value = "otro";
+
+        if (btnIrStep3) btnIrStep3.style.display = "none";
+        if (btnConfirmarDirecto) btnConfirmarDirecto.style.display = "block";
+
+        return;
+    }
+
+    /* ==========================
+       🔵 CRÉDITO
+       - SOLO método "otro"
+       - CONTINUAR venta (NO confirmar)
+       - PASA A STEP 3 (adelanto)
+    ========================== */
+  if (estado === "credito") {
+    items.forEach(i => {
+        if (i.dataset.value !== "otro") {
+            i.classList.add("d-none");
+        } else {
+            i.classList.add("active");
+        }
+    });
+
+    hiddenMetodoPago.value = "otro";
+
+    // 🔥 FORZAR TEXTO CORRECTO
+    if (btnIrStep3) {
+        btnIrStep3.style.display = "";
+        btnIrStep3.innerHTML = `Continuar venta <i class="fas fa-arrow-right ms-2"></i>`;
+    }
+
+    if (btnConfirmarDirecto) {
+        btnConfirmarDirecto.style.display = "none";
+    }
+
+    return;
+}
+
+}
+
+/* ==========================
+   EVENTOS
+========================== */
+estadoPagoSelect?.addEventListener("change", manejarEstadoVenta);
+manejarEstadoVenta(); // ejecutar al cargar
+
+
     function actualizarBotonCarrito() {
         if (!btnIrStep2) return;
 
@@ -1050,48 +1140,102 @@ document.addEventListener("DOMContentLoaded", () => {
     if (btnVolverStep2) btnVolverStep2.addEventListener("click", () => showStep(2));
 
     if (btnIrStep3) {
-        btnIrStep3.addEventListener("click", (e) => {
-            e.preventDefault();
-            e.stopPropagation();
+  btnIrStep3.addEventListener("click", (e) => {
+  e.preventDefault();
 
-            volcarUIaVentaActiva();
-            const v = ventaActiva();
+  volcarUIaVentaActiva();
+  const v = ventaActiva();
 
-            const documento = (v.cliente?.documento || "").trim();
-            const razon     = (v.cliente?.razon || "").trim();
-            const noGuardado = !!v.cliente?.no_guardado;
-            const metodo = (v.metodo_pago || "").trim();
+  const estado = (estadoPagoSelect?.value || "pagado").toLowerCase();
 
-            if (!documento || !razon) {
-                Swal.fire("Cliente requerido", "Debes ingresar el DNI o RUC del cliente.", "warning");
-                return;
-            }
-            if (noGuardado) {
-                Swal.fire("Cliente no guardado", "Debes guardar el cliente antes de continuar la venta.", "warning");
-                return;
-            }
-            if (!metodo) {
-                Swal.fire("Método de pago", "Selecciona un método de pago.", "warning");
-                return;
-            }
+  const documento  = (v.cliente?.documento || "").trim();
+  const razon      = (v.cliente?.razon || "").trim();
+  const noGuardado = !!v.cliente?.no_guardado;
+  const metodo     = (v.metodo_pago || "").trim();
 
-            prepararFase3();
-            showStep(3);
-        });
-    }
+  if (!documento || !razon) {
+    Swal.fire("Cliente requerido", "Debes ingresar el cliente.", "warning");
+    return;
+  }
+
+  if (noGuardado) {
+    Swal.fire("Cliente no guardado", "Debes guardar el cliente.", "warning");
+    return;
+  }
+
+  // 🟡 PENDIENTE → SE REGISTRA AQUÍ MISMO
+  if (estado === "pendiente") {
+    registrarVenta();
+    return;
+  }
+
+  // 🔵 CRÉDITO → FASE 3 (ADELANTO)
+  if (estado === "credito") {
+    prepararFase3Credito(); // aquí irá el input de adelanto
+    showStep(3);
+    return;
+  }
+
+  // 🟢 PAGADO → FASE 3 (VUELTO)
+  if (!metodo) {
+    Swal.fire("Método de pago", "Selecciona un método de pago.", "warning");
+    return;
+  }
+
+  prepararFase3(); // vuelto
+  showStep(3);
+});
+
+}
+
+
+function prepararFase3Credito() {
+  const { total } = calcularTotal();
+
+  if (inputTotalVenta) inputTotalVenta.value = total.toFixed(2);
+
+  if (inputPaga) {
+    inputPaga.value = "";
+    inputPaga.placeholder = "Ingrese adelanto";
+  }
+
+  // ✅ Mostrar el campo de "Vuelto" pero lo usaremos como "Saldo pendiente"
+  // (si lo ocultas, no podrás mostrar el saldo)
+  if (inputVuelto) {
+    inputVuelto.value = "";
+  }
+
+  // Opcional: cambia el título si quieres
+  const titulo = document.querySelector("#step-3 .modal-title, #step-3 h5, #step-3 h6");
+  if (titulo && titulo.textContent.toLowerCase().includes("cambio")) {
+    titulo.textContent = "Registra el adelanto";
+  }
+}
+
 
     // Vuelto
     if (inputPaga && inputTotalVenta && inputVuelto) {
-        inputPaga.addEventListener("input", () => {
-            const pagar = parseFloat(inputPaga.value || 0);
-            const total = parseFloat(inputTotalVenta.value || 0);
+  inputPaga.addEventListener("input", () => {
+    const monto = parseFloat(inputPaga.value || 0);
+    const total = parseFloat(inputTotalVenta.value || 0);
+    const estadoPago = (estadoPagoSelect?.value || "pagado").toLowerCase();
 
-            let vuelto = pagar - total;
-            if (vuelto < 0) vuelto = 0;
+    if (estadoPago === "credito") {
+      let saldo = total - monto;
+      if (saldo < 0) saldo = 0;
 
-            inputVuelto.value = "S/ " + vuelto.toFixed(2);
-        });
+      inputVuelto.value = "Saldo pendiente: S/ " + saldo.toFixed(2);
+      return;
     }
+
+    // pagado normal: vuelto
+    let vuelto = monto - total;
+    if (vuelto < 0) vuelto = 0;
+
+    inputVuelto.value = "S/ " + vuelto.toFixed(2);
+  });
+}
+
 
     // ============================
     // Panel: Ventas en espera (TU HTML)
@@ -1332,69 +1476,97 @@ document.addEventListener("DOMContentLoaded", () => {
     // Registrar venta
     // ============================
     function registrarVenta() {
-        volcarUIaVentaActiva();
-        const v = ventaActiva();
-        const { total } = calcularTotal();
+    volcarUIaVentaActiva();
+    const v = ventaActiva();
+    const { total } = calcularTotal();
 
-        if (!v.productos.length) return mostrarAlerta("No hay productos en la venta.");
-
-        const tipoComprobante = tipoComprobanteSelect?.value || "boleta";
-        const documento = v.cliente?.documento || "";
-        const fecha = document.getElementById("fecha_emision")?.value;
-        const hora  = document.getElementById("hora_actual")?.value;
-
-        const estadoPago = estadoPagoSelect?.value || "pagado";
-        const metodoPago = v.metodo_pago || "";
-        const formato = formatoSelect?.value || "a4";
-
-        if (!metodoPago) return mostrarAlerta("Debes seleccionar un método de pago.");
-
-        const productosEnviar = v.productos.map(it => ({
-            producto_id: it.id,
-            cantidad: it.cantidad,
-            presentacion: it.tipo_venta
-        }));
-
-        fetch("/ventas/registrar", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
-            },
-            body: JSON.stringify({
-                tipo_comprobante: tipoComprobante,
-                documento: documento,
-                total_venta: total,
-                fecha: fecha,
-                hora: hora,
-                estado_pago: estadoPago,
-                metodo_pago: metodoPago,
-                productos: productosEnviar,
-                formato: formato
-            })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (!data.success) return mostrarAlerta(data.message || "Error al registrar venta.");
-
-            configurarBotonesComprobante(data);
-
-            // ✅ liberar reservas: eliminar venta confirmada
-            const idConfirmada = POS.ventaActivaId;
-            delete POS.ventas[idConfirmada];
-
-            asegurarVentaActiva();
-            actualizarProductosStock();
-
-            if (modalVentaExitosa) modalVentaExitosa.show();
-            try { sonidoExito.play().catch(() => {}); } catch {}
-
-            renderTodo();
-        })
-        .catch(() => mostrarAlerta("Error inesperado al registrar la venta."));
+    if (!v.productos.length) {
+        return mostrarAlerta("No hay productos en la venta.");
     }
 
+    const tipoComprobante = tipoComprobanteSelect?.value || "boleta";
+    const documento = v.cliente?.documento || "";
+    const fecha = document.getElementById("fecha_emision")?.value;
+    const hora  = document.getElementById("hora_actual")?.value;
+
+    const estadoPago = estadoPagoSelect?.value || "pagado";
+    const metodoPago = v.metodo_pago || "";
+    const formato = formatoSelect?.value || "a4";
+
+    /* ==================================================
+       🔥 BLOQUE CLAVE: determinar monto_pagado
+    ================================================== */
+    let montoPagado = 0;
+
+    if (estadoPago === "pagado") {
+        montoPagado = total;
+    } else if (estadoPago === "credito") {
+        montoPagado = parseFloat(inputPaga?.value || 0);
+    }
+    // pendiente => montoPagado = 0
+    /* ================================================== */
+
+    if (montoPagado > 0 && !metodoPago) {
+        return mostrarAlerta("Debes seleccionar un método de pago.");
+    }
+
+    const productosEnviar = v.productos.map(it => ({
+        producto_id: it.id,
+        cantidad: it.cantidad,
+        presentacion: it.tipo_venta
+    }));
+
+    fetch("/ventas/registrar", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({
+            tipo_comprobante: tipoComprobante,
+            documento: documento,
+            fecha: fecha,
+            hora: hora,
+            monto_pagado: montoPagado,   // ✅ LO QUE EL BACKEND ESPERA
+            metodo_pago: metodoPago,
+            productos: productosEnviar,
+            formato: formato
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (!data.success) {
+            return mostrarAlerta(data.message || "Error al registrar venta.");
+        }
+
+        configurarBotonesComprobante(data);
+
+        // liberar venta confirmada
+        const idConfirmada = POS.ventaActivaId;
+        delete POS.ventas[idConfirmada];
+
+        asegurarVentaActiva();
+        actualizarProductosStock();
+
+        if (modalVentaExitosa) modalVentaExitosa.show();
+        try { sonidoExito.play().catch(() => {}); } catch {}
+
+        renderTodo();
+    })
+    .catch(() => mostrarAlerta("Error inesperado al registrar la venta."));
+}
+estadoPagoSelect?.addEventListener("change", manejarEstadoVenta);
+
     if (btnConfirmar3) btnConfirmar3.addEventListener("click", registrarVenta);
+
+    const btnConfirmarDirecto = document.getElementById("btn-confirmar-venta-directo");
+
+    if (btnConfirmarDirecto) {
+        btnConfirmarDirecto.addEventListener("click", () => {
+            registrarVenta();
+        });
+    }
+
 
     // Nueva venta desde modal
     if (btnNuevaVenta) {
@@ -1493,5 +1665,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
     window.ventaActiva = ventaActiva;
     window.renderVentasEsperaPanel = renderVentasEsperaPanel;
+
+    
 
 });
