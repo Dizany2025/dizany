@@ -50,4 +50,10 @@ class Movimiento extends Model
     {
         return $query->where('estado', 'pendiente');
     }
+
+    public function venta()
+    {
+        return $this->belongsTo(\App\Models\Venta::class, 'referencia_id');
+    }
+
 }

@@ -196,3 +196,7 @@ Route::get('/productos/ordenar', [ProductoController::class, 'ordenar'])
     ->name('productos.ordenar');
 
 Route::post('/ventas/{venta}/cerrar-pendiente', [VentaController::class, 'cerrarPendiente']);
+
+Route::get('/ventas/{id}/detalle', [VentaController::class, 'detalle']);
+Route::post('/ventas/{venta}/pagar-credito', [VentaController::class, 'pagarCredito']);
+

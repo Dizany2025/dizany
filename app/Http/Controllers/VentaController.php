@@ -54,227 +54,397 @@ public function filtrarPorCategoria(Request $request)
 }
 
 public function registrarVenta(Request $request)
+   {
+        $request->validate([
+            'tipo_comprobante' => 'required|string',
+            'documento'        => 'required|string',
+            'fecha'            => 'required|date',
+            'hora'             => 'required',
+            'productos'        => 'required|array|min:1',
+
+            'monto_pagado'     => 'required|numeric|min:0',
+            'metodo_pago'      => 'nullable|string',
+            'formato'          => 'nullable|string',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            /* ================= CLIENTE ================= */
+            $cliente = Cliente::where('ruc', $request->documento)
+                ->orWhere('dni', $request->documento)
+                ->firstOrFail();
+
+            /* ================= FECHA ================= */
+            $hora = strlen($request->hora) === 5 ? $request->hora . ':00' : $request->hora;
+            $fechaHora = Carbon::createFromFormat('Y-m-d H:i:s', "{$request->fecha} {$hora}");
+
+            /* ================= SERIE ================= */
+            $tipo = $request->tipo_comprobante;
+            $serie = match ($tipo) {
+                'boleta'  => 'B001',
+                'factura' => 'F001',
+                default   => 'NV01',
+            };
+
+            $correlativo = (int) (Venta::where('serie', $serie)->max('correlativo') ?? 0) + 1;
+
+            /* ================= CONFIG ================= */
+            $config = Configuracion::first();
+            $igvPercent = $config->igv ?? 0;
+
+            /* ================= VENTA BASE ================= */
+            $venta = Venta::create([
+                'cliente_id'       => $cliente->id,
+                'usuario_id'       => auth()->id(),
+                'fecha'            => $fechaHora,
+                'tipo_comprobante' => $tipo,
+                'serie'            => $serie,
+                'correlativo'      => $correlativo,
+
+                'metodo_pago'      => null,
+                'estado'           => 'pendiente', // 🔧 FIX: siempre minúscula
+
+                'estado_sunat'     => 'pendiente',
+                'op_gravadas'      => 0,
+                'igv'              => 0,
+                'total'            => 0,
+                'saldo'            => 0,
+                'activo'           => 1
+            ]);
+
+            /* ================= DETALLE + STOCK ================= */
+            $opGravadas = 0;
+
+            foreach ($request->productos as $item) {
+
+                $producto = Producto::findOrFail($item['producto_id']);
+
+                $cantidad     = (int) $item['cantidad'];
+                $presentacion = $item['presentacion'];
+
+                $uPaquete = $producto->unidades_por_paquete ?? 1;
+                $pCaja    = $producto->paquetes_por_caja ?? 1;
+
+                $unidadesAfectadas = match ($presentacion) {
+                    'unidad'  => $cantidad,
+                    'paquete' => $cantidad * $uPaquete,
+                    'caja'    => $cantidad * $uPaquete * $pCaja,
+                    default   => $cantidad
+                };
+
+                if ($producto->stock < $unidadesAfectadas) {
+                    throw new Exception("Stock insuficiente para {$producto->nombre}");
+                }
+
+                $precioPresentacion = match ($presentacion) {
+                    'unidad'  => $producto->precio_venta,
+                    'paquete' => $producto->precio_paquete,
+                    'caja'    => $producto->precio_caja,
+                    default   => $producto->precio_venta
+                };
+
+                $subtotal = $precioPresentacion * $cantidad;
+                $opGravadas += $subtotal;
+
+                $costoTotal = $producto->precio_compra * $unidadesAfectadas;
+                $ganancia   = $subtotal - $costoTotal;
+
+                DetalleVenta::create([
+                    'venta_id'           => $venta->id,
+                    'producto_id'        => $producto->id,
+                    'presentacion'       => $presentacion,
+                    'cantidad'           => $cantidad,
+                    'unidades_afectadas' => $unidadesAfectadas,
+                    'precio_presentacion'=> $precioPresentacion,
+                    'precio_unitario'    => round($precioPresentacion / max($unidadesAfectadas, 1), 4),
+                    'subtotal'           => $subtotal,
+                    'ganancia'           => $ganancia,
+                    'activo'             => 1
+                ]);
+
+                $producto->decrement('stock', $unidadesAfectadas);
+                }
+
+                /* ================= IGV + TOTAL ================= */
+                $igvMonto = round($opGravadas * ($igvPercent / 100), 2);
+                $total    = round($opGravadas + $igvMonto, 2);
+                $opGravadas = round($opGravadas, 2);
+
+                /* ================= PAGO / ESTADO ================= */
+                $montoPagado = round((float) $request->monto_pagado, 2);
+
+                if ($montoPagado > 0 && empty($request->metodo_pago)) {
+                    throw new Exception("Debe seleccionar un método de pago.");
+                }
+
+                $vuelto = 0;
+                if ($montoPagado > $total) {
+                    $vuelto = round($montoPagado - $total, 2);
+                    $montoPagado = $total;
+                }
+
+                if ($montoPagado <= 0) {
+                    $estado = 'pendiente';
+                    $saldo  = $total;
+                    $metodoPagoVenta = null;
+                } elseif ($montoPagado < $total) {
+                    $estado = 'credito';
+                    $saldo  = round($total - $montoPagado, 2);
+                    $metodoPagoVenta = $request->metodo_pago;
+                } else {
+                    $estado = 'pagado';
+                    $saldo  = 0;
+                    $metodoPagoVenta = $request->metodo_pago;
+                }
+
+                $venta->update([
+                    'op_gravadas' => $opGravadas,
+                    'igv'         => $igvMonto,
+                    'total'       => $total,
+                    'saldo'       => $saldo,
+                    'estado'      => $estado,
+                    'metodo_pago' => $metodoPagoVenta,
+                ]);
+
+                if ($montoPagado > 0) {
+                    PagoVenta::create([
+                        'venta_id'    => $venta->id,
+                        'usuario_id'  => auth()->id(),
+                        'monto'       => $montoPagado,
+                        'metodo_pago' => $request->metodo_pago,
+                    ]);
+                }
+
+                // ============================== GENERAR PDF ==============================
+                $formato = $request->input('formato', 'a4'); $vista = match ($formato) 
+                { 'ticket' => "comprobantes.{$tipo}_ticket", default => 
+                "comprobantes.{$tipo}_a4", }; if (!view()->exists($vista)) { throw new \Exception("La vista [$vista] no existe."); } $venta->load(['cliente', 'detalleVentas.producto']); 
+                // LOGO
+                $logoBase64 = null; if ($config && $config->logo && file_exists(public_path($config->logo)))
+                { $path = public_path($config->logo); $logoBase64 = 'data:image/' . pathinfo($path, PATHINFO_EXTENSION) .
+                ';base64,' . base64_encode(file_get_contents($path)); }
+                // QR 
+                $qrData = "{$config->ruc}|{$tipo}|{$serie}|{$correlativo}|{$venta->total}|{$venta->igv}|{$venta->fecha->format('d/m/Y')}|{$venta->hash}";
+                $qr = base64_encode(\QrCode::format('png')->size(120)->generate($qrData)); $pdf = \PDF::setOptions([ 'isRemoteEnabled' => true, 'dpi' => 96, 'defaultMediaType' => 'screen', ])->loadView($vista, [ 'venta' => $venta, 'config' => $config, 'qr' => $qr, 'logoBase64' => $logoBase64, 'subtotal' => $venta->op_gravadas, 'igv' => $venta->igv, 'total' => $venta->total, ]); if ($formato === 'ticket') { $alto = max(400, count($venta->detalleVentas) * 35 + 400); $pdf->setPaper([0, 0, 226.77, $alto]); } else { $pdf->setPaper('A4'); } $nombreArchivo = "{$serie}-" . str_pad($correlativo, 6, '0', STR_PAD_LEFT) . ".pdf"; $ruta = public_path("comprobantes"); if (!is_dir($ruta)) mkdir($ruta, 0775, true); $pdf->save("$ruta/$nombreArchivo"); $pdfUrl = asset("comprobantes/$nombreArchivo"); $venta->update(['pdf_url' => $pdfUrl]); 
+
+                if ($estado === 'pagado') {
+
+                    Movimiento::create([
+                        'fecha' => $fechaHora->toDateString(),
+                        'tipo'  => 'ingreso',
+                        'subtipo' => 'venta',
+                        'concepto' => "Venta {$tipo} {$serie}-" . str_pad($correlativo, 6, '0', STR_PAD_LEFT),
+                        'monto' => $total,
+                        'metodo_pago' => $metodoPagoVenta,
+                        'estado' => 'pagado',
+                        'referencia_id' => $venta->id,
+                        'referencia_tipo' => 'venta',
+                    ]);
+
+                }
+                elseif ($estado === 'pendiente') {
+
+                    Movimiento::create([
+                        'fecha' => $fechaHora->toDateString(),
+                        'tipo' => 'ingreso',
+                        'subtipo' => 'venta',
+                        'concepto' => "Venta pendiente {$tipo} {$serie}-" . str_pad($correlativo, 6, '0', STR_PAD_LEFT),
+                        'monto' => $total,
+                        'metodo_pago' => 'fiado',
+                        'estado' => 'pendiente',
+                        'referencia_id' => $venta->id,
+                        'referencia_tipo' => 'venta',
+                    ]);
+
+
+                }
+                elseif ($estado === 'credito') {
+
+                    if ($montoPagado > 0) {
+                        Movimiento::create([
+                            'fecha' => $fechaHora->toDateString(),
+                            'tipo' => 'ingreso',
+                            'subtipo' => 'venta',
+                            'concepto' => "Adelanto venta {$tipo} {$serie}-" . str_pad($correlativo, 6, '0', STR_PAD_LEFT),
+                            'monto' => $montoPagado,
+                            'metodo_pago' => $metodoPagoVenta,
+                            'estado' => 'pagado',
+                            'referencia_id' => $venta->id,
+                            'referencia_tipo' => 'venta',
+                        ]);
+                    }
+
+                    // 👉 saldo pendiente (NO dinero)
+                    Movimiento::create([
+                        'fecha' => $fechaHora->toDateString(),
+                        'tipo' => 'ingreso',
+                        'subtipo' => 'venta',
+                        'concepto' => "Saldo venta {$tipo} {$serie}-" . str_pad($correlativo, 6, '0', STR_PAD_LEFT),
+                        'monto' => $saldo,
+                        'metodo_pago' => 'credito',
+                        'estado' => 'pendiente',
+                        'referencia_id' => $venta->id,
+                        'referencia_tipo' => 'venta',
+                    ]);
+                }
+                
+                DB::commit();
+
+            return response()->json([
+                'success'        => true,
+                'message'        => 'Venta registrada correctamente.',
+                'serie'          => $serie,
+                'correlativo'    => str_pad($correlativo, 6, '0', STR_PAD_LEFT),
+                'pdf_url'        => $pdfUrl,
+                'nombre_archivo' => $nombreArchivo,
+
+                // info extra que ya usas
+                'estado'         => $estado,
+                'saldo'          => $saldo,
+                'monto_pagado'   => $montoPagado,
+                'vuelto'         => $vuelto,
+            ]);
+
+
+            } catch (\Exception $e) {
+                DB::rollBack();
+                \Log::error("Error registrarVenta: ".$e->getMessage());
+
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 500);
+            }
+}
+
+// VentaController.php
+public function detalle($id)
+{
+    $venta = Venta::with(['cliente', 'detalleVentas.producto'])
+        ->findOrFail($id);
+
+    return response()->json([
+        'id' => $venta->id,
+
+        // texto superior
+        'tipo' => ucfirst($venta->tipo_comprobante),
+
+        // estado real
+        'estado' => $venta->estado, // pagado | pendiente | credito
+
+        // montos
+        'total' => $venta->total,
+        'saldo' => $venta->saldo, // 👈 CLAVE PARA EL SALDO PENDIENTE
+
+        // fecha formateada (esto arregla el null)
+        'fecha_formato' => $venta->fecha
+            ? $venta->fecha->format('h:i A | d F Y')
+            : null,
+
+        // método
+        'metodo_pago' => $venta->metodo_pago,
+
+        // cliente COMO STRING (no objeto)
+        'cliente'       => optional($venta->cliente)->razon_social
+                                ?? optional($venta->cliente)->nombre
+                                ?? optional($venta->cliente)->nombres
+                                ?? '—',
+
+        // ganancia total
+        'ganancia' => $venta->detalleVentas->sum('ganancia'),
+
+        // productos
+        'productos' => $venta->detalleVentas->map(function ($d) {
+            return [
+                'nombre' => $d->producto->nombre,
+                'descripcion' => $d->producto->descripcion,
+                'imagen' => $d->producto->imagen
+                    ? asset('uploads/productos/' . $d->producto->imagen)
+                    : asset('img/sin-imagen.png'),
+                'cantidad_txt' => "{$d->cantidad} {$d->presentacion}",
+                'subtotal' => $d->subtotal,
+            ];
+        }),
+    ]);
+}
+public function pagarCredito(Request $request, Venta $venta)
 {
     $request->validate([
-        'tipo_comprobante' => 'required|string',
-        'documento'        => 'required|string',
-        'fecha'            => 'required|date',
-        'hora'             => 'required',
-        'productos'        => 'required|array|min:1',
-
-        'monto_pagado'     => 'required|numeric|min:0',
-        'metodo_pago'      => 'nullable|string',
-        'formato'          => 'nullable|string',
+        'monto_pagado' => 'required|numeric|min:0.01',
+        'metodo_pago'  => 'required|string',
     ]);
+
+    if ($venta->estado !== 'credito') {
+        return response()->json([
+            'success' => false,
+            'message' => 'La venta no está en crédito'
+        ], 400);
+    }
+
+    $monto = round($request->monto_pagado, 2);
+
+    if ($monto > $venta->saldo) {
+        return response()->json([
+            'success' => false,
+            'message' => 'El monto supera el saldo pendiente'
+        ], 400);
+    }
 
     DB::beginTransaction();
 
     try {
-        /* ================= CLIENTE ================= */
-        $cliente = Cliente::where('ruc', $request->documento)
-            ->orWhere('dni', $request->documento)
-            ->firstOrFail();
-
-        /* ================= FECHA ================= */
-        $hora = strlen($request->hora) === 5 ? $request->hora . ':00' : $request->hora;
-        $fechaHora = Carbon::createFromFormat('Y-m-d H:i:s', "{$request->fecha} {$hora}");
-
-        /* ================= SERIE ================= */
-        $tipo = $request->tipo_comprobante;
-        $serie = match ($tipo) {
-            'boleta'  => 'B001',
-            'factura' => 'F001',
-            default   => 'NV01',
-        };
-
-        $correlativo = (int) (Venta::where('serie', $serie)->max('correlativo') ?? 0) + 1;
-
-        /* ================= CONFIG ================= */
-        $config = Configuracion::first();
-        $igvPercent = $config->igv ?? 0;
-
-        /* ================= VENTA BASE ================= */
-        $venta = Venta::create([
-            'cliente_id'       => $cliente->id,
-            'usuario_id'       => auth()->id(),
-            'fecha'            => $fechaHora,
-            'tipo_comprobante' => $tipo,
-            'serie'            => $serie,
-            'correlativo'      => $correlativo,
-
-            'metodo_pago'      => null,
-            'estado'           => 'pendiente', // 🔧 FIX: siempre minúscula
-
-            'estado_sunat'     => 'pendiente',
-            'op_gravadas'      => 0,
-            'igv'              => 0,
-            'total'            => 0,
-            'saldo'            => 0,
-            'activo'           => 1
+        // Registrar pago
+        PagoVenta::create([
+            'venta_id'    => $venta->id,
+            'usuario_id'  => auth()->id(),
+            'monto'       => $monto,
+            'metodo_pago' => $request->metodo_pago,
         ]);
 
-        /* ================= DETALLE + STOCK ================= */
-        $opGravadas = 0;
-
-        foreach ($request->productos as $item) {
-
-            $producto = Producto::findOrFail($item['producto_id']);
-
-            $cantidad     = (int) $item['cantidad'];
-            $presentacion = $item['presentacion'];
-
-            $uPaquete = $producto->unidades_por_paquete ?? 1;
-            $pCaja    = $producto->paquetes_por_caja ?? 1;
-
-            $unidadesAfectadas = match ($presentacion) {
-                'unidad'  => $cantidad,
-                'paquete' => $cantidad * $uPaquete,
-                'caja'    => $cantidad * $uPaquete * $pCaja,
-                default   => $cantidad
-            };
-
-            if ($producto->stock < $unidadesAfectadas) {
-                throw new Exception("Stock insuficiente para {$producto->nombre}");
-            }
-
-            $precioPresentacion = match ($presentacion) {
-                'unidad'  => $producto->precio_venta,
-                'paquete' => $producto->precio_paquete,
-                'caja'    => $producto->precio_caja,
-                default   => $producto->precio_venta
-            };
-
-            $subtotal = $precioPresentacion * $cantidad;
-            $opGravadas += $subtotal;
-
-            $costoTotal = $producto->precio_compra * $unidadesAfectadas;
-            $ganancia   = $subtotal - $costoTotal;
-
-            DetalleVenta::create([
-                'venta_id'           => $venta->id,
-                'producto_id'        => $producto->id,
-                'presentacion'       => $presentacion,
-                'cantidad'           => $cantidad,
-                'unidades_afectadas' => $unidadesAfectadas,
-                'precio_presentacion'=> $precioPresentacion,
-                'precio_unitario'    => round($precioPresentacion / max($unidadesAfectadas, 1), 4),
-                'subtotal'           => $subtotal,
-                'ganancia'           => $ganancia,
-                'activo'             => 1
-            ]);
-
-            $producto->decrement('stock', $unidadesAfectadas);
-        }
-
-        /* ================= IGV + TOTAL ================= */
-        $igvMonto = round($opGravadas * ($igvPercent / 100), 2);
-        $total    = round($opGravadas + $igvMonto, 2);
-        $opGravadas = round($opGravadas, 2);
-
-        /* ================= PAGO / ESTADO ================= */
-        $montoPagado = round((float) $request->monto_pagado, 2);
-
-        if ($montoPagado > 0 && empty($request->metodo_pago)) {
-            throw new Exception("Debe seleccionar un método de pago.");
-        }
-
-        $vuelto = 0;
-        if ($montoPagado > $total) {
-            $vuelto = round($montoPagado - $total, 2);
-            $montoPagado = $total;
-        }
-
-        if ($montoPagado <= 0) {
-            $estado = 'pendiente';
-            $saldo  = $total;
-            $metodoPagoVenta = null;
-        } elseif ($montoPagado < $total) {
-            $estado = 'credito';
-            $saldo  = round($total - $montoPagado, 2);
-            $metodoPagoVenta = $request->metodo_pago;
-        } else {
-            $estado = 'pagado';
-            $saldo  = 0;
-            $metodoPagoVenta = $request->metodo_pago;
-        }
+        // Actualizar saldo
+        $nuevoSaldo = round($venta->saldo - $monto, 2);
 
         $venta->update([
-            'op_gravadas' => $opGravadas,
-            'igv'         => $igvMonto,
-            'total'       => $total,
-            'saldo'       => $saldo,
-            'estado'      => $estado,
-            'metodo_pago' => $metodoPagoVenta,
+            'saldo'  => $nuevoSaldo,
+            'estado' => $nuevoSaldo <= 0 ? 'pagado' : 'credito',
         ]);
 
-        if ($montoPagado > 0) {
-            PagoVenta::create([
-                'venta_id'    => $venta->id,
-                'usuario_id'  => auth()->id(),
-                'monto'       => $montoPagado,
-                'metodo_pago' => $request->metodo_pago,
-            ]);
-        }
-
-        // ============================== GENERAR PDF ==============================
-        $formato = $request->input('formato', 'a4'); $vista = match ($formato) 
-        { 'ticket' => "comprobantes.{$tipo}_ticket", default => 
-        "comprobantes.{$tipo}_a4", }; if (!view()->exists($vista)) { throw new \Exception("La vista [$vista] no existe."); } $venta->load(['cliente', 'detalleVentas.producto']); 
-        // LOGO
-        $logoBase64 = null; if ($config && $config->logo && file_exists(public_path($config->logo)))
-        { $path = public_path($config->logo); $logoBase64 = 'data:image/' . pathinfo($path, PATHINFO_EXTENSION) .
-         ';base64,' . base64_encode(file_get_contents($path)); }
-         // QR 
-        $qrData = "{$config->ruc}|{$tipo}|{$serie}|{$correlativo}|{$venta->total}|{$venta->igv}|{$venta->fecha->format('d/m/Y')}|{$venta->hash}";
-         $qr = base64_encode(\QrCode::format('png')->size(120)->generate($qrData)); $pdf = \PDF::setOptions([ 'isRemoteEnabled' => true, 'dpi' => 96, 'defaultMediaType' => 'screen', ])->loadView($vista, [ 'venta' => $venta, 'config' => $config, 'qr' => $qr, 'logoBase64' => $logoBase64, 'subtotal' => $venta->op_gravadas, 'igv' => $venta->igv, 'total' => $venta->total, ]); if ($formato === 'ticket') { $alto = max(400, count($venta->detalleVentas) * 35 + 400); $pdf->setPaper([0, 0, 226.77, $alto]); } else { $pdf->setPaper('A4'); } $nombreArchivo = "{$serie}-" . str_pad($correlativo, 6, '0', STR_PAD_LEFT) . ".pdf"; $ruta = public_path("comprobantes"); if (!is_dir($ruta)) mkdir($ruta, 0775, true); $pdf->save("$ruta/$nombreArchivo"); $pdfUrl = asset("comprobantes/$nombreArchivo"); $venta->update(['pdf_url' => $pdfUrl]); 
-
-        /* ================= MOVIMIENTO ================= */
+        // Movimiento de ingreso
         Movimiento::create([
-            'fecha'           => $fechaHora->toDateString(),
-            'tipo'            => 'ingreso',
-            'subtipo'         => 'venta',
-            'concepto'        => "Venta {$tipo} {$serie}-" . str_pad($correlativo, 6, '0', STR_PAD_LEFT),
-            'monto'           => $total,
-
-            // ✅ FIX DEFINITIVO
-            'metodo_pago'     => in_array($estado, ['pendiente', 'credito'])
-                ? 'CREDITO'
-                : $metodoPagoVenta,
-
-            'estado'          => $saldo <= 0 ? 'pagado' : 'pendiente',
-            'referencia_id'   => $venta->id,
+            'fecha' => now()->toDateString(),
+            'tipo'  => 'ingreso',
+            'subtipo' => 'cobro_credito',
+            'concepto' => "Cobro crédito venta {$venta->serie}-" . str_pad($venta->correlativo, 6, '0', STR_PAD_LEFT),
+            'monto' => $monto,
+            'metodo_pago' => $request->metodo_pago,
+            'estado' => 'pagado',
+            'referencia_id' => $venta->id,
             'referencia_tipo' => 'venta',
         ]);
-        
+        Movimiento::where('referencia_id', $venta->id)
+        ->where('subtipo', 'venta')
+        ->where('estado', 'pendiente')
+        ->where('metodo_pago', 'credito')
+        ->delete();
+
         DB::commit();
 
         return response()->json([
-    'success'        => true,
-    'message'        => 'Venta registrada correctamente.',
-    'serie'          => $serie,
-    'correlativo'    => str_pad($correlativo, 6, '0', STR_PAD_LEFT),
-    'pdf_url'        => $pdfUrl,
-    'nombre_archivo' => $nombreArchivo,
-
-    // info extra que ya usas
-    'estado'         => $estado,
-    'saldo'          => $saldo,
-    'monto_pagado'   => $montoPagado,
-    'vuelto'         => $vuelto,
-]);
-
+            'success' => true,
+            'message' => 'Pago registrado correctamente',
+            'saldo'   => $nuevoSaldo,
+        ]);
 
     } catch (\Exception $e) {
         DB::rollBack();
-        \Log::error("Error registrarVenta: ".$e->getMessage());
 
         return response()->json([
-            'success' => false,
+            'successzsuccess' => false,
             'message' => $e->getMessage()
         ], 500);
     }
 }
-
 
 public function cerrarPendiente(Request $request, Venta $venta)
 {
@@ -406,60 +576,6 @@ public function show($id)
         }),
     ]);
 }
-
-public function pagarCredito(Request $request, $id)
-{
-    $request->validate([
-        'monto'        => 'required|numeric|min:0.01',
-        'metodo_pago'  => 'required|string',
-    ]);
-
-    DB::beginTransaction();
-
-    try {
-        $venta = Venta::lockForUpdate()->findOrFail($id);
-
-        if ($venta->estado !== 'credito') {
-            throw new \Exception('La venta no es a crédito');
-        }
-
-        if ($request->monto > $venta->saldo) {
-            throw new \Exception('El monto supera el saldo pendiente');
-        }
-
-        PagoVenta::create([
-            'venta_id'   => $venta->id,
-            'usuario_id' => auth()->id(),
-            'monto'      => $request->monto,
-            'metodo_pago'=> $request->metodo_pago,
-            'fecha_pago' => now(),
-        ]);
-
-        $nuevoSaldo = $venta->saldo - $request->monto;
-
-        $venta->update([
-            'saldo'  => $nuevoSaldo,
-            'estado' => $nuevoSaldo <= 0 ? 'pagado' : 'credito',
-        ]);
-
-        DB::commit();
-
-        return response()->json([
-            'success' => true,
-            'saldo'   => $nuevoSaldo,
-        ]);
-
-    } catch (\Exception $e) {
-
-        DB::rollBack();
-
-        return response()->json([
-            'success' => false,
-            'message' => $e->getMessage(),
-        ], 400);
-    }
-}
-
 
     public function destroy($id)
     {

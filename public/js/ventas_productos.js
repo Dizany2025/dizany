@@ -1215,25 +1215,25 @@ function prepararFase3Credito() {
 
     // Vuelto
     if (inputPaga && inputTotalVenta && inputVuelto) {
-  inputPaga.addEventListener("input", () => {
-    const monto = parseFloat(inputPaga.value || 0);
-    const total = parseFloat(inputTotalVenta.value || 0);
-    const estadoPago = (estadoPagoSelect?.value || "pagado").toLowerCase();
+        inputPaga.addEventListener("input", () => {
+            const monto = parseFloat(inputPaga.value || 0);
+            const total = parseFloat(inputTotalVenta.value || 0);
+            const estado = (estadoPagoSelect?.value || "pagado").toLowerCase();
 
-    if (estadoPago === "credito") {
-      let saldo = total - monto;
-      if (saldo < 0) saldo = 0;
+            if (estado === "credito") {
+                let saldo = total - monto;
+                if (saldo < 0) saldo = 0;
 
-      inputVuelto.value = "Saldo pendiente: S/ " + saldo.toFixed(2);
-      return;
-    }
+                inputVuelto.value = `Saldo pendiente: S/ ${saldo.toFixed(2)}`;
+                return;
+            }
 
-    // pagado normal: vuelto
-    let vuelto = monto - total;
-    if (vuelto < 0) vuelto = 0;
+            // 🟢 pagado normal
+            let vuelto = monto - total;
+            if (vuelto < 0) vuelto = 0;
 
-    inputVuelto.value = "S/ " + vuelto.toFixed(2);
-  });
+            inputVuelto.value = `S/ ${vuelto.toFixed(2)}`;
+        });
 }
 
 

@@ -20,12 +20,13 @@ class Venta extends Model
         'metodo_pago',
         'estado',
         'estado_sunat',
-        'op_gravadas',   // 🔥
-        'igv',           // 🔥
-        'total',         // 🔥
+        'op_gravadas',
+        'igv',
+        'total',
+        'saldo',        // ✅ FALTABA
         'activo'
     ];
-
+    
     public function cliente()
     {
         return $this->belongsTo(Cliente::class, 'cliente_id');
@@ -33,8 +34,11 @@ class Venta extends Model
 
     public function detalleVentas()
     {
-        return $this->hasMany(DetalleVenta::class, 'venta_id');
+        return $this->hasMany(DetalleVenta::class);
     }
+    protected $casts = [
+        'fecha' => 'datetime',
+    ];
 
     public function usuario()
     {

@@ -19,11 +19,16 @@ class MovimientoController extends Controller
     // Tabs
     if ($tab === 'ingresos') {
         $query->where('tipo', 'ingreso')->where('estado', 'pagado');
-    } elseif ($tab === 'egresos') {
+    }   elseif ($tab === 'egresos') {
         $query->where('tipo', 'egreso')->where('estado', 'pagado');
-    } elseif ($tab === 'por_cobrar') {
-        $query->where('tipo', 'ingreso')->where('estado', 'pendiente');
-    } elseif ($tab === 'por_pagar') {
+
+    }   elseif ($tab === 'por_cobrar') {
+            $query->where('estado', 'pendiente')
+            ->whereIn('metodo_pago', ['fiado', 'credito']);
+    }
+
+        
+        elseif ($tab === 'por_pagar') {
         $query->where('tipo', 'egreso')->where('estado', 'pendiente');
     }
 

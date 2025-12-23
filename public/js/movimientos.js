@@ -19,14 +19,20 @@ document.addEventListener('DOMContentLoaded', () => {
         contenido.innerHTML = `<div class="text-muted">Cargando...</div>`;
 
         try {
-            const res = await fetch(`/ventas/${ventaId}`);
+            const res = await fetch(`/ventas/${ventaId}/detalle`);
             const v = await res.json();
 
             const estado = v.estado; // pagado | pendiente | credito
             const saldo  = estado === 'credito' ? Number(v.saldo || 0) : 0;
+            // 🔥 ESTE ES EL MONTO REAL A COBRAR
+            const montoCobrar = estado === 'credito'
+            ? saldo
+            : Number(v.total);
 
             // guardar total para vuelto
             window.__venta_total = Number(v.total);
+            // 🔥 ESTE ES EL QUE USARÁ EL PANEL DE COBRO
+            window.__venta_total = montoCobrar;
 
             contenido.innerHTML = `
             <!-- ================= DETALLE ================= -->
@@ -145,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <h6 class="fw-bold mt-3">Cobrar venta</h6>
 
                 <div class="fw-bold mb-2">
-                    Total a pagar: S/ ${Number(v.total).toFixed(2)}
+                    Total a pagar: S/ ${montoCobrar.toFixed(2)}
                 </div>
 
                 <label class="form-label">Monto recibido</label>
@@ -178,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     <button type="button"
                             class="accion-btn success"
-                            onclick="confirmarCobro(${v.id}, 'pendiente')">
+                            onclick="confirmarCobro(${v.id}, '${estado}')">
                         Registrar pago
                     </button>
                 </div>
@@ -244,6 +250,7 @@ async function confirmarCobro(ventaId, estado) {
         return;
     }
 
+    // 🔥 ENDPOINT CORRECTO SEGÚN ESTADO
     const url = estado === 'credito'
         ? `/ventas/${ventaId}/pagar-credito`
         : `/ventas/${ventaId}/cerrar-pendiente`;
