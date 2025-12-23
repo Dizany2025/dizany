@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 19-12-2025 a las 23:01:43
+-- Tiempo de generación: 23-12-2025 a las 05:29:25
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -114,7 +114,7 @@ CREATE TABLE `configuracion` (
 --
 
 INSERT INTO `configuracion` (`id`, `nombre_empresa`, `ruc`, `logo`, `moneda`, `igv`, `direccion`, `telefono`, `correo`, `tema`) VALUES
-(1, 'DIZANY', '10763633328', 'uploads/logos/1752217103_logo.png', 'S/', 0.00, 'AV. MARGINAL - PACAYZAPA', '958196510', 'admin@dizany.com', 'claro');
+(1, 'DIZANY', '10763633328', 'uploads/logos/1766438312_logo.png', 'S/', 0.00, 'AV. MARGINAL - PACAYZAPA', '958196510', 'admin@dizany.com', 'claro');
 
 -- --------------------------------------------------------
 
@@ -141,16 +141,14 @@ CREATE TABLE `detalle_ventas` (
 --
 
 INSERT INTO `detalle_ventas` (`id`, `venta_id`, `producto_id`, `presentacion`, `cantidad`, `unidades_afectadas`, `precio_presentacion`, `precio_unitario`, `subtotal`, `ganancia`, `activo`) VALUES
-(214, 165, 32, 'unidad', 1, 1, 8.00, 8.00, 8.00, 2.30, 1),
-(215, 166, 31, 'unidad', 1, 1, 25.00, 25.00, 25.00, 10.00, 1),
-(216, 167, 31, 'unidad', 1, 1, 25.00, 25.00, 25.00, 10.00, 1),
-(217, 167, 32, 'unidad', 1, 1, 8.00, 8.00, 8.00, 2.30, 1),
-(218, 168, 32, 'unidad', 1, 1, 8.00, 8.00, 8.00, 2.30, 1),
-(219, 168, 33, 'unidad', 1, 1, 2.50, 2.50, 2.50, 1.50, 1),
-(220, 169, 31, 'unidad', 1, 1, 25.00, 25.00, 25.00, 10.00, 1),
-(221, 169, 34, 'caja', 1, 60, 48.00, 0.80, 48.00, 18.00, 1),
-(222, 169, 33, 'paquete', 1, 15, 35.00, 2.33, 35.00, 20.00, 1),
-(223, 169, 32, 'unidad', 1, 1, 8.00, 8.00, 8.00, 2.30, 1);
+(341, 248, 31, 'unidad', 1, 1, 25.00, 25.00, 25.00, 10.00, 1),
+(342, 249, 32, 'caja', 1, 12, 96.00, 8.00, 96.00, 27.60, 1),
+(343, 250, 31, 'unidad', 1, 1, 25.00, 25.00, 25.00, 10.00, 1),
+(344, 250, 32, 'unidad', 1, 1, 8.00, 8.00, 8.00, 2.30, 1),
+(345, 251, 31, 'unidad', 1, 1, 25.00, 25.00, 25.00, 10.00, 1),
+(346, 251, 34, 'unidad', 1, 1, 1.00, 1.00, 1.00, 0.50, 1),
+(347, 252, 31, 'unidad', 1, 1, 25.00, 25.00, 25.00, 10.00, 1),
+(348, 253, 31, 'unidad', 1, 1, 25.00, 25.00, 25.00, 10.00, 1);
 
 -- --------------------------------------------------------
 
@@ -206,7 +204,8 @@ CREATE TABLE `gastos` (
 --
 
 INSERT INTO `gastos` (`id`, `usuario_id`, `descripcion`, `monto`, `fecha`, `metodo_pago`, `created_at`, `updated_at`) VALUES
-(1, 4, 'pago de luz', 20.00, '2025-12-05 23:55:12', 'Efectivo', '2025-12-05 23:56:37', '2025-12-05 23:56:37');
+(1, 4, 'pago de luz', 20.00, '2025-12-05 23:55:12', 'Efectivo', '2025-12-05 23:56:37', '2025-12-05 23:56:37'),
+(6, 4, 'pago de luz', 19.00, '2025-12-20 00:21:00', 'efectivo', '2025-12-20 00:22:04', '2025-12-20 00:22:04');
 
 -- --------------------------------------------------------
 
@@ -270,10 +269,10 @@ CREATE TABLE `movimientos` (
   `fecha` date NOT NULL,
   `hora` time DEFAULT NULL,
   `tipo` enum('ingreso','egreso') NOT NULL COMMENT 'Ingreso = dinero que entra, Egreso = dinero que sale',
-  `subtipo` enum('venta','gasto','ajuste','otro') NOT NULL,
+  `subtipo` varchar(50) NOT NULL,
   `concepto` varchar(255) NOT NULL,
   `monto` decimal(12,2) NOT NULL,
-  `metodo_pago` enum('efectivo','yape','plin','transferencia','tarjeta','credito') NOT NULL,
+  `metodo_pago` varchar(20) DEFAULT NULL,
   `estado` enum('pagado','pendiente') NOT NULL DEFAULT 'pagado' COMMENT 'Pendiente = por cobrar o por pagar',
   `referencia_id` bigint(20) UNSIGNED DEFAULT NULL COMMENT 'ID relacionado: venta_id, gasto_id, etc',
   `referencia_tipo` varchar(50) DEFAULT NULL COMMENT 'venta, gasto, ajuste, compra',
@@ -286,9 +285,41 @@ CREATE TABLE `movimientos` (
 --
 
 INSERT INTO `movimientos` (`id`, `fecha`, `hora`, `tipo`, `subtipo`, `concepto`, `monto`, `metodo_pago`, `estado`, `referencia_id`, `referencia_tipo`, `created_at`, `updated_at`) VALUES
-(1, '2025-12-19', NULL, 'ingreso', 'venta', 'Venta Boleta B001-123', 150.00, 'efectivo', 'pagado', 123, 'venta', '2025-12-19 05:33:22', '2025-12-19 05:33:22'),
-(2, '2025-12-19', NULL, 'ingreso', 'venta', 'Venta crédito cliente Juan', 300.00, 'credito', 'pendiente', NULL, NULL, '2025-12-19 05:34:14', '2025-12-19 05:34:14'),
-(3, '2025-12-19', NULL, 'egreso', 'gasto', 'Pago proveedor', 500.00, 'transferencia', 'pendiente', NULL, NULL, '2025-12-19 05:34:14', '2025-12-19 05:34:14');
+(70, '2025-12-22', NULL, 'ingreso', 'venta', 'Adelanto venta boleta B001-000004', 20.00, 'otro', 'pagado', 251, 'venta', '2025-12-23 04:26:29', '2025-12-23 04:26:29'),
+(72, '2025-12-22', NULL, 'ingreso', 'cobro_credito', 'Cobro crédito venta B001-000004', 6.00, 'yape', 'pagado', 251, 'venta', '2025-12-23 04:26:50', '2025-12-23 04:26:50'),
+(73, '2025-12-22', NULL, 'ingreso', 'venta', 'Venta pendiente boleta B001-000005', 25.00, 'efectivo', 'pagado', 252, 'venta', '2025-12-23 04:27:16', '2025-12-23 04:27:33'),
+(74, '2025-12-22', NULL, 'ingreso', 'venta', 'Venta boleta B001-000006', 25.00, 'yape', 'pagado', 253, 'venta', '2025-12-23 04:27:59', '2025-12-23 04:27:59');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `pagos_venta`
+--
+
+CREATE TABLE `pagos_venta` (
+  `id` int(11) NOT NULL,
+  `venta_id` int(11) NOT NULL,
+  `usuario_id` int(11) NOT NULL,
+  `monto` decimal(10,2) NOT NULL,
+  `metodo_pago` varchar(50) NOT NULL,
+  `fecha_pago` datetime NOT NULL DEFAULT current_timestamp(),
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `pagos_venta`
+--
+
+INSERT INTO `pagos_venta` (`id`, `venta_id`, `usuario_id`, `monto`, `metodo_pago`, `fecha_pago`, `created_at`, `updated_at`) VALUES
+(56, 248, 4, 25.00, 'transferencia', '2025-12-22 23:13:33', '2025-12-23 04:13:33', '2025-12-23 04:13:33'),
+(57, 250, 4, 30.00, 'otro', '2025-12-22 23:14:53', '2025-12-23 04:14:53', '2025-12-23 04:14:53'),
+(58, 250, 4, 3.00, 'efectivo', '2025-12-22 23:20:54', '2025-12-23 04:20:54', '2025-12-23 04:20:54'),
+(59, 249, 4, 96.00, 'efectivo', '2025-12-22 23:21:24', '2025-12-23 04:21:24', '2025-12-23 04:21:24'),
+(60, 251, 4, 20.00, 'otro', '2025-12-22 23:26:27', '2025-12-23 04:26:27', '2025-12-23 04:26:27'),
+(61, 251, 4, 6.00, 'yape', '2025-12-22 23:26:50', '2025-12-23 04:26:50', '2025-12-23 04:26:50'),
+(62, 252, 4, 25.00, 'efectivo', '2025-12-22 23:27:33', '2025-12-23 04:27:33', '2025-12-23 04:27:33'),
+(63, 253, 4, 25.00, 'yape', '2025-12-22 23:27:57', '2025-12-23 04:27:57', '2025-12-23 04:27:57');
 
 -- --------------------------------------------------------
 
@@ -357,10 +388,10 @@ CREATE TABLE `productos` (
 --
 
 INSERT INTO `productos` (`id`, `codigo_barras`, `nombre`, `slug`, `descripcion`, `precio_compra`, `precio_venta`, `precio_paquete`, `unidades_por_paquete`, `paquetes_por_caja`, `tipo_paquete`, `precio_caja`, `stock`, `ubicacion`, `imagen`, `fecha_vencimiento`, `categoria_id`, `marca_id`, `activo`, `visible_en_catalogo`, `created_at`, `updated_at`) VALUES
-(31, '0000000001', 'PELOTA MIKASA', 'pelota-mikasa', 'MIKASA DE CUERO', 15.00, 25.00, NULL, NULL, NULL, NULL, NULL, 45, 'p1', 'pelota-mikasa-1765915389.jpeg', NULL, 36, 20, 1, 1, '2025-12-16 20:03:09', '2025-12-19 03:44:42'),
-(32, '0000000002', 'PILSEN', 'pilsen', 'PILSEN - CONT. 630 ml', 5.70, 8.00, NULL, 12, NULL, NULL, 96.00, 20, 'p2', 'pilsen-1765918555.jpg', '2027-03-18', 25, 13, 1, 1, '2025-12-16 20:55:55', '2025-12-19 03:44:42'),
-(33, '0000000003', 'SAN LUIS', 'san-luis', 'AGUA CONT. 625ml', 1.00, 2.50, 35.00, 15, NULL, NULL, NULL, 58, 'p3', 'san-luis-1765923081.jpg', '2026-02-15', 38, 22, 1, 1, '2025-12-16 20:59:24', '2025-12-19 03:44:42'),
-(34, '0000000004', 'SODA', 'soda', 'CROCANTES Y DORADITAS', 0.50, 1.00, 5.00, 6, 10, NULL, 48.00, 120, 'p1', 'soda-1765920842.webp', '2026-05-05', 34, 23, 1, 1, '2025-12-16 21:04:56', '2025-12-19 03:44:42');
+(31, '0000000001', 'PELOTA MIKASA', 'pelota-mikasa', 'MIKASA DE CUERO', 15.00, 25.00, NULL, NULL, NULL, NULL, NULL, 1, 'p1', 'pelota-mikasa-1765915389.jpeg', NULL, 36, 20, 1, 1, '2025-12-16 20:03:09', '2025-12-23 04:27:57'),
+(32, '0000000002', 'PILSEN', 'pilsen', 'PILSEN - CONT. 630 ml', 5.70, 8.00, NULL, 12, NULL, NULL, 96.00, 22, 'p2', 'pilsen-1765918555.jpg', '2027-03-18', 25, 13, 1, 1, '2025-12-16 20:55:55', '2025-12-23 04:14:53'),
+(33, '0000000003', 'SAN LUIS', 'san-luis', 'AGUA CONT. 625ml', 1.00, 2.50, 35.00, 15, NULL, NULL, NULL, 57, 'p3', 'san-luis-1765923081.jpg', '2026-02-15', 38, 22, 1, 1, '2025-12-16 20:59:24', '2025-12-23 03:28:03'),
+(34, '0000000004', 'SODA', 'soda', 'CROCANTES Y DORADITAS', 0.50, 1.00, 5.00, 6, 10, NULL, 48.00, 3, 'p1', 'soda-1765920842.webp', '2026-05-05', 34, 23, 1, 1, '2025-12-16 21:04:56', '2025-12-23 04:26:27');
 
 -- --------------------------------------------------------
 
@@ -462,19 +493,21 @@ CREATE TABLE `ventas` (
   `cdr_url` text DEFAULT NULL,
   `activo` tinyint(1) NOT NULL DEFAULT 1,
   `op_gravadas` decimal(10,2) DEFAULT 0.00,
-  `igv` decimal(10,2) DEFAULT 0.00
+  `igv` decimal(10,2) DEFAULT 0.00,
+  `saldo` decimal(10,2) NOT NULL DEFAULT 0.00
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `ventas`
 --
 
-INSERT INTO `ventas` (`id`, `cliente_id`, `usuario_id`, `fecha`, `tipo_comprobante`, `serie`, `correlativo`, `metodo_pago`, `total`, `estado`, `estado_sunat`, `hash`, `xml_url`, `pdf_url`, `cdr_url`, `activo`, `op_gravadas`, `igv`) VALUES
-(165, 19, 4, '2025-12-17 22:44:07', 'boleta', 'B001', 1, 'efectivo', 8.00, 'pagado', 'pendiente', NULL, NULL, NULL, NULL, 1, 8.00, 0.00),
-(166, 19, 4, '2025-12-17 22:44:53', 'boleta', 'B001', 2, 'efectivo', 25.00, 'pagado', 'pendiente', NULL, NULL, NULL, NULL, 1, 25.00, 0.00),
-(167, 19, 4, '2025-12-17 22:45:43', 'boleta', 'B001', 3, 'efectivo', 33.00, 'pagado', 'pendiente', NULL, NULL, NULL, NULL, 1, 33.00, 0.00),
-(168, 33, 4, '2025-12-18 22:00:45', 'boleta', 'B001', 4, 'efectivo', 10.50, 'pagado', 'pendiente', NULL, NULL, NULL, NULL, 1, 10.50, 0.00),
-(169, 20, 4, '2025-12-18 22:44:41', 'boleta', 'B001', 5, 'plin', 116.00, 'pagado', 'pendiente', NULL, NULL, NULL, NULL, 1, 116.00, 0.00);
+INSERT INTO `ventas` (`id`, `cliente_id`, `usuario_id`, `fecha`, `tipo_comprobante`, `serie`, `correlativo`, `metodo_pago`, `total`, `estado`, `estado_sunat`, `hash`, `xml_url`, `pdf_url`, `cdr_url`, `activo`, `op_gravadas`, `igv`, `saldo`) VALUES
+(248, 20, 4, '2025-12-22 23:13:31', 'boleta', 'B001', 1, 'transferencia', 25.00, 'pagado', 'pendiente', NULL, NULL, NULL, NULL, 1, 25.00, 0.00, 0.00),
+(249, 19, 4, '2025-12-22 23:14:06', 'boleta', 'B001', 2, 'efectivo', 96.00, 'pagado', 'pendiente', NULL, NULL, NULL, NULL, 1, 96.00, 0.00, 0.00),
+(250, 19, 4, '2025-12-22 23:14:52', 'boleta', 'B001', 3, 'otro', 33.00, 'pagado', 'pendiente', NULL, NULL, NULL, NULL, 1, 33.00, 0.00, 0.00),
+(251, 20, 4, '2025-12-22 23:26:26', 'boleta', 'B001', 4, 'otro', 26.00, 'pagado', 'pendiente', NULL, NULL, NULL, NULL, 1, 26.00, 0.00, 0.00),
+(252, 19, 4, '2025-12-22 23:27:13', 'boleta', 'B001', 5, 'efectivo', 25.00, 'pagado', 'pendiente', NULL, NULL, NULL, NULL, 1, 25.00, 0.00, 0.00),
+(253, 20, 4, '2025-12-22 23:27:56', 'boleta', 'B001', 6, 'yape', 25.00, 'pagado', 'pendiente', NULL, NULL, NULL, NULL, 1, 25.00, 0.00, 0.00);
 
 --
 -- Índices para tablas volcadas
@@ -550,6 +583,14 @@ ALTER TABLE `movimientos`
   ADD KEY `idx_movimientos_fecha` (`fecha`),
   ADD KEY `idx_movimientos_tipo_estado` (`tipo`,`estado`),
   ADD KEY `idx_movimientos_metodo_pago` (`metodo_pago`);
+
+--
+-- Indices de la tabla `pagos_venta`
+--
+ALTER TABLE `pagos_venta`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_pagos_venta_venta` (`venta_id`),
+  ADD KEY `idx_pagos_venta_usuario` (`usuario_id`);
 
 --
 -- Indices de la tabla `password_resets`
@@ -631,7 +672,7 @@ ALTER TABLE `clientes`
 -- AUTO_INCREMENT de la tabla `detalle_ventas`
 --
 ALTER TABLE `detalle_ventas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=224;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=349;
 
 --
 -- AUTO_INCREMENT de la tabla `facturas`
@@ -649,7 +690,7 @@ ALTER TABLE `failed_jobs`
 -- AUTO_INCREMENT de la tabla `gastos`
 --
 ALTER TABLE `gastos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT de la tabla `marcas`
@@ -667,7 +708,13 @@ ALTER TABLE `migrations`
 -- AUTO_INCREMENT de la tabla `movimientos`
 --
 ALTER TABLE `movimientos`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=75;
+
+--
+-- AUTO_INCREMENT de la tabla `pagos_venta`
+--
+ALTER TABLE `pagos_venta`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=64;
 
 --
 -- AUTO_INCREMENT de la tabla `personal_access_tokens`
@@ -709,7 +756,7 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `ventas`
 --
 ALTER TABLE `ventas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=170;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=254;
 
 --
 -- Restricciones para tablas volcadas
@@ -733,6 +780,13 @@ ALTER TABLE `facturas`
 --
 ALTER TABLE `gastos`
   ADD CONSTRAINT `fk_gastos_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`);
+
+--
+-- Filtros para la tabla `pagos_venta`
+--
+ALTER TABLE `pagos_venta`
+  ADD CONSTRAINT `fk_pagos_venta_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`),
+  ADD CONSTRAINT `fk_pagos_venta_venta` FOREIGN KEY (`venta_id`) REFERENCES `ventas` (`id`) ON DELETE CASCADE;
 
 --
 -- Filtros para la tabla `productos`
