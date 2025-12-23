@@ -1,3 +1,8 @@
+/* ===========================
+   movimientos.js (COMPLETO)
+   Requiere: Bootstrap + SweetAlert2
+=========================== */
+
 document.addEventListener('DOMContentLoaded', () => {
 
     const panel = document.getElementById('offcanvasDetalle');
@@ -6,52 +11,91 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const offcanvas = bootstrap.Offcanvas.getOrCreateInstance(panel);
 
+    // ===== SweetAlert helpers (toast sin OK) =====
+    const toast = (icon, text) => {
+        if (typeof Swal === 'undefined') {
+            alert(text);
+            return;
+        }
+        Swal.fire({
+            toast: true,
+            position: 'top',
+            icon,
+            title: text,
+            showConfirmButton: false,
+            timer: 2200,
+            timerProgressBar: true
+        });
+    };
+
+    const toastSuccess = (text) => toast('success', text);
+    const toastWarn = (text) => toast('warning', text);
+    const toastError = (text) => toast('error', text);
+
+    // ===== Click en fila de movimientos =====
     document.addEventListener('click', async (e) => {
 
         const row = e.target.closest('.mov-row');
         if (!row) return;
 
         const ventaId = row.dataset.refId;
-        const tipo = row.dataset.refTipo;
-        if (tipo !== 'venta') return;
+        const tipoRef = row.dataset.refTipo;
+        if (tipoRef !== 'venta') return;
 
         offcanvas.show();
         contenido.innerHTML = `<div class="text-muted">Cargando...</div>`;
 
         try {
-            const res = await fetch(`/ventas/${ventaId}/detalle`);
-            const v = await res.json();
+            const res = await fetch(`/ventas/${ventaId}/detalle`, {
+                headers: { 'Accept': 'application/json' }
+            });
 
-            const estado = v.estado; // pagado | pendiente | credito
-            const saldo  = estado === 'credito' ? Number(v.saldo || 0) : 0;
-            // 🔥 ESTE ES EL MONTO REAL A COBRAR
-            const montoCobrar = estado === 'credito'
-            ? saldo
-            : Number(v.total);
+            // Si backend devuelve HTML por error
+            const text = await res.text();
+            let v;
+            try { v = JSON.parse(text); }
+            catch {
+                console.error('Respuesta no JSON:', text);
+                contenido.innerHTML = `<div class="text-danger">Error al cargar detalle</div>`;
+                return;
+            }
 
-            // guardar total para vuelto
-            window.__venta_total = Number(v.total);
-            // 🔥 ESTE ES EL QUE USARÁ EL PANEL DE COBRO
-            window.__venta_total = montoCobrar;
+            const estado = (v.estado || '').toLowerCase(); // pagado | pendiente | credito
+            const total = Number(v.total || 0);
+            const saldo = Number(v.saldo || 0);
 
+            // Monto REAL a cobrar en el panel:
+            // - credito => saldo
+            // - pendiente => total
+            const montoCobrar = (estado === 'credito') ? saldo : total;
+
+            // Fuente de verdad global
+            window.__venta = {
+                id: Number(v.id || ventaId),
+                estado,
+                total,
+                saldo,
+                montoCobrar
+            };
+
+            // Render detalle completo
             contenido.innerHTML = `
-            <!-- ================= DETALLE ================= -->
             <div id="panel-detalle">
 
                 <div class="card detalle-card mt-3">
                     <div class="d-flex justify-content-between align-items-center">
-                        <span class="text-muted">${v.tipo} • Valor total</span>
+                        <span class="text-muted">${(v.tipo || v.tipo_comprobante || 'Venta')} • Valor total</span>
                         <div id="estadoVenta"></div>
                     </div>
 
                     <div class="detalle-total">
-                        S/ ${Number(v.total).toFixed(2)}
+                        S/ ${total.toFixed(2)}
                     </div>
 
                     ${
                         estado === 'credito'
                         ? `<div class="text-danger fw-bold mt-1">
-                            Saldo pendiente: S/ ${saldo.toFixed(2)}
+                                Saldo pendiente: S/ ${saldo.toFixed(2)}
                            </div>`
                         : ''
                     }
@@ -61,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="detalle-item">
                         <i class="far fa-calendar"></i>
                         <span>Fecha y hora</span>
-                        <strong>${v.fecha_formato}</strong>
+                        <strong>${v.fecha_formato ?? '—'}</strong>
                     </div>
 
                     <div class="detalle-item">
@@ -73,14 +117,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="detalle-item">
                         <i class="far fa-user"></i>
                         <span>Cliente</span>
-                        <strong>${v.cliente}</strong>
+                        <strong>${typeof v.cliente === 'string' ? v.cliente : (v.cliente?.nombre ?? '—')}</strong>
                     </div>
 
                     <div class="detalle-item">
                         <i class="fas fa-chart-line"></i>
                         <span>Ganancia</span>
                         <strong class="text-success">
-                            S/ ${Number(v.ganancia).toFixed(2)}
+                            S/ ${Number(v.ganancia || 0).toFixed(2)}
                         </strong>
                     </div>
                 </div>
@@ -88,70 +132,49 @@ document.addEventListener('DOMContentLoaded', () => {
                 <h6 class="mt-4 fw-bold">Listado de productos</h6>
 
                 <div class="listado-productos">
-                    ${v.productos.map(p => `
-                        <div class="producto-item-pro">
-                            <img src="${p.imagen}" class="producto-img">
-                            <div class="producto-info">
-                                <div class="producto-nombre">${p.nombre}</div>
-                                ${p.descripcion ? `<div class="producto-desc">${p.descripcion}</div>` : ''}
-                                <div class="producto-cantidad">${p.cantidad_txt}</div>
+                    ${
+                        Array.isArray(v.productos) && v.productos.length
+                        ? v.productos.map(p => `
+                            <div class="producto-item-pro">
+                                <img src="${p.imagen ?? ''}" class="producto-img" onerror="this.style.display='none'">
+                                <div class="producto-info">
+                                    <div class="producto-nombre">${p.nombre ?? '—'}</div>
+                                    ${p.descripcion ? `<div class="producto-desc">${p.descripcion}</div>` : ''}
+                                    <div class="producto-cantidad">${p.cantidad_txt ?? ''}</div>
+                                </div>
+                                <div class="producto-precio">
+                                    S/ ${Number(p.subtotal || 0).toFixed(2)}
+                                </div>
                             </div>
-                            <div class="producto-precio">
-                                S/ ${Number(p.subtotal).toFixed(2)}
-                            </div>
-                        </div>
-                    `).join('')}
+                        `).join('')
+                        : `<div class="text-muted small">Sin productos</div>`
+                    }
                 </div>
 
-                <!-- ================= BOTONES ================= -->
                 <div class="acciones-detalle sticky-actions">
-
                     ${
                         (estado === 'pendiente' || estado === 'credito')
                         ? `
-                            <button class="accion-btn warning"
-                                    onclick="mostrarCobro('${estado}', ${saldo})">
+                            <button class="accion-btn warning" onclick="mostrarCobro()">
                                 <i class="fas fa-cash-register"></i>
                                 <span>Cobrar</span>
                             </button>
-                        `
+                          `
                         : ''
                     }
 
-                    <button class="accion-btn dark">
+                    <button class="accion-btn dark" type="button">
                         <i class="fas fa-print"></i>
                         <span>Imprimir</span>
                     </button>
-
-                    ${
-                        estado === 'pagado'
-                        ? `
-                            <button class="accion-btn">
-                                <i class="fas fa-receipt"></i>
-                                <span>Comprobante</span>
-                            </button>
-
-                            <button class="accion-btn">
-                                <i class="fas fa-pen"></i>
-                                <span>Editar</span>
-                            </button>
-
-                            <button class="accion-btn danger">
-                                <i class="fas fa-trash"></i>
-                                <span>Eliminar</span>
-                            </button>
-                        `
-                        : ''
-                    }
                 </div>
             </div>
 
-            <!-- ================= COBRAR PENDIENTE ================= -->
             <div id="panel-cobro" style="display:none">
                 <h6 class="fw-bold mt-3">Cobrar venta</h6>
 
                 <div class="fw-bold mb-2">
-                    Total a pagar: S/ ${montoCobrar.toFixed(2)}
+                    Total a pagar: S/ <span id="cc_total">${montoCobrar.toFixed(2)}</span>
                 </div>
 
                 <label class="form-label">Monto recibido</label>
@@ -176,25 +199,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
 
                 <div class="d-flex gap-2 mt-3">
-                    <button type="button"
-                            class="accion-btn"
-                            onclick="volverDetalle()">
+                    <button type="button" class="accion-btn" onclick="volverDetalle()">
                         Volver
                     </button>
 
-                    <button type="button"
-                            class="accion-btn success"
-                            onclick="confirmarCobro(${v.id}, '${estado}')">
+                    <button type="button" class="accion-btn success" onclick="confirmarCobro()">
                         Registrar pago
                     </button>
                 </div>
-
             </div>
             `;
 
-            // ================= BADGE ESTADO =================
+            // Badge estado
             const estadoEl = document.getElementById('estadoVenta');
-
             if (estado === 'pagado') {
                 estadoEl.innerHTML = `<span class="badge bg-success">Pagado</span>`;
             } else if (estado === 'pendiente') {
@@ -204,74 +221,149 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
         } catch (err) {
+            console.error(err);
             contenido.innerHTML = `<div class="text-danger">Error al cargar detalle</div>`;
         }
     });
+
+    // ===== Recalcular vuelto EN VIVO (funciona para pendiente y crédito) =====
+    document.addEventListener('input', (e) => {
+        if (e.target.id !== 'cc_monto') return;
+
+        const vueltoEl = document.getElementById('cc_vuelto');
+        if (!vueltoEl) return;
+
+        const recibido = Number(e.target.value || 0);
+        const totalCobrar = window.__venta?.montoCobrar ?? 0;
+
+        const vuelto = recibido - totalCobrar;
+        vueltoEl.innerText = (vuelto > 0) ? vuelto.toFixed(2) : '0.00';
+    });
+
+    // Exponer helpers por si los usas en otros lados
+    window.__toast = { toastSuccess, toastWarn, toastError };
 });
 
-/* ================= FUNCIONES GLOBALES ================= */
+/* ===========================
+   FUNCIONES GLOBALES
+=========================== */
 
 function mostrarCobro() {
-    document.getElementById('panel-detalle').style.display = 'none';
-    document.getElementById('panel-cobro').style.display = 'block';
+    const det = document.getElementById('panel-detalle');
+    const cob = document.getElementById('panel-cobro');
+    if (!det || !cob) return;
+
+    det.style.display = 'none';
+    cob.style.display = 'block';
+
+    // poner 0 por defecto para que el usuario ingrese
+    const inputMonto = document.getElementById('cc_monto');
+    const vueltoEl = document.getElementById('cc_vuelto');
+    if (inputMonto) inputMonto.value = '0';
+    if (vueltoEl) vueltoEl.innerText = '0.00';
 }
 
 function volverDetalle() {
-    document.getElementById('panel-cobro').style.display = 'none';
-    document.getElementById('panel-detalle').style.display = 'block';
+    const det = document.getElementById('panel-detalle');
+    const cob = document.getElementById('panel-cobro');
+    if (!det || !cob) return;
+
+    cob.style.display = 'none';
+    det.style.display = 'block';
 }
 
-// cálculo de vuelto SOLO para pendiente
-document.addEventListener('input', (e) => {
-    if (e.target.id !== 'cc_monto') return;
+async function confirmarCobro() {
 
-    const vueltoEl = document.getElementById('cc_vuelto');
-    if (!vueltoEl) return;
+    const v = window.__venta;
+    if (!v) return;
 
-    const recibido = Number(e.target.value || 0);
-    const total = window.__venta_total || 0;
+    const inputMonto = document.getElementById('cc_monto');
+    const metodoEl = document.getElementById('cc_metodo');
 
-    const vuelto = recibido - total;
-    vueltoEl.innerText = vuelto > 0 ? vuelto.toFixed(2) : '0.00';
-});
+    const montoIngresado = Number(inputMonto?.value || 0);
+    const metodo = metodoEl?.value || '';
 
-async function confirmarCobro(ventaId, estado) {
+    const toast = (icon, text) => {
+        if (typeof Swal === 'undefined') { alert(text); return; }
+        Swal.fire({
+            toast: true,
+            position: 'top',
+            icon,
+            title: text,
+            showConfirmButton: false,
+            timer: 2200,
+            timerProgressBar: true
+        });
+    };
 
-    const monto  = parseFloat(document.getElementById('cc_monto').value);
-    const metodo = document.getElementById('cc_metodo').value;
-
-    if (!monto || monto <= 0) {
-        alert('Ingrese un monto válido');
+    if (!montoIngresado || montoIngresado <= 0) {
+        toast('warning', 'Ingrese un monto válido');
         return;
     }
 
     if (!metodo) {
-        alert('Seleccione método');
+        toast('warning', 'Seleccione método');
         return;
     }
 
-    // 🔥 ENDPOINT CORRECTO SEGÚN ESTADO
-    const url = estado === 'credito'
-        ? `/ventas/${ventaId}/pagar-credito`
-        : `/ventas/${ventaId}/cerrar-pendiente`;
+    // ===== Reglas =====
+    // Pendiente: NO permitir menor. Permitir mayor (vuelto visual) y cobrar solo deuda.
+    // Crédito:   NO permitir menor al saldo. Permitir mayor (vuelto visual) y cobrar solo saldo.
+    const totalCobrar = Number(v.montoCobrar || 0);
 
-    const res = await fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-        },
-        body: JSON.stringify({
-            monto_pagado: monto,
-            metodo_pago: metodo
-        })
-    });
+    if (montoIngresado < totalCobrar) {
+        if (v.estado === 'credito') {
+            toast('warning', 'En crédito, el monto no puede ser menor al saldo pendiente');
+        } else {
+            toast('warning', 'En una venta pendiente debe pagar como mínimo el total');
+        }
+        return;
+    }
 
-    const data = await res.json();
+    // Si paga más, backend solo debe registrar el monto real (deuda),
+    // el vuelto es solo visual.
+    const montoAEnviar = totalCobrar;
 
-    if (data.success) {
-        location.reload();
-    } else {
-        alert(data.message || 'Error al cobrar');
+    const url = (v.estado === 'credito')
+        ? `/ventas/${v.id}/pagar-credito`
+        : `/ventas/${v.id}/cerrar-pendiente`;
+
+    try {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+                monto_pagado: montoAEnviar,
+                metodo_pago: metodo
+            })
+        });
+
+        const text = await res.text();
+        let data;
+        try { data = JSON.parse(text); }
+        catch {
+            console.error('Respuesta no JSON:', text);
+            toast('error', 'Error del servidor');
+            return;
+        }
+
+        if (!res.ok || !data.success) {
+            toast('error', data.message || 'Error al cobrar');
+            return;
+        }
+
+        // ✅ SweetAlert éxito (sin OK)
+        toast('success', 'Deuda pagada con éxito');
+
+        // recargar bonito luego del toast
+        setTimeout(() => location.reload(), 900);
+
+    } catch (err) {
+        console.error(err);
+        toast('error', 'Error al cobrar');
     }
 }

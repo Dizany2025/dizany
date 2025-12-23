@@ -384,11 +384,17 @@ public function pagarCredito(Request $request, Venta $venta)
 
     $monto = round($request->monto_pagado, 2);
 
-    if ($monto > $venta->saldo) {
+    // 🔥 Si paga menos → NO permitido
+    if ($monto < $venta->saldo) {
         return response()->json([
             'success' => false,
-            'message' => 'El monto supera el saldo pendiente'
+            'message' => 'Debe pagar al menos el saldo pendiente'
         ], 400);
+    }
+
+    // 🔥 Si paga más → se ajusta (vuelto solo visual)
+    if ($monto > $venta->saldo) {
+        $monto = $venta->saldo;
     }
 
     DB::beginTransaction();
