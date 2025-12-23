@@ -1,3 +1,126 @@
+/*header*/
+/* =========================================================
+   HEADER ACTIONS – PATRÓN GLOBAL (VENTAS / MOVIMIENTOS)
+   ========================================================= */
+
+/* Contenedor principal del bloque de acciones */
+.header-venta-treinta {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 16px;
+}
+
+/* ================= IZQUIERDA ================= */
+
+/* Wrapper del título */
+/* Da aire entre DIZANY y el separador */
+.titulo-venta-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: 12px; /* 👈 ESTO es lo que faltaba */
+}
+
+/* Separador visual (equivale al "|") */
+.separador {
+    width: 3px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.35);
+    box-shadow: none; /* 👈 más limpio */
+}
+
+/* Título del módulo */
+.titulo-venta {
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.75); /* 👈 clave */
+    letter-spacing: 0.2px;
+}
+.header-venta-treinta:hover .titulo-venta {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* ================= DERECHA ================= */
+
+/* Contenedor de botones (se empuja a la derecha) */
+.header-right-actions {
+    margin-right: 12px; /* 👈 aire con la campanita */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto; /* CLAVE para alinear a la derecha */
+}
+
+/* =========================================================
+   BOTONES MOVIMIENTOS
+   ========================================================= */
+
+/* Botón principal (Abrir caja) */
+.btn-movimientos-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    background: linear-gradient(135deg, #20e3b2, #00bfa5);
+    color: #04352f;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 13px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+.btn-movimientos-primary i {
+    font-size: 14px;
+}
+
+.btn-movimientos-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+}
+
+/* Botón secundario (Reporte) */
+.btn-movimientos-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #ffffff;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-movimientos-outline i {
+    font-size: 14px;
+}
+
+.btn-movimientos-outline:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+/* =========================================================
+   RESPONSIVE (opcional)
+   ========================================================= */
+
+@media (max-width: 768px) {
+    .titulo-venta {
+        display: none; /* solo iconos en móvil */
+    }
+
+    .header-venta-treinta {
+        gap: 10px;
+    }
+}
+
 /* Cards suaves */
 .card-soft{
   border: 1px solid rgba(0,0,0,.06);

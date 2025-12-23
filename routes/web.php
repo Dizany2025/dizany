@@ -200,3 +200,7 @@ Route::post('/ventas/{venta}/cerrar-pendiente', [VentaController::class, 'cerrar
 Route::get('/ventas/{id}/detalle', [VentaController::class, 'detalle']);
 Route::post('/ventas/{venta}/pagar-credito', [VentaController::class, 'pagarCredito']);
 
+Route::get('/movimientos/reporte', 
+    [MovimientoController::class, 'reporte']
+)->name('movimientos.reporte');
+

@@ -1,38 +1,65 @@
 @extends('layouts.app')
 
-@section('content')
-<div class="container-fluid">
+{{-- ================= HEADER ACTIONS (GLOBAL HEADER) ================= --}}
+@section('header-actions')
+<div class="header-venta-treinta w-100 d-flex align-items-center">
 
-    {{-- ================= HEADER ================= --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="fw-bold mb-0">Movimientos</h4>
-
-        <div class="d-flex gap-2">
-            <button class="btn btn-dark">
-                👑 Abrir caja
-            </button>
-
-            <button class="btn btn-outline-dark">
-                ⬇️ Descargar reporte
-            </button>
-        </div>
+    <!-- Izquierda (IGUAL A VENTAS) -->
+    <div class="titulo-venta-wrapper">
+        <div class="separador"></div>
+        <h5 class="titulo-venta">Movimientos</h5>
     </div>
+
+    <!-- Derecha -->
+    <div class="header-right-actions ms-auto">
+
+        <button class="btn-movimientos-primary"
+                onclick="abrirCaja()">
+            <i class="fas fa-cash-register"></i>
+            <span class="btn-text">Abrir caja</span>
+        </button>
+
+        <a href="{{ route('movimientos.reporte') }}"
+           class="btn-movimientos-outline">
+            <i class="fas fa-file-download"></i>
+            <span class="btn-text">Reporte</span>
+        </a>
+
+    </div>
+</div>
+@endsection
+
+@section('content')
+
+<div class="container-fluid">
 
     {{-- ================= TABS PRINCIPALES ================= --}}
     <div class="card mb-3">
-        <div class="card-body p-2 d-flex">
-            <button class="btn btn-dark flex-fill">Transacciones</button>
-            <button class="btn btn-light flex-fill">Cierres de caja</button>
+        <div class="card-body p-2 d-flex gap-2">
+            <a href="{{ route('movimientos.index', array_merge(request()->query(), ['tipo' => 'transacciones'])) }}"
+               class="btn {{ request('tipo','transacciones') === 'transacciones' ? 'btn-dark' : 'btn-light' }} flex-fill">
+                Transacciones
+            </a>
+
+            <a href="{{ route('movimientos.index', array_merge(request()->query(), ['tipo' => 'cierres'])) }}"
+               class="btn {{ request('tipo') === 'cierres' ? 'btn-dark' : 'btn-light' }} flex-fill">
+                Cierres de caja
+            </a>
         </div>
     </div>
 
     {{-- ================= FILTROS ================= --}}
-    <form method="GET" action="{{ route('movimientos.index') }}" class="row g-2 mb-3">
+    <form method="GET"
+          action="{{ route('movimientos.index') }}"
+          class="row g-2 mb-3">
 
+        <input type="hidden" name="tipo" value="{{ request('tipo','transacciones') }}">
         <input type="hidden" name="tab" value="{{ $tab }}">
 
         <div class="col-md-2">
-            <select name="rango" class="form-select" onchange="this.form.submit()">
+            <select name="rango"
+                    class="form-select"
+                    onchange="this.form.submit()">
                 <option value="diario" {{ $rango === 'diario' ? 'selected' : '' }}>Diario</option>
                 <option value="mensual" {{ $rango === 'mensual' ? 'selected' : '' }}>Mensual</option>
             </select>
@@ -40,23 +67,21 @@
 
         <div class="col-md-2">
             <input type="date"
-                name="fecha"
-                value="{{ $fecha }}"
-                class="form-control"
-                onchange="this.form.submit()">
+                   name="fecha"
+                   value="{{ $fecha }}"
+                   class="form-control"
+                   onchange="this.form.submit()">
         </div>
 
         <div class="col-md-4">
             <input type="text"
-                name="buscar"
-                value="{{ request('buscar') }}"
-                class="form-control"
-                placeholder="Buscar concepto..."
-                onkeydown="if(event.key==='Enter'){ this.form.submit(); }">
+                   name="buscar"
+                   value="{{ request('buscar') }}"
+                   class="form-control"
+                   placeholder="Buscar concepto..."
+                   onkeydown="if(event.key==='Enter'){ this.form.submit(); }">
         </div>
-
     </form>
-
 
     {{-- ================= KPIs ================= --}}
     <div class="row mb-4">
@@ -64,12 +89,12 @@
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body d-flex align-items-center gap-3">
-                    <div class="rounded-circle bg-success bg-opacity-10 p-3">
-                        📈
-                    </div>
+                    <div class="rounded-circle bg-success bg-opacity-10 p-3">📈</div>
                     <div>
                         <small class="text-muted">Balance</small>
-                        <h5 class="fw-bold mb-0">S/ {{ number_format($balance ?? 0, 2) }}</h5>
+                        <h5 class="fw-bold mb-0">
+                            S/ {{ number_format($balance ?? 0, 2) }}
+                        </h5>
                     </div>
                 </div>
             </div>
@@ -78,12 +103,12 @@
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body d-flex align-items-center gap-3">
-                    <div class="rounded-circle bg-success bg-opacity-10 p-3">
-                        💵
-                    </div>
+                    <div class="rounded-circle bg-success bg-opacity-10 p-3">💵</div>
                     <div>
                         <small class="text-muted">Ventas totales</small>
-                        <h5 class="fw-bold text-success mb-0">S/ {{ number_format($ventas ?? 0, 2) }}</h5>
+                        <h5 class="fw-bold text-success mb-0">
+                            S/ {{ number_format($ventas ?? 0, 2) }}
+                        </h5>
                     </div>
                 </div>
             </div>
@@ -92,12 +117,12 @@
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body d-flex align-items-center gap-3">
-                    <div class="rounded-circle bg-danger bg-opacity-10 p-3">
-                        💸
-                    </div>
+                    <div class="rounded-circle bg-danger bg-opacity-10 p-3">💸</div>
                     <div>
                         <small class="text-muted">Gastos totales</small>
-                        <h5 class="fw-bold text-danger mb-0">S/ {{ number_format($gastos ?? 0, 2) }}</h5>
+                        <h5 class="fw-bold text-danger mb-0">
+                            S/ {{ number_format($gastos ?? 0, 2) }}
+                        </h5>
                     </div>
                 </div>
             </div>
@@ -107,33 +132,23 @@
 
     {{-- ================= SUB TABS ================= --}}
     <ul class="nav nav-tabs mb-3">
-        <li class="nav-item">
-            <a class="nav-link {{ $tab === 'ingresos' ? 'active' : '' }}"
-            href="{{ route('movimientos.index', array_merge(request()->query(), ['tab' => 'ingresos'])) }}">
-                Ingresos
-            </a>
-        </li>
+        @php
+            $tabs = [
+                'ingresos'   => 'Ingresos',
+                'egresos'    => 'Egresos',
+                'por_cobrar' => 'Por cobrar',
+                'por_pagar'  => 'Por pagar',
+            ];
+        @endphp
 
-        <li class="nav-item">
-            <a class="nav-link {{ $tab === 'egresos' ? 'active' : '' }}"
-            href="{{ route('movimientos.index', array_merge(request()->query(), ['tab' => 'egresos'])) }}">
-                Egresos
-            </a>
-        </li>
-
-        <li class="nav-item">
-            <a class="nav-link {{ $tab === 'por_cobrar' ? 'active' : '' }}"
-            href="{{ route('movimientos.index', array_merge(request()->query(), ['tab' => 'por_cobrar'])) }}">
-                Por cobrar
-            </a>
-        </li>
-
-        <li class="nav-item">
-            <a class="nav-link {{ $tab === 'por_pagar' ? 'active' : '' }}"
-            href="{{ route('movimientos.index', array_merge(request()->query(), ['tab' => 'por_pagar'])) }}">
-                Por pagar
-            </a>
-        </li>
+        @foreach($tabs as $key => $label)
+            <li class="nav-item">
+                <a class="nav-link {{ $tab === $key ? 'active' : '' }}"
+                   href="{{ route('movimientos.index', array_merge(request()->query(), ['tab' => $key])) }}">
+                    {{ $label }}
+                </a>
+            </li>
+        @endforeach
     </ul>
 
     {{-- ================= TABLA ================= --}}
@@ -180,12 +195,15 @@
                         </td>
 
                         <td class="text-center">
-                            <button class="btn btn-sm btn-outline-secondary">👁</button>
+                            <button class="btn btn-sm btn-outline-secondary">
+                                👁
+                            </button>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="text-center text-muted py-4">
+                        <td colspan="6"
+                            class="text-center text-muted py-4">
                             No hay movimientos para mostrar
                         </td>
                     </tr>
@@ -202,21 +220,20 @@
             </div>
         @endif
     </div>
-{{-- =============panel derecho ================= --}}
+</div>
+
+{{-- ================= OFFCANVAS DETALLE ================= --}}
 <div class="offcanvas offcanvas-end detalle-venta-panel"
      tabindex="-1"
-     id="offcanvasDetalle"
-     aria-labelledby="offcanvasDetalleLabel">
+     id="offcanvasDetalle">
 
     <div class="offcanvas-header pb-2">
-        <div class="d-flex align-items-center gap-2">
-            <div class="icon-circle">
-                <i class="fas fa-store"></i>
-            </div>
-            <h5 class="offcanvas-title mb-0">Detalle de la venta</h5>
-        </div>
-
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        <h5 class="offcanvas-title mb-0">
+            Detalle de la venta
+        </h5>
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="offcanvas"></button>
     </div>
 
     <div class="divider-green"></div>
@@ -226,9 +243,7 @@
     </div>
 </div>
 
-
 @endsection
-
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/movimientos.css') }}">
@@ -237,6 +252,3 @@
 @push('scripts')
 <script src="{{ asset('js/movimientos.js') }}"></script>
 @endpush
-
-
-
