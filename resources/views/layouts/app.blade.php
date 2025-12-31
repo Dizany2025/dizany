@@ -8,6 +8,7 @@
 
     <!-- Iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ asset('css/header-actions.css') }}">
 
     <!-- Vite -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -34,10 +35,11 @@
 
     <!-- Bootstrap (una sola vez) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
     <!-- SweetAlert + jQuery -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- JS HEADER ACTIONS (NUEVO SISTEMA) -->
+    <script src="{{ asset('js/header-actions.js') }}"></script>
 
     <!-- Script: Toggle Sidebar -->
     <script>

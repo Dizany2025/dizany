@@ -4,59 +4,48 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 @endpush
-
-@section('header-actions')
-    <!-- 🔵 HEADER -->
-    <div class="header-venta-treinta">
-        
-        <!-- Izquierda -->
-        <div class="titulo-venta-wrapper">
-            <div class="separador"></div>
-            <h5 class="titulo-venta">Nueva venta</h5>
-        </div>
-
-        <!-- Botones derecha -->
-        <div class="header-right-actions">
-            <!-- Ventas en espera -->
-            <div class="pos-espera-wrapper">
-                <button id="btn-pos-espera" class="btn-pos-espera">
-                    <i class="fas fa-receipt"></i>
-                    <span class="btn-text">Ventas en espera</span>
-                    <span id="pos-espera-count" class="badge">0</span>
-                    <i class="fas fa-chevron-down ms-1"></i>
-                </button>
-
-                <!-- PANEL DESLIZABLE -->
-                <div id="pos-espera-panel" class="pos-espera-panel d-none">
-                    <!-- Render JS -->
-                </div>
-            </div>
-
-            <!-- Ordenar -->
-            <div class="ordenar-wrapper">
-                <button id="btn-ordenar" class="btn-ordenar"
-                data-tooltip="Ordenar productos&#10;Organiza tus productos por orden alfabético, stock, ventas o fecha reciente.">
-                <i class="fas fa-sort-amount-down"></i>
-                </button>
-            </div>
-
-            <!-- Nuevo gasto -->
-            <a href="{{ route('gastos.create') }}" class="btn btn-danger">
-                <i class="fas fa-receipt"></i>
-                <span class="btn-text">Nuevo gasto</span>
-            </a>
-
-        </div>
-    </div>
+{{-- Activa el sistema de header-actions --}}
+@section('header-back')
+<button class="btn-header-back" onclick="history.back()">
+    <i class="fas fa-arrow-left"></i>
+</button>
 @endsection
+
+@section('header-title')
+Nueva venta
+@endsection
+
+@section('header-buttons')
+
+<div class="pos-espera-wrapper">
+    <button id="btn-pos-espera" class="btn-pos-espera">
+        <i class="fas fa-receipt"></i>
+        <span class="btn-text">Ventas en espera</span>
+        <span id="pos-espera-count" class="badge">0</span>
+    </button>
+
+    <div id="pos-espera-panel" class="pos-espera-panel d-none"></div>
+</div>
+
+<div class="ordenar-wrapper">
+    <button id="btn-ordenar" class="btn-ordenar"
+            data-tooltip="Ordenar productos">
+        <i class="fas fa-sort-amount-down"></i>
+    </button>
+</div>
+
+<a href="{{ route('gastos.create') }}" class="btn-gasto">
+    <i class="fas fa-receipt"></i>
+    <span class="btn-text">Nuevo gasto</span>
+</a>
+
+@endsection
+
 
 @section('content')
 <link href="{{ asset('css/ventas.css') }}" rel="stylesheet" />
 
 <div class="container-fluid ventas-treinta">
-
-    
-
 
     <!-- 🔥 CUERPO PRINCIPAL 2 COLUMNAS -->
     <div class="treinta-body">

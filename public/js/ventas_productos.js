@@ -1257,6 +1257,18 @@ function prepararFase3Credito() {
         restaurarVentaActivaEnUI();
         renderTodo();
     }
+console.log('--- DEBUG VENTAS EN ESPERA ---');
+console.log('ventas:', POS.ventas);
+
+console.log(
+  'contadores encontrados:',
+  document.querySelectorAll('#pos-espera-count').length
+);
+
+console.log(
+  'botones encontrados:',
+  document.querySelectorAll('#btn-pos-espera').length
+);
 
     function renderVentasEsperaPanel() {
     if (!posEsperaPanel || !posEsperaCount) return;
@@ -1266,7 +1278,9 @@ function prepararFase3Credito() {
         .filter(v => (v.productos || []).length > 0);
 
         // contador correcto
-        posEsperaCount.innerText = ventasConItems.length;
+        document.querySelectorAll('#pos-espera-count').forEach(el => {
+            el.innerText = ventasConItems.length;
+        });
 
         // estado vacío
         if (ventasConItems.length === 0) {
@@ -1364,24 +1378,29 @@ function prepararFase3Credito() {
         setTimeout(() => posEsperaPanel.classList.add("d-none"), 180);
     }
 
-    if (btnPosEspera && posEsperaPanel) {
-        btnPosEspera.addEventListener("click", (e) => {
+    document.querySelectorAll('#btn-pos-espera').forEach(btn => {
+        btn.addEventListener("click", (e) => {
             e.preventDefault();
             e.stopPropagation();
 
-            // re-render siempre antes de abrir
             renderVentasEsperaPanel();
 
-            if (posEsperaPanel.classList.contains("d-none")) abrirPanelEspera();
-            else cerrarPanelEspera();
+            if (posEsperaPanel.classList.contains("d-none")) {
+                abrirPanelEspera();
+            } else {
+                cerrarPanelEspera();
+            }
         });
+    });
 
-        // cerrar si click fuera
-        document.addEventListener("click", () => cerrarPanelEspera());
+    // cerrar al hacer click fuera
+    document.addEventListener("click", () => cerrarPanelEspera());
 
-        // no cerrar al click dentro del panel
+    // evitar cerrar al click dentro
+    if (posEsperaPanel) {
         posEsperaPanel.addEventListener("click", (e) => e.stopPropagation());
     }
+
 
     // ============================
     // Ordenar (modal)

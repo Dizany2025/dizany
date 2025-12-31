@@ -1,32 +1,29 @@
 @extends('layouts.app')
 
-{{-- ================= HEADER ACTIONS (GLOBAL HEADER) ================= --}}
-@section('header-actions')
-<div class="header-venta-treinta w-100 d-flex align-items-center">
+{{-- Activa el sistema de header-actions --}}
+@section('header-back')
+<button class="btn-header-back" onclick="history.back()">
+    <i class="fas fa-arrow-left"></i>
+</button>
+@endsection
 
-    <!-- Izquierda (IGUAL A VENTAS) -->
-    <div class="titulo-venta-wrapper">
-        <div class="separador"></div>
-        <h5 class="titulo-venta">Movimientos</h5>
-    </div>
+@section('header-title')
+Movimientos
+@endsection
 
-    <!-- Derecha -->
-    <div class="header-right-actions ms-auto">
+@section('header-buttons')
 
-        <button class="btn-movimientos-primary"
-                onclick="abrirCaja()">
-            <i class="fas fa-cash-register"></i>
-            <span class="btn-text">Abrir caja</span>
-        </button>
+<button class="btn-movimientos-primary" onclick="abrirCaja()">
+    <i class="fas fa-cash-register"></i>
+    <span class="btn-text">Abrir caja</span>
+</button>
 
-        <a href="{{ route('movimientos.reporte') }}"
-           class="btn-movimientos-outline">
-            <i class="fas fa-file-download"></i>
-            <span class="btn-text">Reporte</span>
-        </a>
+<a href="{{ route('movimientos.reporte') }}"
+   class="btn-movimientos-outline">
+    <i class="fas fa-file-download"></i>
+    <span class="btn-text">Reporte</span>
+</a>
 
-    </div>
-</div>
 @endsection
 
 @section('content')

@@ -326,19 +326,3 @@ footer a {
 /* ============================================
    FIXES ESPECIALES
 ============================================ */
-
-/* El contenido no debe meterse debajo del sidebar */
-@media (min-width: 769px) {
-    #content {
-        margin-left: var(--sidebar-width);
-    }
-
-    body.sidebar-collapsed #content {
-        margin-left: var(--sidebar-width-collapsed);
-    }
-}
-
-/* Evitar que el sidebar se pegue demasiado al header internamente */
-#sidebar {
-    padding-top: 10px;
-}
