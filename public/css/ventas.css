@@ -809,4 +809,128 @@ select.form-select-sm,
 }
 
 
+/*modal ordenar*/
+/* =========================================
+   MODAL ORDENAR INVENTARIO (PREMIUM)
+========================================= */
+
+/* Modal contenedor */
+#modalOrdenar .modal-content {
+    border-radius: 18px;
+    border: none;
+    overflow: hidden;
+    animation: modalFadeUp 0.25s ease-out;
+}
+
+/* Animación */
+@keyframes modalFadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Header */
+#modalOrdenar .modal-header {
+    border-bottom: 1px solid #eef1f5;
+    padding: 16px 20px;
+}
+
+#modalOrdenar .modal-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+/* Body */
+#modalOrdenar .modal-body {
+    padding: 18px 20px;
+}
+
+/* Labels de secciones */
+#modalOrdenar label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.8rem;
+    letter-spacing: 0.2px;
+}
+
+/* Botones de orden */
+.orden-btn {
+    padding: 12px 10px;
+    border-radius: 12px;
+    background: #fff;
+    border: 1.5px solid #e5e7eb;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #111827;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+/* Hover */
+.orden-btn:hover {
+    background: #f5f9ff;
+    border-color: #9ec5ff;
+    color: #1d4ed8;
+    transform: translateY(-1px);
+}
+
+/* Activo */
+.orden-btn.active {
+    background: linear-gradient(135deg, #2563eb, #1e40af);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 6px 16px rgba(37,99,235,0.35);
+}
+
+/* Footer */
+#modalOrdenar .modal-footer {
+    border-top: 1px solid #eef1f5;
+    padding: 14px 20px;
+}
+
+/* Botón limpiar */
+#btn-limpiar-orden {
+    background: #f3f4f6;
+    border: none;
+    color: #374151;
+    border-radius: 10px;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+}
+
+#btn-limpiar-orden:hover {
+    background: #e5e7eb;
+}
+
+/* Botón aplicar */
+#btn-aplicar-orden {
+    background: linear-gradient(135deg, #2563eb, #1e40af);
+    border: none;
+    border-radius: 12px;
+    padding: 9px 22px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    box-shadow: 0 6px 18px rgba(37,99,235,0.35);
+}
+
+#btn-aplicar-orden:hover {
+    filter: brightness(1.08);
+}
+
+/* Mobile ajustes */
+@media (max-width: 576px) {
+    #modalOrdenar .modal-dialog {
+        margin: 10px;
+    }
+
+    .orden-btn {
+        font-size: 0.8rem;
+        padding: 10px 8px;
+    }
+}
 
