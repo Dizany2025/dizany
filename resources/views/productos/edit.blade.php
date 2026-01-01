@@ -8,13 +8,25 @@
 
 @section('title', 'Editar Producto')
 
-@section('header-actions')
-<div class="d-flex align-items-center gap-3 p-3">
-    <a href="{{ route('productos.index') }}" class="atras">
-        <i class="fas fa-chevron-left"></i> Productos
-    </a>
-</div>
+{{-- BOTÓN ATRÁS --}}
+@section('header-back')
+<button class="btn-header-back"
+        type="button"
+        onclick="window.location='{{ route('productos.index') }}'">
+    <i class="fas fa-chevron-left"></i>
+</button>
 @endsection
+
+{{-- TÍTULO --}}
+@section('header-title')
+Editar Producto
+@endsection
+
+{{-- BOTONES DERECHA --}}
+@section('header-buttons')
+{{-- sin acciones --}}
+@endsection
+
 
 @section('content')
 <link href="{{ asset('css/edit_productos.css') }}" rel="stylesheet" />

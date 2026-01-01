@@ -9,12 +9,24 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
 @endpush
 
-@section('header-actions')
-<div class="d-flex align-items-center gap-3">    
-    <a href="{{ route('gastos.create') }}" class="nuevo-producto">
-        <i class="fa-solid fa-plus"></i> Nuevo Gasto
-    </a>
-</div>
+{{-- BOTÓN ATRÁS (opcional) --}}
+@section('header-back')
+<button class="btn-header-back" onclick="history.back()">
+    <i class="fas fa-arrow-left"></i>
+</button>
+@endsection
+
+{{-- TÍTULO --}}
+@section('header-title')
+Gastos
+@endsection
+
+{{-- BOTONES DERECHA --}}
+@section('header-buttons')
+<a href="{{ route('gastos.create') }}" class="btn-gasto">
+    <i class="fa-solid fa-plus"></i>
+    <span class="btn-text">Nuevo gasto</span>
+</a>
 @endsection
 
 @section('content')

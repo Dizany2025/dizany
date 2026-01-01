@@ -13,25 +13,67 @@
     --content-bg: #f5f7fa;
 }
 
+.container,
+.container-sm,
+.container-md,
+.container-lg,
+.container-xl,
+.container-xxl {
+    max-width: 100% !important;
+}
+
 /* ============================================
    LAYOUT GENERAL
 ============================================ */
 body {
     margin: 0;
     padding: 0;
+    min-height: 100vh;
     background: var(--content-bg);
     font-family: 'Segoe UI', sans-serif;
-    padding-top: var(--header-height); /* evitar que el header tape el contenido */
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
 }
 
 /* CONTENIDO PRINCIPAL */
+/* =========================================================
+   LAYOUT CONTENT — FIX DEFINITIVO
+========================================================= */
+
+/* BASE */
 #content {
-    padding: 20px;
-    flex: 1;
-    padding-bottom: 80px; /* evitar que el footer tape contenido */
+    margin-left: var(--sidebar-width);
+    padding-top: var(--header-height);
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 40px;
+
+    min-height: calc(100vh - var(--header-height));
+    transition: margin-left 0.25s ease;
+}
+
+/* ======================================
+   DESKTOP — SIDEBAR NORMAL
+====================================== */
+@media (min-width: 769px) {
+
+    body:not(.sidebar-collapsed) #content {
+        margin-left: var(--sidebar-width);
+    }
+
+    body.sidebar-collapsed #content {
+        margin-left: var(--sidebar-width-collapsed);
+    }
+}
+
+/* ======================================
+   MOBILE — SIDEBAR OVERLAY
+====================================== */
+@media (max-width: 768px) {
+
+    #content {
+        margin-left: 0 !important;
+        padding-left: 16px;
+        padding-right: 16px;
+    }
 }
 
 /* ============================================

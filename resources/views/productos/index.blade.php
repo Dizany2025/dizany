@@ -9,12 +9,24 @@
     
 @endpush
 
-@section('header-actions')
-<div class="d-flex align-items-center gap-3">
-    <a href="{{ route('productos.create') }}" class="nuevo-producto">
-        <i class="fa-solid fa-plus"></i> Nuevo Producto
-    </a>
-</div>
+{{-- Botón atrás (opcional) --}}
+@section('header-back')
+<button class="btn-header-back" onclick="history.back()">
+    <i class="fas fa-arrow-left"></i>
+</button>
+@endsection
+
+{{-- TÍTULO --}}
+@section('header-title')
+Productos
+@endsection
+
+{{-- BOTONES DERECHA --}}
+@section('header-buttons')
+<a href="{{ route('productos.create') }}" class="btn-gasto">
+    <i class="fa-solid fa-plus"></i>
+    <span class="btn-text">Nuevo producto</span>
+</a>
 @endsection
 
 @section('content')

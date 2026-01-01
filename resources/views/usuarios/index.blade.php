@@ -10,13 +10,29 @@
     <link href="{{ asset('css/usuarios.css') }}" rel="stylesheet" />
 @endpush
 
-@section('header-actions')
-<div class="d-flex align-items-center gap-3">
-    <a href="#" class="nuevo-producto" data-bs-toggle="modal" data-bs-target="#modalNuevoUsuario">
-        <i class="fa-solid fa-plus"></i> Nuevo Usuario
-    </a>
-</div>
+{{-- BOTÓN ATRÁS (opcional) --}}
+@section('header-back')
+<button class="btn-header-back" onclick="history.back()">
+    <i class="fas fa-arrow-left"></i>
+</button>
 @endsection
+
+{{-- TÍTULO --}}
+@section('header-title')
+Usuarios
+@endsection
+
+{{-- BOTONES DERECHA --}}
+@section('header-buttons')
+<button class="btn-gasto"
+        type="button"
+        data-bs-toggle="modal"
+        data-bs-target="#modalNuevoUsuario">
+    <i class="fa-solid fa-plus"></i>
+    <span class="btn-text">Nuevo usuario</span>
+</button>
+@endsection
+
 
 @section('content')
 <!-- alerta de confirmacion -->

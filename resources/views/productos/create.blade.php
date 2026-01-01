@@ -1,12 +1,24 @@
 @extends('layouts.app')
 
-@section('header-actions')
-<div class="d-flex align-items-center gap-3 p-3">
-    <a href="{{ route('productos.index') }}" class="atras">
-        <i class="fas fa-chevron-left"></i> Volver a Productos
-    </a>
-</div>
+{{-- BOTÓN ATRÁS --}}
+@section('header-back')
+<button class="btn-header-back"
+        type="button"
+        onclick="window.location='{{ route('productos.index') }}'">
+    <i class="fas fa-chevron-left"></i>
+</button>
 @endsection
+
+{{-- TÍTULO --}}
+@section('header-title')
+Nuevo Producto
+@endsection
+
+{{-- BOTONES DERECHA --}}
+@section('header-buttons')
+{{-- (vacío, no hay acciones en esta vista) --}}
+@endsection
+
 
 @section('content')
 

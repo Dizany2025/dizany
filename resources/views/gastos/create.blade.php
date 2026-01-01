@@ -6,13 +6,23 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <!-- CSS personalizado para productos -->
 @endpush
-@section('header-actions')
-<div class="d-flex align-items-center gap-3 p-3">
-    <a href="{{ route('gastos.index') }}" class="atras">
-        <i class="fas fa-chevron-left"></i> Gastos
-    </a>
-</div>
+{{-- BOTÓN ATRÁS (opcional) --}}
+@section('header-back')
+<button class="btn-header-back" onclick="history.back()">
+    <i class="fas fa-chevron-left"></i>
+</button>
 @endsection
+
+{{-- TÍTULO --}}
+@section('header-title')
+Nuevo Gasto
+@endsection
+
+{{-- BOTONES DERECHA --}}
+@section('header-buttons')
+{{-- vacio --}}
+@endsection
+
 @section('content')
 <div class="card mx-auto my-4" style="max-width: 900px;">
     <div class="card-header text-center bg-primary text-white">

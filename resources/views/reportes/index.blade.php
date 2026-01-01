@@ -1,5 +1,22 @@
 @extends('layouts.app')
 
+{{-- BOTÓN ATRÁS (opcional) --}}
+@section('header-back')
+<button class="btn-header-back" onclick="history.back()">
+    <i class="fas fa-chevron-left"></i>
+</button>
+@endsection
+
+{{-- TÍTULO --}}
+@section('header-title')
+Reportes
+@endsection
+
+{{-- BOTONES DERECHA --}}
+@section('header-buttons')
+{{-- vacio --}}
+@endsection
+
 @push('styles')
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />

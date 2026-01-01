@@ -1,5 +1,22 @@
 @extends('layouts.app')
 
+{{-- BOTÓN ATRÁS (opcional) --}}
+@section('header-back')
+<button class="btn-header-back" onclick="history.back()">
+    <i class="fas fa-arrow-left"></i>
+</button>
+@endsection
+
+{{-- TÍTULO --}}
+@section('header-title')
+Parametros
+@endsection
+
+{{-- BOTONES DERECHA --}}
+@section('header-buttons')
+{{-- vacio --}}
+@endsection
+
 @section('content')
 <style>
 .toast-actualizado {

@@ -13,13 +13,13 @@ Movimientos
 
 @section('header-buttons')
 
-<button class="btn-movimientos-primary" onclick="abrirCaja()">
+<button class="btn-gasto" onclick="abrirCaja()">
     <i class="fas fa-cash-register"></i>
     <span class="btn-text">Abrir caja</span>
 </button>
 
 <a href="{{ route('movimientos.reporte') }}"
-   class="btn-movimientos-outline">
+   class="btn-gasto">
     <i class="fas fa-file-download"></i>
     <span class="btn-text">Reporte</span>
 </a>

@@ -1,5 +1,22 @@
 @extends('layouts.app')
 
+{{-- BOTÓN ATRÁS (opcional) --}}
+@section('header-back')
+<button class="btn-header-back" onclick="history.back()">
+    <i class="fas fa-chevron-left"></i>
+</button>
+@endsection
+
+{{-- TÍTULO --}}
+@section('header-title')
+Panel General
+@endsection
+
+{{-- BOTONES DERECHA --}}
+@section('header-buttons')
+{{-- vacio --}}
+@endsection
+
 @section('content')
 <div class="card mx-auto my-4" style="max-width: 1000px;">
     <div class="card-header text-center bg-primary text-white">
