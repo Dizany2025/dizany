@@ -209,6 +209,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const sonidoError = new Audio("/sonidos/error-alert.mp3"); // si tu ruta real es mp3, corrígelo
     const sonidoExito = new Audio("/sonidos/success.mp3");
 
+   
     // Cache productos
     window.productosCache = new Map(); // id => producto
 
@@ -1611,6 +1612,8 @@ estadoPagoSelect?.addEventListener("change", manejarEstadoVenta);
             window.scrollTo({ top: 0, behavior: "smooth" });
         });
     }
+//=============================
+
 
     // ============================
     // Render general
@@ -1685,6 +1688,57 @@ estadoPagoSelect?.addEventListener("change", manejarEstadoVenta);
     window.ventaActiva = ventaActiva;
     window.renderVentasEsperaPanel = renderVentasEsperaPanel;
 
-    
+    //===============
+    // ============================
+// HEADER BUTTONS (DESKTOP + MOBILE)
+// ============================
+function reactivarHeaderActions(scope, mobilePanel) {
+
+    // ==========================
+    // Ventas en espera (MÓVIL)
+    // ==========================
+    scope.querySelectorAll('#btn-pos-espera').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (!mobilePanel) return;
+
+            if (typeof window.renderVentasEsperaPanel === 'function') {
+                window.renderVentasEsperaPanel();
+            }
+
+            if (mobilePanel.classList.contains('d-none')) {
+                mobilePanel.classList.remove('d-none');
+                requestAnimationFrame(() =>
+                    mobilePanel.classList.add('show')
+                );
+            } else {
+                mobilePanel.classList.remove('show');
+                setTimeout(() =>
+                    mobilePanel.classList.add('d-none'), 180
+                );
+            }
+        });
+    });
+
+    // ==========================
+    // Ordenar (modal)
+    // ==========================
+    scope.querySelectorAll('#btn-ordenar').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const modal = document.getElementById('modalOrdenar');
+            if (modal && window.bootstrap) {
+                bootstrap.Modal
+                    .getOrCreateInstance(modal)
+                    .show();
+            }
+        });
+    });
+}
+
 
 });

@@ -33,7 +33,7 @@
     <!-- TODO LO DERECHO -->
     <div class="d-flex align-items-center ms-auto">
     <!-- BOTÓN MÁS OPCIONES (SOLO MÓVIL) -->
-        <button class="btn-header-more" type="button" aria-label="Más opciones">
+        <button class="btn-header-more" id="btnHeaderMore" type="button" aria-label="Más opciones">
             <i class="fas fa-ellipsis-v"></i>
         </button>
         <!-- DERECHA: campana + usuario -->
