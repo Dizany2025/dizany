@@ -58,6 +58,7 @@ Movimientos
                     class="form-select"
                     onchange="this.form.submit()">
                 <option value="diario" {{ $rango === 'diario' ? 'selected' : '' }}>Diario</option>
+                <option value="semanal" {{ $rango === 'semanal' ? 'selected' : '' }}>Semanal</option>
                 <option value="mensual" {{ $rango === 'mensual' ? 'selected' : '' }}>Mensual</option>
             </select>
         </div>
@@ -83,7 +84,7 @@ Movimientos
     {{-- ================= KPIs ================= --}}
     <div class="row mb-4">
 
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card shadow-sm">
                 <div class="card-body d-flex align-items-center gap-3">
                     <div class="rounded-circle bg-success bg-opacity-10 p-3">📈</div>
@@ -97,7 +98,7 @@ Movimientos
             </div>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card shadow-sm">
                 <div class="card-body d-flex align-items-center gap-3">
                     <div class="rounded-circle bg-success bg-opacity-10 p-3">💵</div>
@@ -111,7 +112,7 @@ Movimientos
             </div>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card shadow-sm">
                 <div class="card-body d-flex align-items-center gap-3">
                     <div class="rounded-circle bg-danger bg-opacity-10 p-3">💸</div>
@@ -125,6 +126,20 @@ Movimientos
             </div>
         </div>
 
+        {{-- Ganancias --}}
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-success bg-opacity-10 p-3">💰</div>
+                    <div>
+                        <small class="text-muted">Ganancia</small>
+                        <h5 class="fw-bold {{ $ganancias >= 0 ? 'text-success' : 'text-danger' }}">
+                            S/ {{ number_format($ganancias ?? 0, 2) }}
+                        </h5>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     {{-- ================= SUB TABS ================= --}}
