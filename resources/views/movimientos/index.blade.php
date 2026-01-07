@@ -60,15 +60,18 @@ Movimientos
                 <option value="diario" {{ $rango === 'diario' ? 'selected' : '' }}>Diario</option>
                 <option value="semanal" {{ $rango === 'semanal' ? 'selected' : '' }}>Semanal</option>
                 <option value="mensual" {{ $rango === 'mensual' ? 'selected' : '' }}>Mensual</option>
+                <option value="anual" {{ $rango === 'anual' ? 'selected' : '' }}>Anual</option>
             </select>
         </div>
 
         <div class="col-md-2">
-            <input type="date"
-                   name="fecha"
-                   value="{{ $fecha }}"
-                   class="form-control"
-                   onchange="this.form.submit()">
+            <input 
+                    id="filter-date"
+                    name="fecha"
+                    class="form-control"
+                    value="{{ $fecha }}"
+                    autocomplete="off">
+
         </div>
 
         <div class="col-md-4">
@@ -259,8 +262,103 @@ Movimientos
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/movimientos.css') }}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
 @endpush
 
 @push('scripts')
 <script src="{{ asset('js/movimientos.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
+
+<script>
+    flatpickr.localize(flatpickr.l10ns.es);
+
+    const rango = "{{ $rango }}";
+
+    /* ===================== DIARIO ===================== */
+    if (rango === "diario") {
+        flatpickr("#filter-date", {
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "j M Y",            // 6 ene 2026
+            defaultDate: "{{ $fecha }}",
+            onChange() { this._input.form.submit(); }
+        });
+    }
+
+    /* ===================== SEMANAL ===================== */
+    if (rango === "semanal") {
+
+        flatpickr("#filter-date", {
+            mode: "range",
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "j M | j M",        // 5 ene | 11 ene
+            defaultDate: "{{ $fecha }}",
+
+            onChange(dates, str, fp) {
+
+                // Si escoge solo 1 día → completamos semana TREINTA
+                if (dates.length === 1) {
+
+                    const start = new Date(dates[0]);
+                    const end   = new Date(dates[0]);
+
+                    end.setDate(end.getDate() + 6);
+
+                    fp.setDate([start, end], true);
+                }
+
+                this._input.form.submit();
+            }
+        });
+    }
+
+    /* ===================== MENSUAL ===================== */
+    if (rango === "mensual") {
+
+        flatpickr("#filter-date", {
+            plugins: [
+                new monthSelectPlugin({
+                    shorthand: true,
+                    dateFormat: "Y-m-d",
+                    altFormat: "M Y"        // ene 2026
+                })
+            ],
+            defaultDate: "{{ $fecha }}",
+            onChange() { this._input.form.submit(); }
+        });
+    }
+
+    /* ===================== ANUAL ===================== */
+    if (rango === "anual") {
+
+        flatpickr("#filter-date", {
+            mode: "range",
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "Y",                // 2026
+            defaultDate: "{{ $fecha }}",
+
+            onChange(dates, str, fp) {
+
+                // si elige solo 1 día → cubre TODO el año
+                if (dates.length === 1) {
+
+                    const y = dates[0].getFullYear();
+
+                    const ini = new Date(y, 0, 1);
+                    const fin = new Date(y, 11, 31);
+
+                    fp.setDate([ini, fin], true);
+                }
+
+                this._input.form.submit();
+            }
+        });
+    }
+</script>
+
 @endpush
