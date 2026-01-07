@@ -11,11 +11,6 @@ use PDF;
 
 class MovimientoController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | LISTADO PRINCIPAL
-    |--------------------------------------------------------------------------
-    */
     public function index(Request $request)
     {
         $tab   = $request->get('tab', 'ingresos');
@@ -24,7 +19,22 @@ class MovimientoController extends Controller
 
         $query = Movimiento::query();
 
-        // ---------- FILTRO POR TABS ----------
+        /* ==========================
+           NORMALIZAR FECHA
+        ========================== */
+
+        // Si el datepicker envía "2026-01-01 a 2026-01-07"
+        // NO intentamos parsearlo como una sola fecha
+        $fechaLimpia = $fecha;
+
+        if (str_contains($fecha, ' a ')) {
+            $partes = explode(' a ', $fecha);
+            $fechaLimpia = trim($partes[0]); // para diario, mensual y anual
+        }
+
+        /* ==========================
+           FILTRO POR TABS
+        ========================== */
         switch ($tab) {
 
             case 'ingresos':
@@ -48,58 +58,62 @@ class MovimientoController extends Controller
             break;
         }
 
-                // ---------- FILTRO POR FECHA ----------
+        /* ==========================
+           FILTRO POR RANGO
+        ========================== */
+
         if ($rango === 'mensual') {
 
-            $fechaCarbon = Carbon::parse($fecha);
+            $fechaCarbon = Carbon::parse($fechaLimpia);
+
             $query->whereMonth('fecha', $fechaCarbon->month)
                   ->whereYear('fecha', $fechaCarbon->year);
 
         } elseif ($rango === 'semanal') {
 
-            // normalizamos separadores
-            $fecha = str_replace(',', ' to ', $fecha);
-            $fecha = str_replace('  ', ' ', $fecha);
+            // normalizamos el separador
+            $fecha = str_replace(' to ', ' a ', $fecha);
 
-            $partes = explode(' to ', trim($fecha));
+            [$f1, $f2] = array_pad(explode(' a ', $fecha), 2, $fecha);
 
-            // si solo hay una fecha → completamos semana estilo Treinta
-            if (count($partes) === 1) {
-
-                $inicio = Carbon::parse($partes[0])->startOfWeek();
-                $fin    = Carbon::parse($partes[0])->endOfWeek();
-
-            } else {
-
-                $inicio = Carbon::parse($partes[0])->startOfDay();
-                $fin    = Carbon::parse($partes[1])->endOfDay();
-            }
+            $inicio = Carbon::parse(trim($f1))->startOfDay();
+            $fin    = Carbon::parse(trim($f2 ?? $f1))
+                        ->endOfDay();
 
             $query->whereBetween('fecha', [$inicio, $fin]);
-        } elseif ($rango === 'anual') {
+            
+        }elseif ($rango === 'anual') {
+
+            // si viene "2026-01-01 a 2026-01-07" agarramos solo la primera parte
+            if (str_contains($fecha, ' a ')) {
+                $fecha = explode(' a ', $fecha)[0];
+            }
 
             $year = Carbon::parse($fecha)->year;
 
-            $query->whereBetween('fecha', [
-                Carbon::create($year, 1, 1)->startOfDay(),
-                Carbon::create($year, 12, 31)->endOfDay()
-            ]);
+            $query->whereYear('fecha', $year);
+        } else {
 
-        } else { // diario
-
-            $query->whereDate('fecha', $fecha);
+            // diario
+            $query->whereDate('fecha', $fechaLimpia);
         }
 
-
-        // ---------- BUSCADOR ----------
+        /* ==========================
+           BUSCADOR
+        ========================== */
         if ($request->filled('buscar')) {
             $query->where('concepto', 'LIKE', '%' . $request->buscar . '%');
         }
 
-        // ---------- LISTADO ----------
+        /* ==========================
+           LISTADO
+        ========================== */
         $movimientos = $query->orderByDesc('fecha')->paginate(15);
 
-        // ---------- KPIs ----------
+        /* ==========================
+           KPIs
+        ========================== */
+
         $ventas = Movimiento::where('tipo', 'ingreso')
             ->where('estado', 'pagado')
             ->sum('monto');
@@ -127,11 +141,6 @@ class MovimientoController extends Controller
         ));
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | REPORTE GENERAL DE MOVIMIENTOS
-    |--------------------------------------------------------------------------
-    */
     public function reporte(Request $request)
     {
         $movimientos = Movimiento::orderByDesc('fecha')->get();
@@ -156,11 +165,6 @@ class MovimientoController extends Controller
         return $pdf->stream('reporte_movimientos.pdf');
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | DETALLE PARA OFFCANVAS (VENTA)
-    |--------------------------------------------------------------------------
-    */
     public function detalleVenta($id)
     {
         $venta = Venta::with('detalles.producto', 'cliente')->findOrFail($id);

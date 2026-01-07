@@ -65,13 +65,19 @@ Movimientos
         </div>
 
         <div class="col-md-2">
-            <input 
+            <div class="input-group" id="picker-wrapper">
+                <input 
                     id="filter-date"
                     name="fecha"
                     class="form-control"
                     value="{{ $fecha }}"
-                    autocomplete="off">
-
+                    autocomplete="off"
+                    readonly
+                >
+                <span class="input-group-text">
+                    <i class="fa fa-calendar"></i>
+                </span>
+            </div>
         </div>
 
         <div class="col-md-4">
@@ -264,6 +270,15 @@ Movimientos
 <link rel="stylesheet" href="{{ asset('css/movimientos.css') }}">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/yearSelect/style.css">
+<style>
+.range-selected{
+    background:#16a34a !important;
+    color:white !important;
+    border-radius:50% !important;
+}
+</style>
+
 @endpush
 
 @push('scripts')
@@ -271,94 +286,118 @@ Movimientos
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/yearSelect/yearSelect.js"></script>
 <script>
-    flatpickr.localize(flatpickr.l10ns.es);
+flatpickr.localize(flatpickr.l10ns.es);
 
-    const rango = "{{ $rango }}";
+const rango = "{{ $rango }}";
 
-    /* ===================== DIARIO ===================== */
-    if (rango === "diario") {
-        flatpickr("#filter-date", {
-            dateFormat: "Y-m-d",
-            altInput: true,
-            altFormat: "j M Y",            // 6 ene 2026
-            defaultDate: "{{ $fecha }}",
-            onChange() { this._input.form.submit(); }
-        });
-    }
+//
+// ============ DIARIO ============
+//
+if (rango === "diario") {
+    flatpickr("#picker-wrapper", {
+        wrap: true,
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "j M Y",
+        defaultDate: "{{ $fecha }}",
+        allowInput: false,
+        onChange(){ this._input.form.submit(); }
+    });
+}
 
-    /* ===================== SEMANAL ===================== */
-    if (rango === "semanal") {
+//
+// ============ SEMANAL ============
+//
+if (rango === "semanal") {
 
-        flatpickr("#filter-date", {
-            mode: "range",
-            dateFormat: "Y-m-d",
-            altInput: true,
-            altFormat: "j M | j M",        // 5 ene | 11 ene
-            defaultDate: "{{ $fecha }}",
+    flatpickr("#picker-wrapper", {
+        wrap: true,
+        mode: "range",
 
-            onChange(dates, str, fp) {
+        dateFormat: "Y-m-d",
+        conjunction: " a ",
 
-                // Si escoge solo 1 día → completamos semana TREINTA
-                if (dates.length === 1) {
+        altInput: true,
+        altFormat: "j M",
+        
+        defaultDate: "{{ $fecha }}",
 
-                    const start = new Date(dates[0]);
-                    const end   = new Date(dates[0]);
+        // cuando eliges un día → completa la semana
+        onChange(dates, str, fp){
 
-                    end.setDate(end.getDate() + 6);
+            if (dates.length === 1) {
 
-                    fp.setDate([start, end], true);
-                }
+                const start = new Date(dates[0]);
+                const end   = new Date(dates[0]);
 
-                this._input.form.submit();
+                end.setDate(end.getDate() + 6);
+
+                fp.setDate([start, end], true);
             }
-        });
-    }
 
-    /* ===================== MENSUAL ===================== */
-    if (rango === "mensual") {
+            fp.input.form.submit();
+        },
 
-        flatpickr("#filter-date", {
-            plugins: [
-                new monthSelectPlugin({
-                    shorthand: true,
-                    dateFormat: "Y-m-d",
-                    altFormat: "M Y"        // ene 2026
-                })
-            ],
-            defaultDate: "{{ $fecha }}",
-            onChange() { this._input.form.submit(); }
-        });
-    }
+        // cuando carga el calendario → también completa semana
+        onReady(dates, str, fp){
 
-    /* ===================== ANUAL ===================== */
-    if (rango === "anual") {
+            if (fp.selectedDates.length === 1) {
 
-        flatpickr("#filter-date", {
-            mode: "range",
-            dateFormat: "Y-m-d",
-            altInput: true,
-            altFormat: "Y",                // 2026
-            defaultDate: "{{ $fecha }}",
+                const start = new Date(fp.selectedDates[0]);
+                const end   = new Date(fp.selectedDates[0]);
 
-            onChange(dates, str, fp) {
+                end.setDate(end.getDate() + 6);
 
-                // si elige solo 1 día → cubre TODO el año
-                if (dates.length === 1) {
-
-                    const y = dates[0].getFullYear();
-
-                    const ini = new Date(y, 0, 1);
-                    const fin = new Date(y, 11, 31);
-
-                    fp.setDate([ini, fin], true);
-                }
-
-                this._input.form.submit();
+                fp.setDate([start, end], true);
             }
-        });
-    }
+        }
+    });
+}
+
+//
+// ============ MENSUAL ============
+//
+if (rango === "mensual") {
+    flatpickr("#picker-wrapper", {
+        wrap: true,
+        plugins: [
+            new monthSelectPlugin({
+                shorthand: true,
+                dateFormat: "Y-m-d",
+                altFormat: "M Y"
+            })
+        ],
+        altInput: true,
+        defaultDate: "{{ $fecha }}",
+        allowInput: false,
+        onChange(){ this._input.form.submit(); }
+    });
+}
+
+//
+// ============ ANUAL SOLO AÑO ============
+//
+if (rango === "anual") {
+
+    flatpickr("#picker-wrapper", {
+        wrap: true,
+
+        dateFormat: "Y",
+        altInput: true,
+        altFormat: "Y",
+
+        allowInput: false,
+
+        // toma solo el año, aunque venga rango
+        defaultDate: "{{ substr($fecha,0,4) }}",
+
+        onChange() { this._input.form.submit(); }
+    });
+}
+
 </script>
+
 
 @endpush
