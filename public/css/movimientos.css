@@ -274,5 +274,40 @@
     white-space: nowrap;
 }
 
+/*calendario anual*/
+/* ===============================
+   FLATPICKR - MODO ANUAL
+   =============================== */
 
+.year-picker {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    width: 260px;
+    background: #fff;
+    border-radius: 12px;
+    padding: 12px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    box-shadow: 0 12px 30px rgba(0,0,0,.15);
+    z-index: 9999;
+}
+
+.year-btn {
+    border: none;
+    background: transparent;
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.year-btn:hover {
+    background: #f1f5f9;
+}
+
+.year-btn.active {
+    background: #facc15;
+    font-weight: bold;
+}
 

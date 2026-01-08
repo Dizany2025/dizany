@@ -65,18 +65,42 @@ Movimientos
         </div>
 
         <div class="col-md-2">
-            <div class="input-group" id="picker-wrapper">
-                <input 
-                    id="filter-date"
-                    name="fecha"
-                    class="form-control"
-                    value="{{ $fecha }}"
-                    autocomplete="off"
-                    readonly
-                >
-                <span class="input-group-text">
-                    <i class="fa fa-calendar"></i>
-                </span>
+            <!-- Wrapper relativo (CLAVE) -->
+            <div class="position-relative" id="year-picker-wrapper">
+
+                <!-- Tu input-group original (NO se rompe) -->
+                <div class="input-group" id="picker-wrapper">
+                    <input
+                        id="filter-date"
+                        name="fecha"
+                        class="form-control"
+                        value="{{ $rango === 'anual' ? substr($fecha, 0, 4) : $fecha }}"
+                        autocomplete="off"
+                        readonly
+                        data-input
+                    >
+                    <span class="input-group-text" data-toggle>
+                        <i class="fa fa-calendar"></i>
+                    </span>
+                </div>
+
+                @php
+                    $yearActivo = $rango === 'anual'
+                        ? substr($fecha, 0, 4)
+                        : now()->year;
+                @endphp
+
+                <div id="year-picker" class="year-picker d-none">
+                    @for ($y = now()->year - 10; $y <= now()->year + 10; $y++)
+                        <button
+                            type="button"
+                            class="year-btn {{ (string)$yearActivo === (string)$y ? 'active' : '' }}"
+                            data-year="{{ $y }}"
+                        >
+                            {{ $y }}
+                        </button>
+                    @endfor
+                </div>
             </div>
         </div>
 
@@ -270,7 +294,6 @@ Movimientos
 <link rel="stylesheet" href="{{ asset('css/movimientos.css') }}">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/yearSelect/style.css">
 <style>
 .range-selected{
     background:#16a34a !important;
@@ -286,118 +309,209 @@ Movimientos
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/yearSelect/yearSelect.js"></script>
+
 <script>
 flatpickr.localize(flatpickr.l10ns.es);
 
-const rango = "{{ $rango }}";
+(function () {
+    const rango = "{{ $rango }}";
 
-//
-// ============ DIARIO ============
-//
-if (rango === "diario") {
-    flatpickr("#picker-wrapper", {
-        wrap: true,
-        dateFormat: "Y-m-d",
-        altInput: true,
-        altFormat: "j M Y",
-        defaultDate: "{{ $fecha }}",
-        allowInput: false,
-        onChange(){ this._input.form.submit(); }
-    });
-}
+    // ✅ importante: apunta al form correcto
+    const form = document.querySelector('form[action="{{ route('movimientos.index') }}"]');
 
-//
-// ============ SEMANAL ============
-//
-if (rango === "semanal") {
+    // Si no encuentra el form, no hagas nada (evita errores raros)
+    if (!form) return;
 
-    flatpickr("#picker-wrapper", {
+    // ✅ esta función EXISTE para todos los rangos
+    function submitFormDelayed() {
+        clearTimeout(window.__mov_submit_timer);
+        window.__mov_submit_timer = setTimeout(() => form.submit(), 200);
+    }
+
+    // Helper: date válida YYYY-MM-DD
+    function isYmd(str){
+        return /^\d{4}-\d{2}-\d{2}$/.test(str);
+    }
+
+    // Helper: año válido YYYY
+    function isYear(str){
+        return /^\d{4}$/.test(str);
+    }
+
+    // Normaliza default según rango
+    let defaultFecha = "{{ $fecha }}";
+    if (rango === "diario" && !isYmd(defaultFecha)) {
+        defaultFecha = "{{ now()->format('Y-m-d') }}";
+    }
+    if (rango === "mensual") {
+        // mensual: trabajaremos con YYYY-MM
+        if (!/^\d{4}-\d{2}$/.test(defaultFecha)) {
+            defaultFecha = "{{ now()->format('Y-m') }}";
+        } else {
+            defaultFecha = defaultFecha.substring(0,7);
+        }
+    }
+    if (rango === "anual") {
+        // anual: YYYY
+        const y = defaultFecha.substring(0,4);
+        defaultFecha = isYear(y) ? y : "{{ now()->format('Y') }}";
+    }
+
+    // Destruir instancia anterior si existe (evita bugs al recargar con cache)
+    if (window.__mov_fp) {
+        try { window.__mov_fp.destroy(); } catch(e){}
+        window.__mov_fp = null;
+    }
+
+    // ===================== DIARIO =====================
+    if (rango === "diario") {
+        window.__mov_fp = flatpickr("#picker-wrapper", {
+            wrap: true,
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "j M Y",
+            defaultDate: defaultFecha,
+            allowInput: false,
+            clickOpens: true,
+            onChange: submitFormDelayed
+        });
+    }
+
+    // ===================== SEMANAL (Lun-Dom) =====================
+    if (rango === "semanal") {
+    let initialized = false; // 👈 CLAVE para evitar loop
+
+    window.__mov_fp = flatpickr("#picker-wrapper", {
         wrap: true,
         mode: "range",
+        locale: "es",
 
         dateFormat: "Y-m-d",
-        conjunction: " a ",
-
         altInput: true,
         altFormat: "j M",
-        
-        defaultDate: "{{ $fecha }}",
+        conjunction: " a ",
 
-        // cuando eliges un día → completa la semana
-        onChange(dates, str, fp){
+        defaultDate: "{{ $fecha ?: now()->format('Y-m-d') }}",
+        allowInput: false,
 
-            if (dates.length === 1) {
+        // 🔹 SOLO SELECCIÓN VISUAL (NO SUBMIT)
+        onReady(selectedDates, str, fp) {
 
-                const start = new Date(dates[0]);
-                const end   = new Date(dates[0]);
+            const base = selectedDates[0] || new Date();
 
-                end.setDate(end.getDate() + 6);
+            const day = base.getDay(); // 0=Dom, 1=Lun
+            const diffToMonday = day === 0 ? -6 : 1 - day;
 
-                fp.setDate([start, end], true);
-            }
+            const start = new Date(base);
+            start.setDate(base.getDate() + diffToMonday);
 
-            fp.input.form.submit();
+            const end = new Date(start);
+            end.setDate(start.getDate() + 6);
+
+            // Seleccionar semana completa (visual)
+            fp.setDate([start, end], true);
+
+            // Marcar que ya inicializó
+            initialized = true;
         },
 
-        // cuando carga el calendario → también completa semana
-        onReady(dates, str, fp){
+        onChange(dates, str, fp) {
 
-            if (fp.selectedDates.length === 1) {
+            // Ignorar el primer cambio disparado por setDate del onReady
+            if (!initialized) return;
 
-                const start = new Date(fp.selectedDates[0]);
-                const end   = new Date(fp.selectedDates[0]);
+            // Si elige un solo día → completar semana
+            if (dates.length === 1) {
 
-                end.setDate(end.getDate() + 6);
+                const base = dates[0];
+                const day = base.getDay();
+                const diffToMonday = day === 0 ? -6 : 1 - day;
+
+                const start = new Date(base);
+                start.setDate(base.getDate() + diffToMonday);
+
+                const end = new Date(start);
+                end.setDate(start.getDate() + 6);
 
                 fp.setDate([start, end], true);
+                return;
+            }
+
+            // Cuando ya hay rango completo → submit
+            if (dates.length === 2) {
+                submitFormDelayed();
             }
         }
     });
 }
 
-//
-// ============ MENSUAL ============
-//
-if (rango === "mensual") {
-    flatpickr("#picker-wrapper", {
-        wrap: true,
-        plugins: [
-            new monthSelectPlugin({
-                shorthand: true,
-                dateFormat: "Y-m-d",
-                altFormat: "M Y"
-            })
-        ],
-        altInput: true,
-        defaultDate: "{{ $fecha }}",
-        allowInput: false,
-        onChange(){ this._input.form.submit(); }
-    });
-}
+    // ===================== MENSUAL =====================
+    if (rango === "mensual") {
+        window.__mov_fp = flatpickr("#picker-wrapper", {
+            wrap: true,
+            plugins: [
+                new monthSelectPlugin({
+                    shorthand: true,
+                    dateFormat: "Y-m",   // 👈 enviamos YYYY-MM al backend
+                    altFormat: "M Y"
+                })
+            ],
+            altInput: true,
+            defaultDate: defaultFecha,
+            allowInput: false,
+            clickOpens: true,
+            onChange: submitFormDelayed
+        });
+    }
 
-//
-// ============ ANUAL SOLO AÑO ============
-//
-if (rango === "anual") {
+    // ===================== ANUAL (solo año) =====================
+    // Sin plugin raro: usamos un input de año
+    if (rango === "anual") {
+        const input  = document.getElementById("filter-date");
+        const picker = document.getElementById("year-picker");
 
-    flatpickr("#picker-wrapper", {
-        wrap: true,
+        // Normalizar valor inicial (solo año)
+        if (input.value.length > 4) {
+            input.value = input.value.substring(0, 4);
+        }
 
-        dateFormat: "Y",
-        altInput: true,
-        altFormat: "Y",
+        // Abrir / cerrar selector
+        input.addEventListener("click", (e) => {
+            e.stopPropagation();
+            picker.classList.toggle("d-none");
+        });
 
-        allowInput: false,
+        // Click en un año
+        picker.querySelectorAll(".year-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
 
-        // toma solo el año, aunque venga rango
-        defaultDate: "{{ substr($fecha,0,4) }}",
+                const year = btn.dataset.year;
 
-        onChange() { this._input.form.submit(); }
-    });
-}
+                // actualizar input
+                input.value = year;
 
+                // marcar activo
+                picker.querySelectorAll(".year-btn")
+                    .forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+
+                // cerrar picker
+                picker.classList.add("d-none");
+
+                // ✅ AQUÍ ESTABA EL ERROR
+                submitFormDelayed();
+            });
+        });
+
+        // cerrar si clic fuera
+        document.addEventListener("click", (e) => {
+            if (!picker.contains(e.target) && e.target !== input) {
+                picker.classList.add("d-none");
+            }
+        });
+    }
+
+})();
 </script>
-
 
 @endpush
