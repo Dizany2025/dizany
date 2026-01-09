@@ -28,7 +28,7 @@ class Movimiento extends Model
     ];
 
     /* =========================
-       SCOPES (MUY ÚTILES)
+       SCOPES
     ========================= */
 
     public function scopeIngresos($query)
@@ -51,9 +51,18 @@ class Movimiento extends Model
         return $query->where('estado', 'pendiente');
     }
 
+    // ✅ ESTE ES EL NUEVO (BIEN PUESTO)
+    public function scopeActivos($query)
+    {
+        return $query->where('estado', '!=', 'anulado');
+    }
+
+    /* =========================
+       RELACIONES
+    ========================= */
+
     public function venta()
     {
         return $this->belongsTo(\App\Models\Venta::class, 'referencia_id');
     }
-
 }

@@ -12,207 +12,170 @@ use PDF;
 class MovimientoController extends Controller
 {
     public function index(Request $request)
-        {
-            /* ==========================
-            PARAMETROS
-            ========================== */
-            $tab   = $request->get('tab', 'ingresos');
-            $rango = $request->get('rango', 'diario');
-            $fecha = $request->get('fecha', now()->format('Y-m-d'));
+    {
+        /* ==========================
+        PARÁMETROS
+        ========================== */
+        $tab   = $request->get('tab', 'ingresos');
+        $rango = $request->get('rango', 'diario');
+        $fecha = $request->get('fecha', now()->format('Y-m-d'));
 
-            // normalizar separador semanal
-            $fecha = str_replace(
-                [' to ', ' | ', ' → '],
-                ' a ',
-                $fecha
-            );
+        // Normalizar separadores
+        $fecha = str_replace([' to ', ' | ', ' → '], ' a ', $fecha);
 
+        /* ==========================
+        QUERY BASE
+        ========================== */
+        $query = Movimiento::activos();
 
-            /* ==========================
-            QUERY BASE (TABLA)
-            ========================== */
-            $query = Movimiento::query();
+        // ---- FILTRO POR TAB ----
+        switch ($tab) {
+            case 'ingresos':
+                $query->ingresos()->pagados();
+                break;
 
-            // -------- FILTRO POR TAB --------
-            switch ($tab) {
-                case 'ingresos':
-                    $query->where('tipo', 'ingreso')
-                        ->where('estado', 'pagado');
-                    break;
+            case 'egresos':
+                $query->egresos()->pagados();
+                break;
 
-                case 'egresos':
-                    $query->where('tipo', 'egreso')
-                        ->where('estado', 'pagado');
-                    break;
+            case 'por_cobrar':
+                $query->pendientes()
+                      ->whereIn('metodo_pago', ['fiado', 'credito']);
+                break;
 
-                case 'por_cobrar':
-                    $query->where('estado', 'pendiente')
-                        ->whereIn('metodo_pago', ['fiado', 'credito']);
-                    break;
+            case 'por_pagar':
+                $query->egresos()->pendientes();
+                break;
+        }
 
-                case 'por_pagar':
-                    $query->where('tipo', 'egreso')
-                        ->where('estado', 'pendiente');
-                    break;
-            }
+        /* ==========================
+        RANGO DE FECHAS
+        ========================== */
+        $inicio = null;
+        $fin    = null;
 
-            /* ==========================
-            CALCULAR RANGO DE FECHAS
-            (UNA SOLA VEZ)
-            ========================== */
-            $inicio = null;
-            $fin    = null;
-
+        try {
             if ($rango === 'diario') {
-
-                if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
-                    $fecha = now()->format('Y-m-d');
-                }
-
                 $inicio = Carbon::parse($fecha)->startOfDay();
                 $fin    = Carbon::parse($fecha)->endOfDay();
 
             } elseif ($rango === 'semanal') {
-
-                $partes = array_map('trim', explode(' a ', $fecha));
-                $f1 = $partes[0] ?? now()->format('Y-m-d');
-                $f2 = $partes[1] ?? $f1;
-
+                [$f1, $f2] = array_pad(explode(' a ', $fecha), 2, $fecha);
                 $inicio = Carbon::parse($f1)->startOfDay();
                 $fin    = Carbon::parse($f2)->endOfDay();
 
             } elseif ($rango === 'mensual') {
+                $carbon = preg_match('/^\d{4}-\d{2}$/', $fecha)
+                    ? Carbon::createFromFormat('Y-m', $fecha)
+                    : Carbon::createFromLocaleFormat('M Y', 'es', $fecha);
 
-                /*
-                | Mensual puede venir como:
-                | - "2026-01"
-                | - "Ene 2026"
-                */
+                $inicio = $carbon->startOfMonth();
+                $fin    = $carbon->endOfMonth();
 
-                try {
-                    // Intentar formato YYYY-MM
-                    if (preg_match('/^\d{4}-\d{2}$/', $fecha)) {
-                        $carbon = Carbon::createFromFormat('Y-m', $fecha);
-                    } else {
-                        // Intentar formato "Ene 2026"
-                        $carbon = Carbon::createFromLocaleFormat(
-                            'M Y',
-                            'es',
-                            $fecha
-                        );
-                    }
-                } catch (\Exception $e) {
-                    // Fallback seguro
-                    $carbon = now();
-                }
-
-                $inicio = $carbon->copy()->startOfMonth();
-                $fin    = $carbon->copy()->endOfMonth();
             } elseif ($rango === 'anual') {
-
-                $year = substr($fecha, 0, 4);
-                if (!preg_match('/^\d{4}$/', $year)) {
-                    $year = now()->year;
-                }
-
+                $year   = preg_match('/^\d{4}$/', $fecha) ? $fecha : now()->year;
                 $inicio = Carbon::create($year, 1, 1)->startOfDay();
                 $fin    = Carbon::create($year, 12, 31)->endOfDay();
-            }
-
-            // aplicar rango a la TABLA
-            if ($inicio && $fin) {
-                $query->whereBetween('fecha', [$inicio, $fin]);
 
             } elseif ($rango === 'personalizado') {
-
                 [$f1, $f2] = array_pad(explode(' a ', $fecha), 2, null);
-
                 if ($f1 && $f2) {
                     $inicio = Carbon::parse($f1)->startOfDay();
                     $fin    = Carbon::parse($f2)->endOfDay();
                 }
             }
+        } catch (\Exception $e) {
+            $inicio = null;
+            $fin    = null;
+        }
 
-            /* ==========================
-            APLICAR RANGO (UNA VEZ)
-            ========================== */
-            if ($inicio && $fin) {
-                $query->whereBetween('fecha', [$inicio, $fin]);
-            }
+        if ($inicio && $fin) {
+            $query->whereBetween('fecha', [$inicio, $fin]);
+        }
 
+        /* ==========================
+        BUSCADOR
+        ========================== */
+        if ($request->filled('buscar')) {
+            $query->where('concepto', 'like', '%' . $request->buscar . '%');
+        }
 
-            /* ==========================
-            BUSCADOR
-            ========================== */
-            if ($request->filled('buscar')) {
-                $query->where('concepto', 'LIKE', '%' . $request->buscar . '%');
-            }
+        /* ==========================
+        LISTADO
+        ========================== */
+        $movimientos = $query
+            ->orderByDesc('fecha')
+            ->paginate(15);
 
-            /* ==========================
-            LISTADO
-            ========================== */
-            $movimientos = $query
-                ->orderByDesc('fecha')
-                ->paginate(15);
+        /* ==========================
+        KPIs (MISMO RANGO)
+        ========================== */
 
-            /* ==========================
-            KPIs (MISMO RANGO)
-            ========================== */
-            $ventas = Movimiento::where('tipo', 'ingreso')
-                ->where('estado', 'pagado')
-                ->when($inicio && $fin, fn ($q) =>
-                    $q->whereBetween('fecha', [$inicio, $fin])
-                )
-                ->sum('monto');
-
-            $egresos = Movimiento::where('tipo', 'egreso')
-                ->where('estado', 'pagado')
-                ->when($inicio && $fin, fn ($q) =>
-                    $q->whereBetween('fecha', [$inicio, $fin])
-                )
-                ->sum('monto');
-
-            $balance = $ventas - $egresos;
-
-            $ganancias = DetalleVenta::whereHas('venta', function ($q) use ($inicio, $fin) {
-                    $q->where('estado', 'pagado')
-                    ->when($inicio && $fin, fn ($q2) =>
-                        $q2->whereBetween('fecha', [$inicio, $fin])
-                    );
-                })
-                ->sum('ganancia');
-
-            /* ==========================
-            VISTA
-            ========================== */
-            return view('movimientos.index', compact(
-                'movimientos',
-                'ventas',
-                'egresos',
-                'balance',
-                'ganancias',
-                'tab',
-                'rango',
-                'fecha'
-            ));
-    }
-
-
-    public function reporte(Request $request)
-    {
-        $movimientos = Movimiento::orderByDesc('fecha')->get();
-
-        $ventas = Movimiento::where('tipo', 'ingreso')
-            ->where('estado', 'pagado')
+        $ventas = Movimiento::ingresos()
+            ->pagados()
+            ->activos()
+            ->where('subtipo', 'venta')
+            ->when($inicio && $fin, fn ($q) =>
+                $q->whereBetween('fecha', [$inicio, $fin])
+            )
             ->sum('monto');
 
-        $egresos = Movimiento::where('tipo', 'egreso')
-            ->where('estado', 'pagado')
+        $gastos = Movimiento::egresos()
+            ->pagados()
+            ->activos()
+            ->where('subtipo', 'gasto')
+            ->when($inicio && $fin, fn ($q) =>
+                $q->whereBetween('fecha', [$inicio, $fin])
+            )
+            ->sum('monto');
+
+        $egresos = Movimiento::egresos()
+            ->pagados()
+            ->activos()
+            ->when($inicio && $fin, fn ($q) =>
+                $q->whereBetween('fecha', [$inicio, $fin])
+            )
             ->sum('monto');
 
         $balance = $ventas - $egresos;
 
-        $pdf = \PDF::loadView('movimientos.reporte_pdf', compact(
+        $ganancias = DetalleVenta::whereHas('venta', function ($q) use ($inicio, $fin) {
+                $q->where('estado', 'pagado')
+                  ->when($inicio && $fin, fn ($q2) =>
+                      $q2->whereBetween('fecha', [$inicio, $fin])
+                  );
+            })
+            ->sum('ganancia');
+
+        /* ==========================
+        VISTA
+        ========================== */
+        return view('movimientos.index', compact(
+            'movimientos',
+            'ventas',
+            'gastos',
+            'egresos',
+            'balance',
+            'ganancias',
+            'tab',
+            'rango',
+            'fecha'
+        ));
+    }
+
+    /* ==========================
+    REPORTE PDF
+    ========================== */
+    public function reporte(Request $request)
+    {
+        $movimientos = Movimiento::activos()->orderByDesc('fecha')->get();
+
+        $ventas = Movimiento::ingresos()->pagados()->activos()->sum('monto');
+        $egresos = Movimiento::egresos()->pagados()->activos()->sum('monto');
+
+        $balance = $ventas - $egresos;
+
+        $pdf = PDF::loadView('movimientos.reporte_pdf', compact(
             'movimientos',
             'ventas',
             'egresos',
@@ -222,9 +185,13 @@ class MovimientoController extends Controller
         return $pdf->stream('reporte_movimientos.pdf');
     }
 
+    /* ==========================
+    DETALLE DE VENTA (AJAX)
+    ========================== */
     public function detalleVenta($id)
     {
-        $venta = Venta::with('detalles.producto', 'cliente')->findOrFail($id);
+        $venta = Venta::with('detalles.producto', 'cliente')
+            ->findOrFail($id);
 
         return response()->json($venta);
     }

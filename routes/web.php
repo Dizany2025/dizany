@@ -204,3 +204,11 @@ Route::get('/movimientos/reporte',
     [MovimientoController::class, 'reporte']
 )->name('movimientos.reporte');
 
+Route::delete('/gastos/{id}', [GastoController::class, 'destroy'])
+     ->name('gastos.destroy');
+     
+Route::get('/gastos/{id}/edit', [GastoController::class, 'edit'])
+    ->name('gastos.edit');
+
+Route::put('/gastos/{id}', [GastoController::class, 'update'])
+    ->name('gastos.update');

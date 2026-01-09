@@ -74,19 +74,42 @@ Gastos
                             <th>Monto</th>
                             <th>Método de Pago</th>
                             <th>Usuario</th>
+                            <th class="text-center">Acciones</th>
                         </tr>
                     </thead>
+
                     <tbody id="tabla-gastos">
-                        @foreach($gastos as $gasto)
-                        <tr>
-                            <td>{{ date('d/m/Y H:i', strtotime($gasto->fecha)) }}</td>
-                            <td>{{ $gasto->descripcion }}</td>
-                            <td>S/ {{ number_format($gasto->monto, 2) }}</td>
-                            <td>{{ $gasto->metodo_pago }}</td>
-                            <td>{{ $gasto->usuario->nombre ?? '—' }}</td>
-                        </tr>
-                        @endforeach
+                    @foreach($gastos as $gasto)
+                    <tr>
+                        <td>{{ date('d/m/Y H:i', strtotime($gasto->fecha)) }}</td>
+                        <td>{{ $gasto->descripcion }}</td>
+                        <td>S/ {{ number_format($gasto->monto, 2) }}</td>
+                        <td>{{ $gasto->metodo_pago }}</td>
+                        <td>{{ $gasto->usuario->nombre ?? '—' }}</td>
+
+                        <td class="text-center">
+                            <!-- EDITAR -->
+                            <a href="{{ route('gastos.edit', $gasto->id) }}"
+                            class="btn btn-warning btn-sm">
+                                <i class="fas fa-edit"></i>
+                            </a>
+
+                            <!-- ELIMINAR -->
+                            <form action="{{ route('gastos.destroy', $gasto->id) }}"
+                                method="POST"
+                                class="d-inline"
+                                onsubmit="return confirm('¿Eliminar este gasto?')">
+                                @csrf
+                                @method('DELETE')
+                                <button class="btn btn-danger btn-sm">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    @endforeach
                     </tbody>
+
                     <tfoot>
                         <tr>
                             <th colspan="2" class="text-end">Total del día:</th>
