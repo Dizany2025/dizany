@@ -46,7 +46,6 @@ body {
     padding-right: 20px;
     padding-bottom: 40px;
 
-    min-height: calc(100vh - var(--header-height));
     transition: margin-left 0.25s ease;
 }
 
@@ -366,5 +365,38 @@ footer a {
 }
 
 /* ============================================
-   FIXES ESPECIALES
+   STICKY FOOTER FIX (GLOBAL)
 ============================================ */
+
+/* ============================================
+   STICKY FOOTER DEFINITIVO (DASHBOARD)
+============================================ */
+
+/* ============================================
+   STICKY FOOTER — FIX DEFINITIVO (COMPATIBLE)
+============================================ */
+
+/* ============================================
+   STICKY FOOTER REAL (DASHBOARD FIX)
+============================================ */
+
+html, body {
+    height: 100%;
+}
+
+/* Wrapper que controla contenido + footer */
+#layout-wrapper {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* El contenido empuja al footer */
+#content {
+    flex: 1;
+}
+
+/* Footer nunca se superpone */
+footer {
+    flex-shrink: 0;
+}

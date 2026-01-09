@@ -25,13 +25,17 @@
     {{-- SIDEBAR --}}
     @include('components.sidebar')
 
-    {{-- CONTENIDO --}}
-    <main id="content">
-        @yield('content')
-    </main>
+    {{-- contenido --}}
+    <div id="layout-wrapper">
 
-    {{-- FOOTER --}}
-    @include('components.footer')
+        <main id="content">
+            @yield('content')
+        </main>
+
+        {{-- FOOTER --}}
+        @include('components.footer')
+
+    </div>
 
     <!-- Bootstrap (una sola vez) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

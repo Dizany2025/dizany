@@ -21,7 +21,12 @@ class MovimientoController extends Controller
             $fecha = $request->get('fecha', now()->format('Y-m-d'));
 
             // normalizar separador semanal
-            $fecha = str_replace(' to ', ' a ', $fecha);
+            $fecha = str_replace(
+                [' to ', ' | ', ' → '],
+                ' a ',
+                $fecha
+            );
+
 
             /* ==========================
             QUERY BASE (TABLA)
@@ -117,7 +122,24 @@ class MovimientoController extends Controller
             // aplicar rango a la TABLA
             if ($inicio && $fin) {
                 $query->whereBetween('fecha', [$inicio, $fin]);
+
+            } elseif ($rango === 'personalizado') {
+
+                [$f1, $f2] = array_pad(explode(' a ', $fecha), 2, null);
+
+                if ($f1 && $f2) {
+                    $inicio = Carbon::parse($f1)->startOfDay();
+                    $fin    = Carbon::parse($f2)->endOfDay();
+                }
             }
+
+            /* ==========================
+            APLICAR RANGO (UNA VEZ)
+            ========================== */
+            if ($inicio && $fin) {
+                $query->whereBetween('fecha', [$inicio, $fin]);
+            }
+
 
             /* ==========================
             BUSCADOR

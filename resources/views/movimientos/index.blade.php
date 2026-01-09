@@ -61,6 +61,8 @@ Movimientos
                 <option value="semanal" {{ $rango === 'semanal' ? 'selected' : '' }}>Semanal</option>
                 <option value="mensual" {{ $rango === 'mensual' ? 'selected' : '' }}>Mensual</option>
                 <option value="anual" {{ $rango === 'anual' ? 'selected' : '' }}>Anual</option>
+                <option value="personalizado" {{ $rango === 'personalizado' ? 'selected' : '' }}>Personalizado</option>
+
             </select>
         </div>
 
@@ -510,6 +512,53 @@ flatpickr.localize(flatpickr.l10ns.es);
             }
         });
     }
+
+    // ===================== PERSONALIZADO (DOBLE) =====================
+    if (rango === "personalizado") {
+
+    if (window.__mov_fp) {
+        window.__mov_fp.destroy();
+    }
+
+    // Detectar rango por estructura, no por símbolo
+    const fechaBackend = "{{ $fecha }}";
+    const partes = fechaBackend.split(" a ");
+    const tieneRangoPrevio = partes.length === 2;
+
+    window.__mov_fp = flatpickr("#picker-wrapper", {
+        wrap: true,
+        mode: "range",
+
+        locale: {
+            ...flatpickr.l10ns.es,
+            rangeSeparator: " → "
+        },
+
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "j M",
+
+        showMonths: 2,
+        allowInput: false,
+
+        // 🔑 USAR EL RANGO REAL QUE VIENE DEL BACKEND
+        defaultDate: tieneRangoPrevio ? partes : null,
+
+        // 🔑 SOLO limpiar si NO hay rango previo
+        onOpen(selectedDates, dateStr, fp) {
+            if (!tieneRangoPrevio) {
+                fp.clear();
+                fp.jumpToDate(new Date());
+            }
+        },
+
+        onChange(dates) {
+            if (dates.length === 2) {
+                submitFormDelayed();
+            }
+        }
+    });
+}
 
 })();
 </script>
