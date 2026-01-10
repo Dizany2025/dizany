@@ -11,8 +11,16 @@ use Carbon\Carbon;
 
 class GastoController extends Controller
 {
+    private function soloAdmin()
+{
+    if (!auth()->check() || !auth()->user()->esAdmin()) {
+        abort(403, 'No autorizado');
+    }
+}
+
+
     // Mostrar lista de gastos
-  public function index(Request $request)
+    public function index(Request $request)
     {
         $query = Gasto::where('estado', 'activo')
               ->with('usuario'); // Relación con el modelo Usuario
@@ -60,12 +68,13 @@ class GastoController extends Controller
     // Guardar gasto en la BD
     public function store(Request $request)
 {
+
     $request->validate([
         'usuario_id' => 'required|exists:usuarios,id',
         'descripcion' => 'required|string|max:255',
         'monto' => 'required|numeric|min:0.01',
         'fecha' => 'required|date',
-        'metodo_pago' => 'nullable|string|max:50',
+        'metodo_pago' => 'required|string|max:50',
     ]);
 
     // 1️⃣ Guardar gasto
@@ -111,28 +120,32 @@ class GastoController extends Controller
     }
 
     public function destroy($id)
-{
-    $gasto = Gasto::findOrFail($id);
+        {
+            $this->soloAdmin();
 
-    // 🔴 Anular gasto
-    $gasto->update([
-        'estado' => 'anulado'
-    ]);
+            $gasto = Gasto::findOrFail($id);
 
-    // 🔴 Anular movimiento asociado
-    Movimiento::where('referencia_tipo', 'gasto')
-        ->where('referencia_id', $gasto->id)
-        ->update([
-            'estado' => 'anulado'
-        ]);
+            // 🔴 Anular gasto
+            $gasto->update([
+                'estado' => 'anulado'
+            ]);
 
-    return redirect()
-        ->route('gastos.index')
-        ->with('success', 'Gasto anulado correctamente');
-}
+            // 🔴 Anular movimiento asociado
+            Movimiento::where('referencia_tipo', 'gasto')
+                ->where('referencia_id', $gasto->id)
+                ->update([
+                    'estado' => 'anulado'
+                ]);
+
+            return redirect()
+                ->route('gastos.index')
+                ->with('success', 'Gasto anulado correctamente');
+        }
 
 public function edit($id)
 {
+    $this->soloAdmin();
+
     $gasto = Gasto::findOrFail($id);
     $usuarios = User::all();
 
@@ -140,6 +153,7 @@ public function edit($id)
 }
 public function update(Request $request, $id)
 {
+    $this->soloAdmin();
     $request->validate([
         'usuario_id'  => 'required|exists:usuarios,id',
         'descripcion' => 'required|string|max:255',

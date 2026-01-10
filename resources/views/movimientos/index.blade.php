@@ -228,10 +228,12 @@ Movimientos
                         <td>{{ ucfirst($movimiento->metodo_pago) }}</td>
 
                         <td>
-                            @if($movimiento->estado === 'pagado')
+                            @if ($movimiento->estado === 'pagado')
                                 <span class="badge bg-success">Pagado</span>
-                            @else
-                                <span class="badge bg-warning text-dark">Pendiente</span>
+                            @elseif ($movimiento->estado === 'pendiente')
+                                <span class="badge bg-warning">Pendiente</span>
+                            @elseif ($movimiento->estado === 'anulado')
+                                <span class="badge bg-danger">Anulado</span>
                             @endif
                         </td>
 

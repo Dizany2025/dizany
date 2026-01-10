@@ -26,7 +26,7 @@ class MovimientoController extends Controller
         /* ==========================
         QUERY BASE
         ========================== */
-        $query = Movimiento::activos();
+        $query = Movimiento::query();
 
         // ---- FILTRO POR TAB ----
         switch ($tab) {
@@ -35,7 +35,7 @@ class MovimientoController extends Controller
                 break;
 
             case 'egresos':
-                $query->egresos()->pagados();
+                $query->egresos(); // 👈 SIN pagados()
                 break;
 
             case 'por_cobrar':

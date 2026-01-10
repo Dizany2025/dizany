@@ -351,8 +351,9 @@ Nuevo Producto
     <script src="{{ asset('js/registrar_producto.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    //MOSTRAR IMAGEN
+    
     <script>
+//MOSTRAR IMAGEN
         document.getElementById('imagen').addEventListener('change', function (e) {
             const file = e.target.files[0];
             const preview = document.getElementById('preview_imagen');
@@ -372,8 +373,9 @@ Nuevo Producto
         });
     </script>
 
-    //calcularStock
+    
     <script>
+        //calcularStock
         document.addEventListener('DOMContentLoaded', function () {
 
             const cantidadInput = document.querySelector('input[name="cantidad_ingresada"]');
@@ -463,8 +465,9 @@ Nuevo Producto
         });
     </script>
 
-    //MOSTRAR OCULTAR UNPUTS    
+      
     <script>
+        // MOSTRAR OCULTAR UNPUTS  
         document.addEventListener('DOMContentLoaded', function () {
 
             const chkPaquete = document.getElementById('usa_paquete');

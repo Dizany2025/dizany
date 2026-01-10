@@ -39,7 +39,7 @@ Gastos
         </div>
         <div class="card-body">
             <!-- Filtros Dinámicos -->
-            <div class="row g-3 mb-3">
+            <div class="row g-3 mb-3 filters-group">
                 <div class="col-12 col-md-4">
                     <label for="filter-date" class="form-label">: Por Fecha:</label>
                     <input type="text" id="filter-date" class="form-control" placeholder="Selecciona una fecha">
@@ -66,13 +66,13 @@ Gastos
 
             <!-- Tabla Gastos -->
             <div class="table-responsive">
-                <table class="table table-striped table-bordered mb-0">
-                    <thead class="thead-dark">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
                         <tr>
                             <th>Fecha</th>
                             <th>Descripción</th>
-                            <th>Monto</th>
-                            <th>Método de Pago</th>
+                            <th class="text-end">Monto</th>
+                            <th>Método</th>
                             <th>Usuario</th>
                             <th class="text-center">Acciones</th>
                         </tr>
@@ -80,41 +80,63 @@ Gastos
 
                     <tbody id="tabla-gastos">
                     @foreach($gastos as $gasto)
-                    <tr>
-                        <td>{{ date('d/m/Y H:i', strtotime($gasto->fecha)) }}</td>
-                        <td>{{ $gasto->descripcion }}</td>
-                        <td>S/ {{ number_format($gasto->monto, 2) }}</td>
-                        <td>{{ $gasto->metodo_pago }}</td>
-                        <td>{{ $gasto->usuario->nombre ?? '—' }}</td>
+                        <tr>
+                            <td class="text-muted">
+                                {{ date('d/m/Y H:i', strtotime($gasto->fecha)) }}
+                            </td>
 
-                        <td class="text-center">
-                            <!-- EDITAR -->
-                            <a href="{{ route('gastos.edit', $gasto->id) }}"
-                            class="btn btn-warning btn-sm">
-                                <i class="fas fa-edit"></i>
-                            </a>
+                            <td>
+                                <strong>{{ $gasto->descripcion }}</strong>
+                            </td>
 
-                            <!-- ELIMINAR -->
-                            <form action="{{ route('gastos.destroy', $gasto->id) }}"
-                                method="POST"
-                                class="d-inline"
-                                onsubmit="return confirm('¿Eliminar este gasto?')">
-                                @csrf
-                                @method('DELETE')
-                                <button class="btn btn-danger btn-sm">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
+                            <td class="text-end text-danger fw-semibold">
+                                - S/ {{ number_format($gasto->monto, 2) }}
+                            </td>
+
+                            <td>
+                                <span class="badge bg-secondary text-capitalize">
+                                    {{ $gasto->metodo_pago }}
+                                </span>
+                            </td>
+
+                            <td>
+                                {{ $gasto->usuario->nombre ?? '—' }}
+                            </td>
+
+                            <td class="text-center">
+                                @if(auth()->user()->esAdmin())
+                                    <a href="{{ route('gastos.edit', $gasto->id) }}"
+                                    class="btn btn-sm btn-outline-warning rounded-circle"
+                                    title="Editar">
+                                        <i class="fas fa-pen"></i>
+                                    </a>
+
+                                    <form action="{{ route('gastos.destroy', $gasto->id) }}"
+                                        method="POST"
+                                        class="d-inline"
+                                        onsubmit="return confirm('¿Anular este gasto?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button class="btn btn-sm btn-outline-danger rounded-circle"
+                                                title="Anular">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                @else
+                                    <span class="text-muted">—</span>
+                                @endif
+                            </td>
+                        </tr>
                     @endforeach
                     </tbody>
 
-                    <tfoot>
+                    <tfoot class="table-light">
                         <tr>
-                            <th colspan="2" class="text-end">Total del día:</th>
-                            <th id="total-gastos">S/ 0.00</th>
-                            <th colspan="2"></th>
+                            <th colspan="2" class="text-end">Total del día</th>
+                            <th id="total-gastos" class="text-end fw-bold text-danger">
+                                S/ 0.00
+                            </th>
+                            <th colspan="3"></th>
                         </tr>
                     </tfoot>
                 </table>

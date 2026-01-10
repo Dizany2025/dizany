@@ -35,13 +35,15 @@ Nuevo Gasto
                 @csrf
 
                 <div class="mb-3">
-                    <label>Usuario:</label>
-                    <select name="usuario_id" class="form-control" required>
-                        <option value="">-- Selecciona --</option>
-                        @foreach($usuarios as $usuario)
-                            <option value="{{ $usuario->id }}">{{ $usuario->nombre }}</option>
-                        @endforeach
-                    </select>
+                    <label class="form-label">Usuario</label>
+                    <input type="text"
+                        class="form-control"
+                        value="{{ auth()->user()->nombre }}"
+                        disabled>
+
+                    <input type="hidden"
+                        name="usuario_id"
+                        value="{{ auth()->id() }}">
                 </div>
 
                 <div class="mb-3">
@@ -60,8 +62,15 @@ Nuevo Gasto
                 </div>
 
                 <div class="mb-3">
-                    <label>Método de Pago:</label>
-                    <input type="text" name="metodo_pago" class="form-control" placeholder="Efectivo, Yape, etc.">
+                    <label class="form-label">Método de pago</label>
+                    <select name="metodo_pago" class="form-select" required>
+                        <option value="">Seleccione un método</option>
+                        <option value="efectivo">Efectivo</option>
+                        <option value="yape">Yape</option>
+                        <option value="plin">Plin</option>
+                        <option value="transferencia">Transferencia</option>
+                        <option value="tarjeta">Tarjeta</option>
+                    </select>
                 </div>
 
                 <button type="submit" class="btn btn-success">Registrar</button>

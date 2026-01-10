@@ -1,98 +1,281 @@
-/* Estilos generales para la tabla */
+/* ======================================================
+   BASE GENERAL
+====================================================== */
+
+body {
+    background-color: #f5f7fb;
+}
+
+/* ======================================================
+   FILTROS
+====================================================== */
+
+.form-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.form-control,
+.form-select {
+    border-radius: 0.375rem;
+    border-color: #ced4da;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.15rem rgba(13,110,253,.15);
+}
+
+/* ======================================================
+   TABLA GASTOS (ESTILO LIMPIO TIPO MOVIMIENTOS)
+====================================================== */
+
 .table {
     width: 100%;
-    margin-bottom: 1rem;
+    margin-bottom: 0;
     color: #212529;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
-.table th,
+/* Header claro */
+.table thead th {
+    background-color: #f8f9fa;
+    color: #495057;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border-bottom: 1px solid #dee2e6;
+    padding: 0.75rem;
+}
+
+/* Celdas */
 .table td {
     padding: 0.75rem;
-    vertical-align: top;
-    border-top: 1px solid #dee2e6;
+    vertical-align: middle;
+    border-top: none;
+    font-size: 0.875rem;
 }
 
-.table th {
-    background-color: #343a40;
-    color: white;
+/* Hover suave */
+.table-hover tbody tr:hover {
+    background-color: #f1f3f5;
 }
 
+/* Quitar rayado viejo */
 .table-striped tbody tr:nth-of-type(odd) {
-    background-color: #f9f9f9;
+    background-color: transparent;
 }
 
-.table-bordered {
-    border: 1px solid #dee2e6;
+/* Responsive */
+.table-responsive {
+    overflow-x: auto;
 }
 
-.table-bordered th,
-.table-bordered td {
-    border: 1px solid #dee2e6;
+/* ======================================================
+   TEXTO Y COLORES
+====================================================== */
+
+.text-muted {
+    color: #6c757d !important;
 }
 
-.table .thead-dark th {
-    color: white;
-    background-color: #343a40;
+.text-danger {
+    color: #dc3545 !important;
 }
 
-/* Estilo de los botones */
-.btn-primary {
-    background-color: #007bff;
-    border-color: #007bff;
-    padding: 0.5rem 1rem;
-    color: white;
-    text-decoration: none;
-    font-size: 1rem;
+.text-success {
+    color: #198754 !important;
 }
 
-.btn-primary:hover {
-    background-color: #0056b3;
-    border-color: #0056b3;
+.fw-semibold {
+    font-weight: 600;
 }
+
+/* ======================================================
+   BADGES
+====================================================== */
+
+.badge {
+    font-size: 0.75rem;
+    padding: 0.35em 0.6em;
+    border-radius: 0.375rem;
+}
+
+.badge.bg-secondary {
+    background-color: #868e96 !important;
+}
+
+
+.badge.bg-danger {
+    background-color: #dc3545 !important;
+}
+
+/* ======================================================
+   BOTONES DE ACCIÓN
+====================================================== */
 
 .btn {
-    margin: 0.5rem 0;
+    box-shadow: none !important;
 }
 
-/* Paginación */
+.btn-outline-warning {
+    color: #f59f00;
+    border-color: #f59f00;
+}
+
+.btn-outline-warning:hover {
+    background-color: #f59f00;
+    color: #fff;
+}
+
+.btn-outline-danger {
+    color: #fa5252;
+    border-color: #fa5252;
+}
+
+.btn-outline-danger:hover {
+    background-color: #fa5252;
+    color: #fff;
+}
+
+.btn.rounded-circle {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    line-height: 34px;
+    text-align: center;
+}
+
+/* ======================================================
+   FOOTER TOTAL
+====================================================== */
+
+.table tfoot th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-top: 1px solid #dee2e6;
+    padding: 0.75rem;
+}
+
+/* ======================================================
+   ALERTAS
+====================================================== */
+
+.alert-warning {
+    background-color: #fff3cd;
+    border-color: #ffecb5;
+    color: #664d03;
+}
+
+/* ======================================================
+   PAGINACIÓN
+====================================================== */
+
 .pagination {
-    display: flex;
     justify-content: center;
-    margin-top: 1rem;
 }
 
-.pagination .page-item .page-link {
-    padding: 0.5rem 1rem;
-    margin: 0 0.25rem;
-    border: 1px solid #dee2e6;
+.page-link {
+    color: #0d6efd;
+    border-radius: 0.375rem;
 }
 
-.pagination .page-item.active .page-link {
-    background-color: #007bff;
-    border-color: #007bff;
+.page-item.active .page-link {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+/* ======================================================
+   RESPONSIVE
+====================================================== */
+
+@media (max-width: 768px) {
+    .table thead {
+        display: none;
+    }
+
+    .table tbody tr {
+        display: block;
+        margin-bottom: 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 0.5rem;
+        padding: 0.5rem;
+        background-color: #fff;
+    }
+
+    .table tbody td {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.4rem 0;
+        font-size: 0.85rem;
+    }
+
+    .table tbody td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #6c757d;
+    }
+}
+/* Realce sutil de filas */
+.table tbody tr {
+    transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.table tbody tr:hover {
+    background-color: #f8fafc;
+    box-shadow: inset 4px 0 0 #0d6efd;
+}
+/* Descripción más clara */
+.table td:nth-child(2) strong {
+    color: #212529;
+    font-weight: 600;
+}
+/* Monto egreso */
+.table td.text-danger {
+    font-size: 0.95rem;
+}
+/* Espaciado entre filas */
+.table tbody tr + tr {
+    border-top: 1px solid #eef1f5;
+}
+/* Total del día destacado */
+.table tfoot th {
+    background-color: #f1f3f5;
+    font-size: 0.95rem;
 }
 /*filtros*/
-    .form-label {
-        font-weight: 600;
-        color: #333;
-    }
+/* ======================================================
+   FILTROS – ESTILO PRO
+====================================================== */
 
-    .form-control, .form-select {
-        border-radius: 0.375rem;
-    }
+.filters-group .form-control,
+.filters-group .form-select {
+    background-color: #f8f9fa;
+    border: 1px solid #e1e5ea;
+    border-radius: 0.5rem;
+    height: 42px;
+    font-size: 0.9rem;
+    padding: 0.45rem 0.75rem;
+    color: #495057;
+    transition: all 0.15s ease-in-out;
+}
 
-    .table-responsive {
-        overflow-x: auto;
-    }
+.filters-group .form-control::placeholder {
+    color: #adb5bd;
+}
 
-    /* Estilos para hacerlo responsivo */
-    @media (max-width: 768px) {
-        .row {
-            flex-direction: column;
-        }
+.filters-group .form-control:focus,
+.filters-group .form-select:focus {
+    background-color: #ffffff;
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.12rem rgba(13,110,253,.15);
+}
 
-        .col-md-4 {
-            width: 100%;
-        }
-    }
+.filters-group .form-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #6c757d;
+    margin-bottom: 0.25rem;
+}

@@ -19,6 +19,7 @@ class Gasto extends Model
         'monto',
         'fecha',
         'metodo_pago',
+        'estado', // 👈 CLAVE
     ];
 
     // Relación con el usuario (opcional, si quieres usarlo)

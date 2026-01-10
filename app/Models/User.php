@@ -46,6 +46,9 @@ public function getEmailForPasswordReset()
 {
     return $this->email;
 }
-
+public function esAdmin()
+{
+    return $this->rol_id == 1;
+}
 
 }
