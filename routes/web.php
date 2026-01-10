@@ -22,6 +22,7 @@ use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\MarcaController;
 use App\Http\Controllers\DashboardAdminController;
 use App\Http\Controllers\MovimientoController;
+use App\Http\Controllers\LoteController;
 //consultar dni y ruc
 use Illuminate\Support\Facades\Http;
 use App\Models\Producto;
@@ -182,8 +183,11 @@ Route::get('/validar-categoria', function (Request $request) {
 });
 // FIN INETRFAZ PARAMETROS
 Route::get('/inventario/stock', [InventarioController::class, 'stock'])->name('inventario.stock');
+Route::get('/inventario/lote', [InventarioController::class, 'lote'])
+    ->name('inventario.lote');
 Route::post('/inventario/actualizar-stock/{id}', [InventarioController::class, 'actualizarStock']);
 Route::get('/notificaciones/inventario', [InventarioController::class, 'obtenerNotificaciones']);
+
 
 Route::post('/autorizar', [VentaController::class, 'autorizar'])->name('ventas.autorizar');
 Route::get('/comprobantes/descargar/{filename}', [VentaController::class, 'descargarComprobante']);
@@ -212,3 +216,11 @@ Route::get('/gastos/{id}/edit', [GastoController::class, 'edit'])
 
 Route::put('/gastos/{id}', [GastoController::class, 'update'])
     ->name('gastos.update');
+
+// Mostrar formulario
+Route::get('/inventario/lotes', [LoteController::class, 'index'])
+    ->name('inventario.lotes');
+
+// Guardar lote (ESTA ES LA QUE FALTA O NO COINCIDE)
+Route::post('/inventario/lote', [LoteController::class, 'store'])
+    ->name('inventario.lote.store');

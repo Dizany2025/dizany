@@ -49,7 +49,7 @@
 
                 <!-- Inventario -->
                 <div class="submenu">
-                    <button class="submenu-toggle {{ request()->is('inventario*') ? 'active' : '' }}">    
+                    <button class="submenu-toggle {{ request()->is('inventario*') ? 'active' : '' }}">
                         <div class="submenu-left">
                             <i class="fas fa-warehouse me-2"></i>
                             <span class="menu-text">Inventario</span>
@@ -58,13 +58,24 @@
                     </button>
 
                     <div class="submenu-items {{ request()->is('inventario*') ? 'show' : '' }}">
+
+                        <!-- Stock -->
                         <a href="{{ route('inventario.stock') }}"
                         class="{{ request()->routeIs('inventario.stock') ? 'active' : '' }}">
                             <i class="fas fa-boxes-stacked me-1"></i>
                             <span class="menu-text">Stock</span>
                         </a>
+
+                        <!-- Ingreso por Lote -->
+                        <a href="{{ route('inventario.lote') }}"
+                        class="{{ request()->routeIs('inventario.lote') ? 'active' : '' }}">
+                            <i class="fas fa-truck-loading me-1"></i>
+                            <span class="menu-text">Ingreso de Lotes</span>
+                        </a>
+
                     </div>
                 </div>
+
 
                 <a href="{{ route('ventas.index') }}"
                 class="{{ request()->routeIs('ventas.index') ? 'active' : '' }}">
