@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use App\Models\Lote;
+
 
 class Producto extends Model
 {
@@ -78,4 +80,9 @@ class Producto extends Model
             }
         });
     }
+
+    public function lotes()
+{
+    return $this->hasMany(Lote::class);
+}
 }

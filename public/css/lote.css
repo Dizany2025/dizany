@@ -1,0 +1,176 @@
+/* ====== Layout general ====== */
+        .inv-card {
+            border: 1px solid #e7edf5;
+            border-radius: 14px;
+            box-shadow: 0 8px 18px rgba(18, 38, 63, .06);
+            overflow: hidden;
+        }
+        .inv-card-header {
+            background: linear-gradient(90deg, #0d6efd, #1677ff);
+            color: #fff;
+            padding: 14px 18px;
+        }
+        .inv-card-header h5 {
+            margin: 0;
+            font-weight: 700;
+            letter-spacing: .2px;
+        }
+        .inv-section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+            color: #0b3d91;
+            margin-bottom: 14px;
+        }
+        .inv-section-title .dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: #0d6efd;
+            box-shadow: 0 0 0 5px rgba(13,110,253,.12);
+        }
+
+        /* ====== Inputs ====== */
+        .inv-label {
+            font-weight: 700;
+            color: #25324a;
+            margin-bottom: 6px;
+        }
+        .inv-input, .inv-select {
+            border-radius: 12px;
+            border: 1px solid #dbe5f3;
+            padding: 10px 12px;
+            transition: all .15s ease;
+            background: #fff;
+        }
+        .inv-input:focus, .inv-select:focus {
+            border-color: rgba(13,110,253,.55);
+            box-shadow: 0 0 0 .2rem rgba(13,110,253,.15);
+        }
+
+        /* ====== Select2 estilo ====== */
+        .select2-container .select2-selection--single {
+            height: 44px;
+            border-radius: 12px !important;
+            border: 1px solid #dbe5f3 !important;
+            display: flex;
+            align-items: center;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            padding-left: 12px;
+            color: #25324a;
+            font-weight: 600;
+            line-height: 44px;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 44px;
+            right: 10px;
+        }
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            border-radius: 10px;
+            border: 1px solid #dbe5f3;
+            padding: 10px 12px;
+            outline: none;
+        }
+        .select2-dropdown {
+            border-radius: 14px;
+            border: 1px solid #dbe5f3;
+            box-shadow: 0 10px 24px rgba(18, 38, 63, .12);
+            overflow: hidden;
+        }
+        .select2-results__option {
+            padding: 10px 12px;
+        }
+        .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+            background: rgba(13,110,253,.12);
+            color: #0b3d91;
+        }
+
+        /* “tarjeta” dentro del dropdown */
+        .prod-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .prod-item .name {
+            font-weight: 800;
+            color: #1b2a41;
+            letter-spacing: .2px;
+        }
+        .prod-item .desc {
+            font-size: 12px;
+            color: #6b7b93;
+        }
+
+        /* ====== Footer botones (sticky) ====== */
+        .inv-actions {
+            position: sticky;
+            bottom: 0;
+            background: rgba(255,255,255,.92);
+            backdrop-filter: blur(8px);
+            border-top: 1px solid #e7edf5;
+            padding: 14px 18px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .btn-soft {
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-weight: 700;
+        }
+        .btn-cancel {
+            background: #f2f5fa;
+            border: 1px solid #dbe5f3;
+            color: #2a3953;
+        }
+        .btn-cancel:hover { background: #e9eef7; }
+
+        .btn-save {
+            background: #14a44d;
+            border: 1px solid #119243;
+            color: #fff;
+        }
+        .btn-save:hover { background: #129846; }
+
+        /* Responsive: separaciones */
+        @media (max-width: 992px) {
+            .inv-actions { position: static; }
+        }
+
+        /*====fechas Date inputs====*/
+        
+input[type="date"] {
+    position: relative;
+    padding-right: 42px;
+}
+
+/* icono calendario */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.6;
+    filter: invert(0.4);
+}
+
+/* hover */
+input[type="date"]:hover::-webkit-calendar-picker-indicator {
+    opacity: 1;
+}
+
+/* Firefox fix */
+input[type="date"]::-moz-focus-inner {
+    border: 0;
+}
+
+/* ====== SELECTS (PROVEEDOR) ====== */
+
+.select2-container .select2-selection--single {
+    height: 44px;
+    border-radius: 12px !important;
+    border: 1px solid #dbe5f3 !important;
+    background: #fff;
+}
+
+.select2-container--default .select2-selection__arrow {
+    top: 8px;
+}
