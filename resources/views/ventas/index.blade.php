@@ -475,7 +475,20 @@ $productos = \App\Models\Producto::withSum('detalleVentas as total_vendido', 'ca
   window.USUARIO_ES_ADMIN = @json(Auth::user()->rol_id == 1);
 </script>
 
-<script src="{{ asset('js/ventas_productos.js') }}"></script>
+<script src="js/ventas_core.js"></script>
+<script src="js/ventas_state.js"></script>
+<script src="js/ventas_stock.js"></script>
+
+<script src="js/ventas_productos.js"></script>
+<script src="js/ventas_carrito.js"></script>
+
+<script src="js/ventas_ui.js"></script>
+<script src="js/ventas_espera.js"></script>
+<script src="js/ventas_ordenar.js"></script>
+<script src="js/ventas_registro.js"></script>
+
+<script src="js/ventas_bootstrap.js"></script>
+
 
 <script>
     document.getElementById("btn-ordenar").addEventListener("click", () => {
