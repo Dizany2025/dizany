@@ -21,7 +21,7 @@
                         <tr>
                             <th>Producto</th>
                             <th>Proveedor</th>
-                            <th class="text-center">Cantidad</th>
+                            <th class="text-center">Stock</th>
                             <th>Ingreso</th>
                             <th>Vencimiento</th>
                             <th class="text-center">Estado</th>
@@ -32,9 +32,9 @@
                         @forelse ($lotes as $lote)
                             <tr>
                                 <td>
-                                    <strong>{{ $lote->producto->nombre }}</strong><br>
+                                    <strong>{{ $lote->producto->nombre ?? '—' }}</strong><br>
                                     <small class="text-muted">
-                                        {{ $lote->producto->descripcion }}
+                                        {{ $lote->producto->descripcion ?? '' }}
                                     </small>
                                 </td>
 
@@ -43,25 +43,28 @@
                                 </td>
 
                                 <td class="text-center fw-bold">
-                                    {{ $lote->cantidad }}
+                                    {{ $lote->stock_actual }}
+                                    <small class="text-muted d-block">
+                                        / {{ $lote->stock_inicial }}
+                                    </small>
                                 </td>
 
                                 <td>
-                                    {{ $lote->fecha_ingreso->format('d/m/Y') }}
+                                    {{ \Carbon\Carbon::parse($lote->fecha_ingreso)->format('d/m/Y') }}
                                 </td>
 
                                 <td>
                                     @if ($lote->fecha_vencimiento)
-                                        {{ $lote->fecha_vencimiento->format('d/m/Y') }}
+                                        {{ \Carbon\Carbon::parse($lote->fecha_vencimiento)->format('d/m/Y') }}
                                     @else
                                         <span class="text-muted">No aplica</span>
                                     @endif
                                 </td>
 
                                 <td class="text-center">
-                                    @if ($lote->cantidad == 0)
+                                    @if ($lote->stock_actual == 0)
                                         <span class="badge bg-secondary">Agotado</span>
-                                    @elseif ($lote->fecha_vencimiento && $lote->fecha_vencimiento->isPast())
+                                    @elseif ($lote->fecha_vencimiento && \Carbon\Carbon::parse($lote->fecha_vencimiento)->isPast())
                                         <span class="badge bg-danger">Vencido</span>
                                     @else
                                         <span class="badge bg-success">Activo</span>

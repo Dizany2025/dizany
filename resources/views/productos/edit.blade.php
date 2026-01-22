@@ -1,12 +1,10 @@
 @extends('layouts.app')
 
 @push('styles')
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <link href="{{ asset('css/edit_productos.css') }}" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<link href="{{ asset('css/edit_productos.css') }}" rel="stylesheet" />
 @endpush
-
-@section('title', 'Editar Producto')
 
 {{-- BOTÓN ATRÁS --}}
 @section('header-back')
@@ -17,27 +15,19 @@
 </button>
 @endsection
 
-{{-- TÍTULO --}}
-@section('header-title')
-Editar Producto
-@endsection
-
-{{-- BOTONES DERECHA --}}
-@section('header-buttons')
-{{-- sin acciones --}}
-@endsection
-
+@section('header-title','Editar Producto')
 
 @section('content')
-<link href="{{ asset('css/edit_productos.css') }}" rel="stylesheet" />
-<div class="card shadow my-4 mx-auto" style="max-width: 900px;">
+<div class="card shadow-sm mx-auto my-4" style="max-width: 960px;">
     <div class="card-header bg-primary text-white text-center">
-        <h4 class="mb-0">Editar Producto</h4>
+        <h4 class="mb-0">
+            <i class="fas fa-box"></i> Editar Producto
+        </h4>
     </div>
 
     <div class="card-body">
 
-        {{-- Errores --}}
+        {{-- ERRORES --}}
         @if ($errors->any())
             <div class="alert alert-danger">
                 <ul class="mb-0">
@@ -51,297 +41,242 @@ Editar Producto
         <input type="hidden" id="producto_id" value="{{ $producto->id }}">
 
         <form action="{{ route('productos.update', $producto->id) }}"
-      method="POST"
-      enctype="multipart/form-data"
-      id="form-editar-producto">
+              method="POST"
+              enctype="multipart/form-data">
+            @csrf
+            @method('PUT')
 
-@csrf
-@method('PUT')
+            <div class="row g-3">
 
-<div class="row g-3">
+                {{-- ================= DATOS BÁSICOS ================= --}}
 
-    <!-- ================= CÓDIGO DE BARRAS ================= -->
-    <div class="col-md-6 col-lg-4">
-        <label class="form-label">Código de Barras</label>
-        <input type="text"
-               class="form-control shadow-sm"
-               id="codigo_barras"
-               name="codigo_barras"
-               value="{{ old('codigo_barras', $producto->codigo_barras) }}"
-               required>
-        <div id="codigo_barras_error"
-             class="invalid-feedback d-none">
-            El código ya está registrado.
-        </div>
-    </div>
+                <div class="col-md-4">
+                    <label class="form-label">Código de Barras</label>
+                    <input type="text"
+                           id="codigo_barras"
+                           name="codigo_barras"
+                           class="form-control"
+                           value="{{ old('codigo_barras', $producto->codigo_barras) }}">
+                    <div id="codigo_barras_error"
+                         class="invalid-feedback d-none">
+                        Este código ya está registrado.
+                    </div>
+                </div>
 
-    <!-- ================= NOMBRE ================= -->
-    <div class="col-md-6 col-lg-4">
-        <label class="form-label">Nombre</label>
-        <input type="text"
-               class="form-control shadow-sm"
-               id="nombre"
-               name="nombre"
-               value="{{ old('nombre', $producto->nombre) }}"
-               required>
-    </div>
+                <div class="col-md-4">
+                    <label class="form-label">Nombre</label>
+                    <input type="text"
+                           name="nombre"
+                           class="form-control"
+                           value="{{ old('nombre', $producto->nombre) }}"
+                           required>
+                </div>
 
-    <!-- ================= SLUG ================= -->
-    <div class="col-md-6 col-lg-4">
-        <label class="form-label">Slug</label>
-        <input type="text"
-               class="form-control shadow-sm"
-               id="slug"
-               name="slug"
-               value="{{ old('slug', $producto->slug) }}"
-               readonly>
-    </div>
+                <div class="col-md-4">
+                    <label class="form-label">Slug</label>
+                    <input type="text"
+                           class="form-control"
+                           value="{{ $producto->slug }}"
+                           readonly>
+                </div>
 
-    <!-- ================= DESCRIPCIÓN ================= -->
-    <div class="col-12">
-        <label class="form-label">Descripción</label>
-        <textarea class="form-control shadow-sm"
-                  name="descripcion"
-                  rows="2">{{ old('descripcion', $producto->descripcion) }}</textarea>
-    </div>
+                <div class="col-12">
+                    <label class="form-label">Descripción</label>
+                    <textarea name="descripcion"
+                              class="form-control"
+                              rows="2">{{ old('descripcion', $producto->descripcion) }}</textarea>
+                </div>
 
-    <!-- ================= PRECIOS ================= -->
-    <div class="col-md-4">
-        <label class="form-label">Precio Compra</label>
-        <div class="input-group shadow-sm">
-            <span class="input-group-text">S/</span>
-            <input type="number" step="0.01"
-                   name="precio_compra"
-                   class="form-control"
-                   value="{{ old('precio_compra', $producto->precio_compra) }}"
-                   required>
-        </div>
-    </div>
+                {{-- ================= PRESENTACIONES ================= --}}
 
-    <div class="col-md-4">
-        <label class="form-label">Precio Venta (Unidad)</label>
-        <div class="input-group shadow-sm">
-            <span class="input-group-text">S/</span>
-            <input type="number" step="0.01"
-                   name="precio_venta"
-                   class="form-control"
-                   value="{{ old('precio_venta', $producto->precio_venta) }}"
-                   required>
-        </div>
-    </div>
+                <div class="col-12 mt-4">
+                    <label class="form-label fw-bold text-primary">
+                        Presentaciones disponibles
+                    </label>
 
-    <div class="col-md-4">
-        <label class="form-label">Precio Paquete</label>
-        <div class="input-group shadow-sm">
-            <span class="input-group-text">S/</span>
-            <input type="number" step="0.01"
-                   name="precio_paquete"
-                   class="form-control"
-                   value="{{ old('precio_paquete', $producto->precio_paquete) }}">
-        </div>
-    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" checked disabled>
+                        <label class="form-check-label">
+                            Unidad (siempre)
+                        </label>
+                    </div>
 
-    <div class="col-md-4">
-        <label class="form-label">Precio Caja</label>
-        <div class="input-group shadow-sm">
-            <span class="input-group-text">S/</span>
-            <input type="number" step="0.01"
-                   name="precio_caja"
-                   class="form-control"
-                   value="{{ old('precio_caja', $producto->precio_caja) }}">
-        </div>
-    </div>
+                    <div class="form-check">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               id="usa_paquete"
+                               {{ $producto->unidades_por_paquete ? 'checked' : '' }}>
+                        <label class="form-check-label">Paquete</label>
+                    </div>
 
-    <!-- ================= CONVERSIONES ================= -->
-    <div class="col-md-4">
-        <label class="form-label">Unidades por paquete / caja</label>
-        <input type="number"
-               class="form-control shadow-sm"
-               name="unidades_por_paquete"
-               value="{{ old('unidades_por_paquete', $producto->unidades_por_paquete) }}">
-    </div>
+                    <div class="form-check">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               id="usa_caja"
+                               {{ ($producto->paquetes_por_caja || $producto->unidades_por_caja) ? 'checked' : '' }}>
+                        <label class="form-check-label">Caja</label>
+                    </div>
+                </div>
 
-    <div class="col-md-4">
-        <label class="form-label">Paquetes por caja</label>
-        <input type="number"
-               class="form-control shadow-sm"
-               name="paquetes_por_caja"
-               value="{{ old('paquetes_por_caja', $producto->paquetes_por_caja) }}">
-    </div>
+                {{-- ================= CONVERSIONES ================= --}}
 
-    <!-- ================= STOCK ACTUAL (A) ================= -->
-    <div class="col-md-4">
-        <label class="form-label fw-bold">
-            Stock actual (editable)
-        </label>
-        <input type="number"
-               class="form-control shadow-sm"
-               name="stock"
-               id="stock_actual"
-               value="{{ old('stock', $producto->stock) }}">
-        <small class="text-muted">
-            Puedes editarlo manualmente si lo deseas
-        </small>
-    </div>
+                <div class="row mt-2">
 
-    <!-- ================= RECALCULAR STOCK (B + C) ================= -->
-    <div class="col-12 mt-4">
-        <div class="alert alert-warning">
-            <strong>Recalcular stock (opcional)</strong><br>
-            Usa este bloque solo si estás ingresando nuevo stock.
-            Si lo dejas vacío, se mantiene el stock actual.
-        </div>
+                    <div class="col-md-4 d-none" id="grupo_unidades_paquete">
+                        <label class="form-label fw-bold">
+                            Unidades por paquete
+                        </label>
+                        <input type="number"
+                               min="1"
+                               name="unidades_por_paquete"
+                               class="form-control"
+                               value="{{ old('unidades_por_paquete', $producto->unidades_por_paquete) }}">
+                    </div>
 
-        <div class="form-check">
-            <input class="form-check-input" type="radio"
-                   name="nivel_ingreso" value="unidad">
-            <label class="form-check-label">Ingreso por unidades</label>
-        </div>
+                    <div class="col-md-4 d-none" id="grupo_paquetes_caja">
+                        <label class="form-label fw-bold">
+                            Paquetes por caja
+                        </label>
+                        <input type="number"
+                               min="1"
+                               name="paquetes_por_caja"
+                               class="form-control"
+                               value="{{ old('paquetes_por_caja', $producto->paquetes_por_caja) }}">
+                    </div>
 
-        <div class="form-check">
-            <input class="form-check-input" type="radio"
-                   name="nivel_ingreso" value="paquete">
-            <label class="form-check-label">Ingreso por paquetes</label>
-        </div>
+                    <div class="col-md-4 d-none" id="grupo_unidades_caja">
+                        <label class="form-label fw-bold">
+                            Unidades por caja
+                        </label>
+                        <input type="number"
+                               min="1"
+                               name="unidades_por_caja"
+                               class="form-control"
+                               value="{{ old('unidades_por_caja', $producto->unidades_por_caja) }}">
+                    </div>
 
-        <div class="form-check">
-            <input class="form-check-input" type="radio"
-                   name="nivel_ingreso" value="caja">
-            <label class="form-check-label">Ingreso por cajas</label>
-        </div>
+                </div>
 
-        <div class="row mt-2">
-            <div class="col-md-4">
-                <label class="form-label">Cantidad ingresada</label>
-                <input type="number"
-                       class="form-control shadow-sm"
-                       name="cantidad_ingresada"
-                       value="{{ old('cantidad_ingresada') }}">
+                {{-- ================= UBICACIÓN ================= --}}
+
+                <div class="col-md-4">
+                    <label class="form-label">Ubicación</label>
+                    <input type="text"
+                           name="ubicacion"
+                           class="form-control"
+                           value="{{ old('ubicacion', $producto->ubicacion) }}">
+                </div>
+
+                {{-- ================= CATEGORÍA / MARCA ================= --}}
+
+                <div class="col-md-4">
+                    <label class="form-label d-flex justify-content-between">
+                        <span>Categoría</span>
+                        <button type="button"
+                                class="btn btn-sm btn-primary"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modalNuevaCategoria">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </label>
+                    <select name="categoria_id"
+                            id="categoria_id"
+                            class="form-select"
+                            required>
+                        @foreach($categorias as $categoria)
+                            <option value="{{ $categoria->id }}"
+                                {{ old('categoria_id', $producto->categoria_id) == $categoria->id ? 'selected' : '' }}>
+                                {{ $categoria->nombre }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label d-flex justify-content-between">
+                        <span>Marca</span>
+                        <button type="button"
+                                class="btn btn-sm btn-primary"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modalNuevaMarca">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </label>
+                    <select name="marca_id"
+                            id="marca_id"
+                            class="form-select">
+                        @foreach($marcas as $marca)
+                            <option value="{{ $marca->id }}"
+                                {{ old('marca_id', $producto->marca_id) == $marca->id ? 'selected' : '' }}>
+                                {{ $marca->nombre }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- ================= IMAGEN ================= --}}
+
+                <div class="col-12">
+                    <label class="form-label">Imagen</label>
+                    <input type="file"
+                           name="imagen"
+                           id="imagen"
+                           class="form-control"
+                           accept="image/*">
+
+                    <div class="mt-2">
+                        <img id="preview_imagen"
+                             src="{{ $producto->imagen ? asset('uploads/productos/'.$producto->imagen) : '' }}"
+                             class="img-thumbnail {{ $producto->imagen ? '' : 'd-none' }}"
+                             style="max-height:150px;">
+                    </div>
+                </div>
+
+                {{-- ================= ESTADO ================= --}}
+
+                <div class="col-md-4">
+
+                    {{-- VENCIMIENTO --}}
+                    <div class="form-check">
+                        <input class="form-check-input"
+                            type="checkbox"
+                            id="maneja_vencimiento"
+                            name="maneja_vencimiento"
+                            {{ old('maneja_vencimiento', $producto->maneja_vencimiento) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="maneja_vencimiento">
+                                Maneja fecha de vencimiento
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mt-4">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               name="activo"
+                               {{ old('activo', $producto->activo) ? 'checked' : '' }}>
+                        <label class="form-check-label">Activo</label>
+                    </div>
+
+                    <div class="form-check mt-2">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               name="visible_en_catalogo"
+                               {{ old('visible_en_catalogo', $producto->visible_en_catalogo) ? 'checked' : '' }}>
+                        <label class="form-check-label">Visible en catálogo</label>
+                    </div>
+                </div>
+
             </div>
 
-            <div class="col-md-4">
-                <label class="form-label">Nuevo stock calculado</label>
-                <input type="number"
-                       class="form-control shadow-sm"
-                       name="stock_calculado"
-                       readonly>
+            <div class="mt-4 text-center">
+                <button type="submit" class="btn btn-success px-5">
+                    <i class="fas fa-save"></i> Actualizar Producto
+                </button>
             </div>
-        </div>
-    </div>
 
-    <!-- ================= UBICACIÓN / FECHA ================= -->
-    <div class="col-md-4">
-        <label class="form-label">Ubicación</label>
-        <input type="text"
-               class="form-control shadow-sm"
-               name="ubicacion"
-               value="{{ old('ubicacion', $producto->ubicacion) }}">
-    </div>
-
-    <div class="col-md-4">
-        <label class="form-label">Fecha de vencimiento</label>
-        <input type="date"
-               class="form-control shadow-sm"
-               name="fecha_vencimiento"
-               value="{{ old('fecha_vencimiento', optional($producto->fecha_vencimiento)->format('Y-m-d')) }}">
-    </div>
-
-    <!-- ================= CATEGORÍA / MARCA ================= -->
-    <div class="col-md-4">
-        <label class="form-label d-flex justify-content-between">
-            <span>Categoría</span>
-            <button type="button"
-                    class="btn btn-sm btn-primary"
-                    data-bs-toggle="modal"
-                    data-bs-target="#modalNuevaCategoria">
-                <i class="fas fa-plus"></i>
-            </button>
-        </label>
-        <select name="categoria_id"
-                id="categoria_id"
-                class="form-select"
-                required>
-            @foreach($categorias as $categoria)
-                <option value="{{ $categoria->id }}"
-                    {{ old('categoria_id', $producto->categoria_id) == $categoria->id ? 'selected' : '' }}>
-                    {{ $categoria->nombre }}
-                </option>
-            @endforeach
-        </select>
-    </div>
-
-    <div class="col-md-4">
-        <label class="form-label d-flex justify-content-between">
-            <span>Marca</span>
-            <button type="button"
-                    class="btn btn-sm btn-primary"
-                    data-bs-toggle="modal"
-                    data-bs-target="#modalNuevaMarca">
-                <i class="fas fa-plus"></i>
-            </button>
-        </label>
-        <select name="marca_id"
-                id="marca_id"
-                class="form-select">
-            @foreach($marcas as $marca)
-                <option value="{{ $marca->id }}"
-                    {{ old('marca_id', $producto->marca_id) == $marca->id ? 'selected' : '' }}>
-                    {{ $marca->nombre }}
-                </option>
-            @endforeach
-        </select>
-    </div>
-
-    <!-- ================= IMAGEN ================= -->
-    <div class="col-12">
-        <label class="form-label">Imagen</label>
-        <input type="file" class="form-control shadow-sm" name="imagen" id="imagen" accept="image/*">
-        <small class="text-muted">
-            Deja vacío si no deseas cambiarla
-        </small>
-
-        @if($producto->imagen)
-            <div class="mt-2">
-                <img id="preview_imagen"
-                    src="{{ $producto->imagen ? asset('uploads/productos/' . $producto->imagen) : '' }}"
-                    class="img-thumbnail {{ $producto->imagen ? '' : 'd-none' }}"
-                    width="150">
-            </div>
-        @endif
-    </div>
-
-    <!-- ================= ESTADO ================= -->
-    <div class="col-md-4">
-        <div class="form-check mt-3">
-            <input class="form-check-input"
-                   type="checkbox"
-                   name="activo"
-                   {{ old('activo', $producto->activo) ? 'checked' : '' }}>
-            <label class="form-check-label">Activo</label>
-        </div>
-
-        <div class="form-check mt-2">
-            <input class="form-check-input"
-                   type="checkbox"
-                   name="visible_en_catalogo"
-                   {{ old('visible_en_catalogo', $producto->visible_en_catalogo) ? 'checked' : '' }}>
-            <label class="form-check-label">Visible en catálogo</label>
-        </div>
-    </div>
-
-</div>
-
-<div class="text-center mt-4">
-    <button type="submit" class="btn btn-success px-5">
-        <i class="fas fa-save"></i> Actualizar Producto
-    </button>
-</div>
-
-</form>
-
-
+        </form>
     </div>
 </div>
+
 <!-- Modal Nueva Categoría -->
 <div class="modal fade" id="modalNuevaCategoria" tabindex="-1">
     <div class="modal-dialog">
@@ -360,7 +295,7 @@ Editar Producto
 
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button class="btn btn-success" id="btnGuardarCategoria">Guardar</button>
+                <button type="button" class="btn btn-success" id="btnGuardarCategoria">Guardar</button>
             </div>
 
         </div>
@@ -384,7 +319,7 @@ Editar Producto
 
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button class="btn btn-success" id="btnGuardarMarca">Guardar</button>
+                <button type="button" class="btn btn-success" id="btnGuardarMarca">Guardar</button>
             </div>
 
         </div>
@@ -393,141 +328,119 @@ Editar Producto
 @endsection
 
 @push('scripts')
-
-<!-- Validación de código de barras -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    $('#codigo_barras').on('input', function () {
-        const codigo = $(this).val();
-        const productoId = $('#producto_id').val();
+/* ==========================
+   VALIDAR CÓDIGO DE BARRAS
+========================== */
+document.addEventListener("DOMContentLoaded", () => {
+    const input = document.getElementById("codigo_barras");
+    const errorDiv = document.getElementById("codigo_barras_error");
+    const productoId = document.getElementById("producto_id")?.value;
 
-        $.get('{{ route('productos.validarCodigoBarras') }}', {
-            codigo_barras: codigo,
-            producto_id: productoId
-        }, function (response) {
-            if (response.exists) {
-                $('#codigo_barras').addClass('is-invalid');
-                $('#codigo_barras_error').removeClass('d-none').text('Este código ya está registrado.');
-            } else {
-                $('#codigo_barras').removeClass('is-invalid');
-                $('#codigo_barras_error').addClass('d-none');
-            }
-        });
-    });
-</script>
+    if (!input || !errorDiv) return;
 
-<!-- ==== SCRIPT PARA CALCULAR STOCK AUTOMÁTICO EN EDITAR ==== -->
-<script>
-document.addEventListener('DOMContentLoaded', function () {
+    let timer;
 
-    /* =====================================================
-     * PREVIEW DE IMAGEN
-     * ===================================================== */
-    const inputImagen = document.getElementById('imagen');
-    const previewImg  = document.getElementById('preview_imagen');
+    input.addEventListener("input", () => {
+        const codigo = input.value.trim();
+        clearTimeout(timer);
 
-    if (inputImagen && previewImg) {
-        inputImagen.addEventListener('change', function () {
-            const file = this.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                previewImg.src = e.target.result;
-                previewImg.classList.remove('d-none');
-            };
-            reader.readAsDataURL(file);
-        });
-    }
-
-    /* =====================================================
-     * RECALCULAR STOCK (EDITAR)
-     * ===================================================== */
-
-    const cantidadInput = document.querySelector('input[name="cantidad_ingresada"]');
-    const radiosIngreso = document.querySelectorAll('input[name="nivel_ingreso"]');
-
-    const unidadesPorPaquete = document.querySelector('input[name="unidades_por_paquete"]');
-    const paquetesPorCaja   = document.querySelector('input[name="paquetes_por_caja"]');
-
-    const stockCalculado = document.querySelector('input[name="stock_calculado"]');
-
-    // 👉 PRIMERO obtener el input
-    const stockActualInput = document.getElementById('stock_actual');
-
-    // 👉 LUEGO guardar el stock base
-    const stockBase = stockActualInput ? parseInt(stockActualInput.value) || 0 : 0;
-
-    function calcularStock() {
-
-        const cantidad = parseInt(cantidadInput.value);
-        const stockActualInput = document.getElementById('stock_actual');
-
-        // 🔁 Si no hay ingreso, restaurar stock original
-        if (!cantidad || cantidad <= 0) {
-            stockCalculado.value = '';
-            stockActualInput.value = stockBase;
+        if (!codigo) {
+            input.classList.remove("is-invalid");
+            errorDiv.classList.add("d-none");
             return;
         }
 
-        const nivel = document.querySelector('input[name="nivel_ingreso"]:checked')?.value;
-        if (!nivel) {
-            stockCalculado.value = '';
-            stockActualInput.value = stockBase;
-            return;
-        }
-
-        const up = parseInt(unidadesPorPaquete?.value) || 0;
-        const pc = parseInt(paquetesPorCaja?.value) || 0;
-
-        let ingreso = 0;
-
-        // ===== UNIDAD =====
-        if (nivel === 'unidad') {
-            ingreso = cantidad;
-        }
-
-        // ===== PAQUETE =====
-        if (nivel === 'paquete') {
-            if (up <= 0) return;
-            ingreso = cantidad * up;
-        }
-
-        // ===== CAJA =====
-        if (nivel === 'caja') {
-            if (pc > 0 && up > 0) {
-                ingreso = cantidad * pc * up;
-            } else if (up > 0) {
-                ingreso = cantidad * up;
-            } else {
-                return;
-            }
-        }
-
-        // 👉 MOSTRAR INGRESO
-        stockCalculado.value = ingreso;
-
-        // 👉 MOSTRAR STOCK TOTAL (BASE + INGRESO)
-        stockActualInput.value = stockBase + ingreso;
-    }  
-
-    // Eventos
-    cantidadInput?.addEventListener('input', calcularStock);
-    unidadesPorPaquete?.addEventListener('input', calcularStock);
-    paquetesPorCaja?.addEventListener('input', calcularStock);
-
-    radiosIngreso.forEach(radio => {
-        radio.addEventListener('change', calcularStock);
+        timer = setTimeout(() => {
+            fetch(`{{ route('productos.validarCodigoBarras') }}?codigo_barras=${codigo}&producto_id=${productoId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.exists) {
+                        input.classList.add("is-invalid");
+                        errorDiv.classList.remove("d-none");
+                    } else {
+                        input.classList.remove("is-invalid");
+                        errorDiv.classList.add("d-none");
+                    }
+                });
+        }, 300);
     });
-
 });
 </script>
 
 <script>
-// GUARDAR CATEGORÍA
-$("#btnGuardarCategoria").click(function() {
+/* ==========================
+   MOSTRAR / OCULTAR INPUTS
+========================== */
+document.addEventListener('DOMContentLoaded', function () {
+
+    const chkPaquete = document.getElementById('usa_paquete');
+    const chkCaja    = document.getElementById('usa_caja');
+
+    const grupoUP = document.getElementById('grupo_unidades_paquete');
+    const grupoPC = document.getElementById('grupo_paquetes_caja');
+    const grupoUC = document.getElementById('grupo_unidades_caja');
+
+    function actualizar() {
+
+        // PAQUETE
+        if (chkPaquete.checked) {
+            grupoUP.classList.remove('d-none');
+        } else {
+            grupoUP.classList.add('d-none');
+            grupoPC.classList.add('d-none');
+        }
+
+        // CAJA
+        if (chkCaja.checked) {
+
+            if (chkPaquete.checked) {
+                // caja por paquetes
+                grupoPC.classList.remove('d-none');
+                grupoUC.classList.add('d-none');
+            } else {
+                // caja directa
+                grupoUC.classList.remove('d-none');
+                grupoPC.classList.add('d-none');
+            }
+
+        } else {
+            grupoPC.classList.add('d-none');
+            grupoUC.classList.add('d-none');
+        }
+    }
+
+    chkPaquete.addEventListener('change', actualizar);
+    chkCaja.addEventListener('change', actualizar);
+
+    actualizar(); // init
+});
+</script>
+
+<script>
+/* ==========================
+   PREVIEW IMAGEN
+========================== */
+document.getElementById('imagen')?.addEventListener('change', function () {
+    const file = this.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = e => {
+        const img = document.getElementById('preview_imagen');
+        img.src = e.target.result;
+        img.classList.remove('d-none');
+    };
+    reader.readAsDataURL(file);
+});
+</script>
+
+<script>
+    $(document).on('click', '#btnGuardarCategoria', function () {
+
     let nombre = $("#nueva_categoria_nombre").val().trim();
 
     if (!nombre) {
@@ -538,23 +451,20 @@ $("#btnGuardarCategoria").click(function() {
     $.post("{{ route('categoria.ajax.store') }}", {
         nombre: nombre,
         _token: '{{ csrf_token() }}'
-    }, function(response) {
+    }, function (response) {
 
-        // Si ya existe
         if (response.error) {
             $("#error_categoria").text(response.message).removeClass("d-none");
             return;
         }
 
-        // Si se guarda correctamente, limpiar errores
         $("#error_categoria").addClass("d-none").text("");
 
-        // Insertar en el select y seleccionar automáticamente
+        // 👇 CLAVE: agregar y seleccionar
         $("#categoria_id").append(
-            `<option value="${response.data.id}" selected>${response.data.nombre}</option>`
+            new Option(response.data.nombre, response.data.id, true, true)
         );
 
-        // Cerrar modal
         $("#modalNuevaCategoria").modal("hide");
         $("#nueva_categoria_nombre").val("");
 
@@ -562,8 +472,8 @@ $("#btnGuardarCategoria").click(function() {
     });
 });
 
-// GUARDAR MARCA
-$("#btnGuardarMarca").click(function() {
+$(document).on('click', '#btnGuardarMarca', function () {
+
     let nombre = $("#nueva_marca_nombre").val().trim();
 
     if (!nombre) {
@@ -574,23 +484,19 @@ $("#btnGuardarMarca").click(function() {
     $.post("{{ route('marca.ajax.store') }}", {
         nombre: nombre,
         _token: '{{ csrf_token() }}'
-    }, function(response) {
+    }, function (response) {
 
-        // Si la marca ya existe
         if (response.error) {
             $("#error_marca").text(response.message).removeClass("d-none");
             return;
         }
 
-        // Si se guarda correctamente
         $("#error_marca").addClass("d-none").text("");
 
-        // Agregar al select y seleccionar automáticamente
         $("#marca_id").append(
-            `<option value="${response.data.id}" selected>${response.data.nombre}</option>`
+            new Option(response.data.nombre, response.data.id, true, true)
         );
 
-        // Cerrar modal
         $("#modalNuevaMarca").modal("hide");
         $("#nueva_marca_nombre").val("");
 
@@ -598,6 +504,5 @@ $("#btnGuardarMarca").click(function() {
     });
 });
 
-</script>
-
+    </script>
 @endpush

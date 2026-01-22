@@ -97,12 +97,12 @@ Productos
                             <td>{{ $producto->codigo_barras }}</td>
                             <td>{{ $producto->nombre }}</td>
                             <td>{{ $producto->descripcion }}</td>
-                            <td class="text-end">{{ number_format($producto->precio_venta, 2) }}</td>
+                            <td class="text-end">{{ number_format($producto->precio_venta_actual, 2) }}</td>
                             <td>
-                                <span class="fw-bold">{{ $producto->stock }}</span>
-                                @if($producto->stock <= 5)
+                                <span class="fw-bold">{{ $producto->stock_total }}</span>
+                                @if($producto->stock_total <= 5)
                                     <span class="badge bg-danger ms-1">Stock bajo</span>
-                                @elseif($producto->stock <= 10)
+                                @elseif($producto->stock_total <= 10)
                                     <span class="badge bg-warning text-dark ms-1">Poco stock</span>
                                 @endif
                             </td>
@@ -167,7 +167,7 @@ Productos
             <div class="modal-body">
                 <div class="row g-3">
 
-                    <!-- 🟦 COLUMNA 1 -->
+                    <!-- 🟦 INFO GENERAL -->
                     <div class="col-md-4">
                         <h6 class="fw-bold border-bottom pb-1">Información General</h6>
 
@@ -180,69 +180,51 @@ Productos
                         <label>Nombre</label>
                         <input id="modalNombre" class="form-control mb-2" disabled>
 
-                        <label>Slug</label>
-                        <input id="modalSlug" class="form-control mb-2" disabled>
-
                         <label>Descripción</label>
                         <textarea id="modalDescripcion" class="form-control mb-2" rows="3" disabled></textarea>
-
-                        <label>Activo</label>
-                        <input id="modalActivo" class="form-control mb-2" disabled>
-
-                        <label>Visible en Catálogo</label>
-                        <input id="modalVisibleCatalogo" class="form-control mb-2" disabled>
-                    </div>
-
-                    <!-- 🟩 COLUMNA 2 -->
-                    <div class="col-md-4">
-                        <h6 class="fw-bold border-bottom pb-1">Precios y Empaques</h6>
-
-                        <label>Precio Compra</label>
-                        <input id="modalPrecioCompra" class="form-control mb-2" disabled>
-
-                        <label>Precio Venta</label>
-                        <input id="modalPrecioVenta" class="form-control mb-2" disabled>
-
-                        <!-- PAQUETE -->
-                        <div id="grupoPaquete">
-                            <label>Precio Paquete</label>
-                            <input id="modalPrecioPaquete" class="form-control mb-2" disabled>
-
-                            <label>Unidades por Paquete</label>
-                            <input id="modalUnidadesPorPaquete" class="form-control mb-2" disabled>
-                        </div>
-
-                        <!-- CAJA -->
-                        <div id="grupoCaja">
-                            <label>Paquetes por Caja</label>
-                            <input id="modalPaquetesPorCaja" class="form-control mb-2" disabled>
-
-                            <label>Precio Caja</label>
-                            <input id="modalPrecioCaja" class="form-control mb-2" disabled>
-                        </div>
-
-                        <label>Tipo de Paquete</label>
-                        <input id="modalTipoPaquete" class="form-control mb-2" disabled>
-                    </div>
-
-                    <!-- 🟧 COLUMNA 3 -->
-                    <div class="col-md-4">
-                        <h6 class="fw-bold border-bottom pb-1">Inventario</h6>
-
-                        <label>Stock Total</label>
-                        <input id="modalStock" class="form-control mb-2" disabled>
-
-                        <label>Ubicación</label>
-                        <input id="modalUbicacion" class="form-control mb-2" disabled>
-
-                        <label>Fecha de Vencimiento</label>
-                        <input id="modalFechaVencimiento" class="form-control mb-2" disabled>
 
                         <label>Categoría</label>
                         <input id="modalCategoria" class="form-control mb-2" disabled>
 
                         <label>Marca</label>
                         <input id="modalMarca" class="form-control mb-2" disabled>
+
+                        <label>Ubicación</label>
+                        <input id="modalUbicacion" class="form-control mb-2" disabled>
+
+                        <label>Activo</label>
+                        <input id="modalActivo" class="form-control mb-2" disabled>
+
+                        <label>Visible en catálogo</label>
+                        <input id="modalVisibleCatalogo" class="form-control mb-2" disabled>
+                    </div>
+
+                    <!-- 🟩 PRESENTACIONES -->
+                    <div class="col-md-4">
+                        <h6 class="fw-bold border-bottom pb-1">Presentaciones</h6>
+
+                        <label>Unidades por paquete</label>
+                        <input id="modalUnidadesPorPaquete" class="form-control mb-2" disabled>
+
+                        <label>Paquetes por caja</label>
+                        <input id="modalPaquetesPorCaja" class="form-control mb-2" disabled>
+
+                        <label>Unidades por caja</label>
+                        <input id="modalUnidadesPorCaja" class="form-control mb-2" disabled>
+
+                        <label>Maneja fecha de vencimiento</label>
+                        <input id="modalManejaVencimiento" class="form-control mb-2" disabled>
+                    </div>
+
+                    <!-- 🟧 RESUMEN INVENTARIO (DESDE LOTES) -->
+                    <div class="col-md-4">
+                        <h6 class="fw-bold border-bottom pb-1">Inventario (Resumen)</h6>
+
+                        <label>Stock total actual</label>
+                        <input id="modalStockTotal" class="form-control mb-2" disabled>
+
+                        <label>Lotes activos</label>
+                        <input id="modalCantidadLotes" class="form-control mb-2" disabled>
 
                         <div class="text-center mt-3">
                             <img id="modalImagen"
@@ -261,8 +243,6 @@ Productos
         </div>
     </div>
 </div>
-
-
 
 @endsection
 
@@ -300,22 +280,8 @@ Productos
 </script>
 
 <script>
-function formatFechaLarga(fecha) {
-    if (!fecha) return "---";
-
-    const meses = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
-    const d = new Date(fecha);
-
-    return `${String(d.getDate()).padStart(2,'0')} ${meses[d.getMonth()]} ${d.getFullYear()}`;
-}
-
-function formatMoney(value) {
-    if (!value) return "S/. 0.00";
-    return "S/. " + parseFloat(value).toFixed(2);
-}
-
 function formatNumber(value) {
-    if (!value) return "0";
+    if (!value || value <= 0) return "0";
     return new Intl.NumberFormat('es-PE').format(value);
 }
 
@@ -327,56 +293,61 @@ $(document).on('click', '.ver-detalles', function () {
 
         if (!r.success) return;
 
-        // ===== COLUMNA 1 =====
+        /* =====================
+           INFO GENERAL
+        ===================== */
         $('#modalId').val(r.id);
-        $('#modalCodigo').val(r.codigo_barras);
+        $('#modalCodigo').val(r.codigo_barras ?? '-');
         $('#modalNombre').val(r.nombre);
-        $('#modalSlug').val(r.slug);
-        $('#modalDescripcion').val(r.descripcion);
+        $('#modalDescripcion').val(r.descripcion ?? '-');
+        $('#modalCategoria').val(r.categoria_nombre ?? '-');
+        $('#modalMarca').val(r.marca_nombre ?? '-');
+        $('#modalUbicacion').val(r.ubicacion ?? '-');
+
         $('#modalActivo').val(r.activo ? 'Sí' : 'No');
         $('#modalVisibleCatalogo').val(r.visible_en_catalogo ? 'Sí' : 'No');
 
-        // ===== COLUMNA 2 =====
-        $('#modalPrecioCompra').val(formatMoney(r.precio_compra));
-        $('#modalPrecioVenta').val(formatMoney(r.precio_venta));
-
-        // PAQUETE
-        if (r.unidades_por_paquete > 0) {
-            $('#grupoPaquete').show();
-            $('#modalPrecioPaquete').val(formatMoney(r.precio_paquete));
-            $('#modalUnidadesPorPaquete').val(formatNumber(r.unidades_por_paquete));
-        } else {
-            $('#grupoPaquete').hide();
-        }
-
-        // CAJA
-        if (r.paquetes_por_caja > 0 || r.precio_caja > 0) {
-            $('#grupoCaja').show();
-            $('#modalPaquetesPorCaja').val(formatNumber(r.paquetes_por_caja));
-            $('#modalPrecioCaja').val(formatMoney(r.precio_caja));
-        } else {
-            $('#grupoCaja').hide();
-        }
-
-        $('#modalTipoPaquete').val(r.tipo_paquete ?? '-');
-
-        // ===== COLUMNA 3 =====
-        $('#modalStock').val(formatNumber(r.stock));
-        $('#modalUbicacion').val(r.ubicacion ?? '-');
-        $('#modalFechaVencimiento').val(formatFechaLarga(r.fecha_vencimiento));
-        $('#modalCategoria').val(r.categoria_nombre);
-        $('#modalMarca').val(r.marca_nombre);
-
-        $('#modalImagen').attr(
-            'src',
-            r.imagen ? `/uploads/productos/${r.imagen}` : '/img/sin-imagen.png'
+        /* =====================
+           PRESENTACIONES
+        ===================== */
+        $('#modalUnidadesPorPaquete').val(
+            r.unidades_por_paquete ? formatNumber(r.unidades_por_paquete) : '-'
         );
 
-        new bootstrap.Modal('#productoModal').show();
+        $('#modalPaquetesPorCaja').val(
+            r.paquetes_por_caja ? formatNumber(r.paquetes_por_caja) : '-'
+        );
+
+        $('#modalUnidadesPorCaja').val(
+            r.unidades_por_caja ? formatNumber(r.unidades_por_caja) : '-'
+        );
+
+        $('#modalManejaVencimiento').val(
+            r.maneja_vencimiento ? 'Sí' : 'No'
+        );
+
+        /* =====================
+           INVENTARIO (RESUMEN)
+        ===================== */
+        $('#modalStockTotal').val(formatNumber(r.stock_total));
+        $('#modalCantidadLotes').val(formatNumber(r.lotes_activos));
+
+        /* =====================
+           IMAGEN
+        ===================== */
+        $('#modalImagen').attr(
+            'src',
+            r.imagen
+                ? `/uploads/productos/${r.imagen}`
+                : '/img/sin-imagen.png'
+        );
+
+        /* =====================
+           MOSTRAR MODAL
+        ===================== */
+        new bootstrap.Modal(document.getElementById('productoModal')).show();
     });
 });
 </script>
-
-
 
 @endpush

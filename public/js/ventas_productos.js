@@ -42,10 +42,13 @@ document.addEventListener("DOMContentLoaded", () => {
             ? `/uploads/productos/${nombreImagen}`
             : "/img/sin-imagen.png";
 
-        const precioBase  = parseFloat(prod.precio_venta || 0) || 0;
+        // 🔥 PRECIO VIENE DEL BACKEND (LOTE FIFO)
+        const precioBase  = parseFloat(prod.precio || 0) || 0;
         const precioFinal = calcularPrecioFinal(precioBase).toFixed(2);
 
-        const disponible = stockDisponible(prod);
+        // 🔥 STOCK VIENE DEL BACKEND (SUMA DE LOTES)
+        const disponible = Number(prod.stock || 0);
+
         const stockText  = disponible > 0
             ? `${disponible} disponibles`
             : "Sin stock";
@@ -158,8 +161,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         );
                     }
 
-                    const disp = stockDisponible(prod);
-                    if (disp <= 0) {
+                    if (Number(prod.stock || 0) <= 0) {
                         return mostrarAlerta(
                             `No hay stock para "${prod.nombre}".`
                         );
@@ -187,14 +189,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (Array.isArray(lista)) {
                     window.PRODUCTOS_INICIALES = lista;
                     renderGrillaProductos(lista);
-                }
-            })
-            .catch(() => {
-                if (
-                    window.PRODUCTOS_INICIALES &&
-                    Array.isArray(window.PRODUCTOS_INICIALES)
-                ) {
-                    renderGrillaProductos(window.PRODUCTOS_INICIALES);
                 }
             });
     }
@@ -244,31 +238,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const q = buscarInput.value.trim();
 
             if (!q) {
-
-                const btnActivo =
-                    document.querySelector(".btn-filtro-categoria.active");
-
-                const catID = btnActivo
-                    ? Number(btnActivo.dataset.cat)
-                    : 0;
-
-                if (
-                    window.PRODUCTOS_INICIALES &&
-                    Array.isArray(window.PRODUCTOS_INICIALES)
-                ) {
-                    if (catID === 0) {
-                        renderGrillaProductos(window.PRODUCTOS_INICIALES);
-                    } else {
-                        renderGrillaProductos(
-                            window.PRODUCTOS_INICIALES.filter(
-                                p => Number(p.categoria_id) === catID
-                            )
-                        );
-                    }
-                } else {
-                    resultadosDiv.innerHTML = "";
-                    resultadosDiv.classList.add("d-none");
-                }
+                renderGrillaProductos(window.PRODUCTOS_INICIALES || []);
                 return;
             }
 
@@ -280,6 +250,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 );
         });
     }
+
+    // ============================
+    // INICIAL
+    // ============================
+    actualizarProductosStock();
 
     // ============================
     // EXPONER

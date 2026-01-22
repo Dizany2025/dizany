@@ -21,6 +21,7 @@ use App\Models\Configuracion;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use App\Models\Movimiento;
 use App\Models\PagoVenta;
+use App\Models\Lote;
 
 
 class VentaController extends Controller
@@ -583,180 +584,27 @@ public function show($id)
     ]);
 }
 
-    public function destroy($id)
-    {
-        if (!is_numeric($id)) {
-            return response()->json(['success' => false, 'message' => 'ID de venta inválido'], 400);
-        }
 
-        try {
-            DB::transaction(function () use ($id) {
-                $venta = Venta::with('detalleVentas.producto')->findOrFail($id);
 
-                foreach ($venta->detalleVentas as $detalle) {
-                    $detalle->producto->increment('stock', $detalle->cantidad);
-                }
-
-                $venta->detalleVentas()->delete();
-                $venta->delete();
-            });
-
-            return response()->json(['success' => true, 'message' => 'Venta eliminada y stock reintegrado']);
-
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Error al eliminar: ' . $e->getMessage()], 500);
-        }
-    }
-
-    public function edit(Venta $venta)
+public function stockFIFO($productoId)
 {
-    $venta->load(['cliente', 'detalleVentas.producto']);
-    $clientes = Cliente::all();
-    $productos = Producto::where('stock', '>', 0)->get();
-    $config = Configuracion::first();
-
-    return view('ventas.edit', compact('venta', 'clientes', 'productos', 'config'));
-}
-
-
-// ACTUALIZAR VENTA Y GANANCIAS
-public function update(Request $request, Venta $venta)
-{
-    $request->validate([
-        'cliente_id'                      => 'required|exists:clientes,id',
-        'fecha'                           => 'required|date',
-        'metodo_pago'                     => 'required|string',
-        'productos'                       => 'required|array|min:1',
-        'productos.*.cantidad'           => 'required|numeric|min:1',
-        'productos.*.precio_mayor'       => 'nullable|numeric|min:0',
-        'productos.*.tipo_venta'         => 'required|in:unidad,mayor',
-    ]);
-
-    try {
-        DB::beginTransaction();
-
-        // Restaurar stock anterior
-        $detallesAnteriores = $venta->detalleVentas()->get();
-        foreach ($detallesAnteriores as $detalle) {
-            $producto = Producto::find($detalle->producto_id);
-            if ($producto) {
-                $producto->stock += $detalle->unidades_descuento ?? $detalle->cantidad; // Por compatibilidad
-                $producto->save();
-            }
-        }
-
-        // Actualizar datos de la venta
-        $venta->update([
-            'cliente_id'  => $request->cliente_id,
-            'fecha'       => $request->fecha,
-            'metodo_pago' => $request->metodo_pago,
+    $lotes = Lote::where('producto_id', $productoId)
+        ->where('stock_actual', '>', 0)
+        ->orderBy('fecha_ingreso', 'asc') // FIFO real
+        ->get([
+            'id',
+            'producto_id',
+            'stock_actual',
+            'precio_unidad',
+            'precio_paquete',
+            'precio_caja'
         ]);
 
-        // Eliminar los detalles anteriores
-        $venta->detalleVentas()->delete();
-
-        $total = 0;
-
-        foreach ($request->productos as $productoId => $datos) {
-            $producto = Producto::findOrFail($productoId);
-            $cantidad = intval($datos['cantidad']);
-            $tipoVenta = $datos['tipo_venta'];
-            $precioUnitario = floatval($producto->precio_venta);
-            $precioMayor = floatval($datos['precio_mayor'] ?? 0);
-            $unidadesPorMayor = intval($producto->unidades_por_mayor) ?: 1;
-
-            // Calcular precio aplicado y unidades reales
-            $precioAplicado = ($tipoVenta === 'mayor' && $precioMayor > 0) ? $precioMayor : $precioUnitario;
-            $unidadesDescuento = $tipoVenta === 'mayor' ? $cantidad * $unidadesPorMayor : $cantidad;
-
-            // Calcular ganancia según tipo
-            if ($tipoVenta === 'mayor') {
-                $costoCaja = $producto->precio_compra * $unidadesPorMayor;
-                $ganancia = ($precioMayor - $costoCaja) * $cantidad;
-            } else {
-                $ganancia = ($precioUnitario - $producto->precio_compra) * $cantidad;
-            }
-
-            $subtotal = $precioAplicado * $cantidad;
-            $total += $subtotal;
-
-            DetalleVenta::create([
-                'venta_id'          => $venta->id,
-                'producto_id'       => $productoId,
-                'cantidad'          => $cantidad,
-                'tipo_venta'        => $tipoVenta,
-                'precio_unitario'   => $precioUnitario,
-                'precio_mayor'      => $precioMayor > 0 ? $precioMayor : null,
-                'subtotal'          => $subtotal,
-                'ganancia'          => $ganancia,
-                'unidades_descuento'=> $unidadesDescuento
-            ]);
-
-            // Actualizar stock
-            $producto->stock -= $unidadesDescuento;
-            $producto->save();
-        }
-
-        $venta->total = $total;
-        $venta->save();
-
-        DB::commit();
-
-        return $request->ajax()
-            ? response()->json(['success' => true, 'message' => 'Venta actualizada correctamente.'])
-            : redirect()->route('ventas.index')->with('success', 'Venta actualizada correctamente.');
-    } catch (\Exception $e) {
-        DB::rollBack();
-        $msg = 'Ocurrió un error: ' . $e->getMessage();
-        return $request->ajax()
-            ? response()->json(['success' => false, 'message' => $msg])
-            : back()->with('error', $msg);
-    }
+    return response()->json($lotes);
 }
 
-//EXPORTAR EXCEL & PDF
- public function exportarExcel(Request $request)
-{
-    return Excel::download(new VentasExport($request), 'ventas_filtradas.xlsx');
-}
 
-public function exportarPDF(Request $request)
-{
-    $rango = $request->input('filter-type', 'diario');
-    $fecha = $request->input('filter-date', Carbon::today()->toDateString());
-    $usuarioId = $request->input('filter-user', null);
-    $cliente = $request->input('filter-client', null);
 
-    $ventas = Venta::with(['cliente', 'usuario', 'detalleVentas']);
-
-    if ($rango === 'diario') {
-        $ventas->whereDate('fecha', Carbon::parse($fecha));
-    } elseif ($rango === 'semanal') {
-        $start = Carbon::parse($fecha)->startOfWeek();
-        $end = Carbon::parse($fecha)->endOfWeek();
-        $ventas->whereBetween('fecha', [$start, $end]);
-    } elseif ($rango === 'mensual') {
-        $ventas->whereMonth('fecha', Carbon::parse($fecha)->month)
-               ->whereYear('fecha', Carbon::parse($fecha)->year);
-    }
-
-    if ($usuarioId) {
-        $ventas->where('usuario_id', $usuarioId);
-    }
-
-    if ($cliente) {
-        $ventas->whereHas('cliente', function ($query) use ($cliente) {
-            $query->where('nombre', 'LIKE', "%{$cliente}%")
-                  ->orWhere('dni', 'LIKE', "%{$cliente}%")
-                  ->orWhere('ruc', 'LIKE', "%{$cliente}%");
-        });
-    }
-
-    $ventas = $ventas->orderByDesc('fecha')->get();
-
-    $pdf = PDF::loadView('exports.ventas_pdf', compact('ventas'));
-    return $pdf->download('ventas_filtradas.pdf');
-}
 public function autorizar(Request $request)
 {
     $usuario = $request->input('usuario');

@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\DetalleLoteVenta;
+
 
 class DetalleVenta extends Model
 {
@@ -31,4 +33,10 @@ class DetalleVenta extends Model
     {
         return $this->belongsTo(Producto::class);
     }
+
+    public function lotes()
+{
+    return $this->hasMany(DetalleLoteVenta::class);
+}
+
 }

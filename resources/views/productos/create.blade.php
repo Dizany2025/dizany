@@ -43,254 +43,201 @@ Nuevo Producto
         @endif
 
         <form action="{{ route('productos.store') }}" method="POST" enctype="multipart/form-data">
-@csrf
+        @csrf
 
-<div class="row g-3">
+        <div class="row g-3">
 
-    <!-- ================= DATOS BÁSICOS ================= -->
+            {{-- ================= DATOS BÁSICOS ================= --}}
+            <div class="col-md-4">
+                <label class="form-label">Código de Barras</label>
+                <input type="text"
+                    name="codigo_barras"
+                    id="codigo_barras"
+                    class="form-control"
+                    value="{{ old('codigo_barras') }}">
 
-    <div class="col-md-4"> <label class="form-label">Código de Barras</label> 
-        <input type="text" id="codigo_barras" name="codigo_barras" class="form-control" value="{{ old('codigo_barras') }}"> 
-        <div id="codigo_barras_error" class="invalid-feedback d-none"> Este código ya está registrado. </div> 
-    </div>
-
-    <div class="col-md-4">
-        <label class="form-label">Nombre</label>
-        <input type="text" name="nombre" class="form-control"
-               value="{{ old('nombre') }}" required>
-    </div>
-
-    <div class="col-md-4">
-        <label class="form-label">Precio Compra</label>
-        <div class="input-group">
-            <span class="input-group-text">S/</span>
-            <input type="number" step="0.01" name="precio_compra"
-                   class="form-control"
-                   value="{{ old('precio_compra') }}" required>
-        </div>
-    </div>
-
-    <div class="col-12">
-        <label class="form-label">Descripción</label>
-        <textarea name="descripcion" class="form-control"
-                  rows="2">{{ old('descripcion') }}</textarea>
-    </div>
-
-    <!-- ================= PRESENTACIONES ================= -->
-
-    <div class="col-12 mt-4">
-        <label class="form-label fw-bold text-primary">
-            Presentaciones disponibles
-        </label>
-
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" checked disabled>
-            <label class="form-check-label">
-                Unidad (siempre)
-            </label>
-        </div>
-
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="usa_paquete">
-            <label class="form-check-label">
-                Paquete
-            </label>
-        </div>
-
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="usa_caja">
-            <label class="form-check-label">
-                Caja
-            </label>
-        </div>
-    </div>
-
-    <!-- ================= CONVERSIONES ================= -->
-
-    <div class="row mt-2">
-
-        <div class="col-md-4 d-none" id="grupo_unidades_base">
-            <label class="form-label fw-bold" id="label_unidades_base">
-                Unidades
-            </label>
-            <input type="number" min="1"
-                name="unidades_por_paquete"
-                id="unidades_base"
-                class="form-control"
-                value="{{ old('unidades_por_paquete') }}">
-        </div>
-
-        <div class="col-md-4 d-none" id="grupo_paquetes_caja">
-            <label class="form-label fw-bold">
-                Paquetes por caja
-            </label>
-            <input type="number" min="1"
-                   name="paquetes_por_caja"
-                   class="form-control"
-                   value="{{ old('paquetes_por_caja') }}">
-        </div>
-
-    </div>
-
-    <!-- ================= PRECIOS ================= -->
-
-    <div class="row mt-3">
-
-        <div class="col-md-4">
-            <label class="form-label">Precio Unidad</label>
-            <div class="input-group">
-                <span class="input-group-text">S/</span>
-                <input type="number" step="0.01"
-                       name="precio_venta"
-                       class="form-control"
-                       value="{{ old('precio_venta') }}" required>
+                <div id="codigo_barras_error"
+                    class="invalid-feedback d-none">
+                    Este código de barras ya está registrado.
+                </div>
             </div>
-        </div>
 
-        <div class="col-md-4 d-none" id="grupo_precio_paquete">
-            <label class="form-label">Precio Paquete</label>
-            <div class="input-group">
-                <span class="input-group-text">S/</span>
-                <input type="number" step="0.01"
-                       name="precio_paquete"
+            <div class="col-md-4">
+                <label class="form-label">Nombre</label>
+                <input type="text"
+                       name="nombre"
                        class="form-control"
-                       value="{{ old('precio_paquete') }}">
+                       value="{{ old('nombre') }}"
+                       required>
             </div>
-        </div>
 
-        <div class="col-md-4 d-none" id="grupo_precio_caja">
-            <label class="form-label">Precio Caja</label>
-            <div class="input-group">
-                <span class="input-group-text">S/</span>
-                <input type="number" step="0.01"
-                       name="precio_caja"
+            <div class="col-md-4">
+                <label class="form-label">Ubicación</label>
+                <input type="text"
+                       name="ubicacion"
                        class="form-control"
-                       value="{{ old('precio_caja') }}">
+                       value="{{ old('ubicacion') }}">
             </div>
+
+            <div class="col-12">
+                <label class="form-label">Descripción</label>
+                <textarea name="descripcion"
+                          class="form-control"
+                          rows="2">{{ old('descripcion') }}</textarea>
+            </div>
+
+            {{-- ================= PRESENTACIONES ================= --}}
+            <div class="col-12 mt-4">
+                <label class="form-label fw-bold text-primary">
+                    Presentaciones disponibles
+                </label>
+
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" checked disabled>
+                    <label class="form-check-label">
+                        Unidad (siempre disponible)
+                    </label>
+                </div>
+
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="chk_paquete">
+                    <label class="form-check-label">Paquete</label>
+                </div>
+
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="chk_caja">
+                    <label class="form-check-label">Caja</label>
+                </div>
+            </div>
+
+            {{-- ================= CONVERSIONES ================= --}}
+            <div class="row mt-2">
+
+                <div class="col-md-4 d-none" id="grupo_unidades_paquete">
+                    <label class="form-label">Unidades por paquete</label>
+                    <input type="number"
+                           name="unidades_por_paquete"
+                           class="form-control"
+                           min="1">
+                </div>
+
+                <div class="col-md-4 d-none" id="grupo_paquetes_caja">
+                    <label class="form-label">Paquetes por caja</label>
+                    <input type="number"
+                           name="paquetes_por_caja"
+                           class="form-control"
+                           min="1">
+                </div>
+
+                <div class="col-md-4 d-none" id="grupo_unidades_caja">
+                    <label class="form-label">Unidades por caja</label>
+                    <input type="number"
+                           name="unidades_por_caja"
+                           class="form-control"
+                           min="1">
+                </div>
+
+            </div>
+
+            {{-- ================= VENCIMIENTO ================= --}}
+            <div class="col-md-4 mt-3">
+                <div class="form-check">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           name="maneja_vencimiento"
+                           value="1">
+                    <label class="form-check-label">
+                        Maneja fecha de vencimiento
+                    </label>
+                </div>
+            </div>
+
+            {{-- ================= CATEGORÍA / MARCA ================= --}}
+            <div class="col-md-4">
+                <label class="form-label d-flex justify-content-between">
+                    <span>Categoría</span>
+                    <button type="button"
+                            class="btn btn-sm btn-primary"
+                            data-bs-toggle="modal"
+                            data-bs-target="#modalNuevaCategoria">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </label>
+                <select name="categoria_id" id="categoria_id" class="form-select" required>
+                    <option value="">Seleccione</option>
+                    @foreach($categorias as $categoria)
+                        <option value="{{ $categoria->id }}">
+                            {{ $categoria->nombre }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label d-flex justify-content-between">
+                    <span>Marca</span>
+                    <button type="button"
+                            class="btn btn-sm btn-primary"
+                            data-bs-toggle="modal"
+                            data-bs-target="#modalNuevaMarca">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </label>
+                <select name="marca_id" id="marca_id" class="form-select">
+                    <option value="">Seleccione</option>
+                    @foreach($marcas as $marca)
+                        <option value="{{ $marca->id }}">
+                            {{ $marca->nombre }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- ================= IMAGEN ================= --}}
+            <div class="col-md-4">
+                <label class="form-label">Imagen</label>
+                <input type="file"
+                       name="imagen"
+                       id="imagen"
+                       class="form-control"
+                       accept="image/*">
+
+                       <img id="preview_imagen"
+                        src=""
+                        class="img-thumbnail d-none mt-2"
+                        style="max-height: 150px;">
+            </div>
+
+            {{-- ================= ESTADO ================= --}}
+            <div class="col-md-4 mt-3">
+                <div class="form-check">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           name="activo"
+                           value="1"
+                           checked>
+                    <label class="form-check-label">Activo</label>
+                </div>
+
+                <div class="form-check mt-2">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           name="visible_en_catalogo"
+                           value="1"
+                           checked>
+                    <label class="form-check-label">Visible en catálogo</label>
+                </div>
+            </div>
+
         </div>
 
-    </div>
-
-    <!-- ================= INGRESO DE STOCK ================= -->
-
-    <div class="col-12 mt-4">
-        <label class="form-label fw-bold text-primary">
-            ¿Cómo estás ingresando este stock?
-        </label>
-
-        <div class="form-check">
-            <input class="form-check-input" type="radio"
-                   name="nivel_ingreso" value="unidad">
-            <label class="form-check-label">Unidades</label>
+        <div class="mt-4 text-center">
+            <button type="submit" class="btn btn-primary px-5">
+                Guardar Producto
+            </button>
         </div>
 
-        <div class="form-check d-none" id="ingreso_paquete">
-            <input class="form-check-input" type="radio"
-                   name="nivel_ingreso" value="paquete">
-            <label class="form-check-label">Paquetes</label>
-        </div>
-
-        <div class="form-check d-none" id="ingreso_caja">
-            <input class="form-check-input" type="radio"
-                   name="nivel_ingreso" value="caja">
-            <label class="form-check-label">Cajas</label>
-        </div>
-    </div>
-
-    <!-- ================= CANTIDAD / STOCK ================= -->
-
-    <div class="col-md-4 mt-3">
-        <label class="form-label fw-bold">
-            Cantidad ingresada
-        </label>
-        <input type="number" min="1"
-               name="cantidad_ingresada"
-               class="form-control">
-    </div>
-
-    <div class="col-md-4 mt-3">
-        <label class="form-label fw-bold">
-            Stock final (unidades)
-        </label>
-        <input type="number" name="stock"
-               id="stock"
-               class="form-control" readonly>
-    </div>
-
-    <!-- ================= UBICACIÓN / FECHA ================= -->
-
-    <div class="col-md-4">
-        <label class="form-label">Ubicación</label>
-        <input type="text" name="ubicacion"
-               class="form-control"
-               value="{{ old('ubicacion') }}">
-    </div>
-
-    <div class="col-md-4">
-        <label class="form-label">Fecha de Vencimiento</label>
-        <input type="date" name="fecha_vencimiento"
-               class="form-control"
-               value="{{ old('fecha_vencimiento') }}">
-    </div>
-
-    <!-- ================= CATEGORÍA / MARCA ================= --> 
-     <div class="col-md-4"> 
-        <label class="form-label d-flex justify-content-between"> <span>Categoría</span> 
-            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevaCategoria"><i class="fas fa-plus"></i> </button> 
-        </label> 
-        <select name="categoria_id" id="categoria_id" class="form-select" required> 
-            <option value="">Seleccione</option> @foreach($categorias as $categoria) 
-            <option value="{{ $categoria->id }}">{{ $categoria->nombre }}</option>@endforeach 
-        </select> 
-    </div> 
-    <div class="col-md-4"> 
-        <label class="form-label d-flex justify-content-between"> <span>Marca</span> 
-            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevaMarca"> <i class="fas fa-plus"></i></button> 
-        </label> 
-        <select name="marca_id" id="marca_id" class="form-select"> 
-            <option value="">Seleccione</option> @foreach($marcas as $marca) 
-            <option value="{{ $marca->id }}">{{ $marca->nombre }}</option> @endforeach 
-        </select> 
-    </div>
-
-    <!-- ================= IMAGEN ================= -->
-
-    <div class="col-md-4">
-        <label class="form-label">Imagen</label>
-        <input type="file" name="imagen" id="imagen" class="form-control" accept="image/*">
-    </div>
-    <div class="mt-2">
-        <img id="preview_imagen"
-            src="#"
-            class="img-thumbnail d-none"
-            style="max-height: 150px;">
-    </div>
-
-    <!-- ================= ESTADO ================= -->
-
-    <div class="col-md-4">
-        <div class="form-check mt-4">
-            <input class="form-check-input" type="checkbox"
-                   name="activo" checked>
-            <label class="form-check-label">Activo</label>
-        </div>
-
-        <div class="form-check mt-2">
-            <input class="form-check-input" type="checkbox"
-                   name="visible_en_catalogo" checked>
-            <label class="form-check-label">Visible en catálogo</label>
-        </div>
-    </div>
-
-</div>
-
-<div class="mt-4 text-center">
-    <button type="submit" class="btn btn-primary px-5">
-        Guardar Producto
-    </button>
-</div>
-
-</form>
+        </form>
 
 
     </div>
@@ -348,22 +295,38 @@ Nuevo Producto
 
 @push('scripts')
     <script src="{{ asset('js/validarCodigoBarras.js') }}"></script>
-    <script src="{{ asset('js/registrar_producto.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     
-    <script>
-//MOSTRAR IMAGEN
-        document.getElementById('imagen').addEventListener('change', function (e) {
+<script>
+//mostrar imagen
+    document.addEventListener('DOMContentLoaded', function () {
+
+        const input = document.getElementById('imagen');
+        const preview = document.getElementById('preview_imagen');
+
+        if (!input || !preview) return;
+
+        input.addEventListener('change', function (e) {
+
             const file = e.target.files[0];
-            const preview = document.getElementById('preview_imagen');
 
             if (!file) {
+                preview.classList.add('d-none');
+                preview.src = '';
+                return;
+            }
+
+            // Validar que sea imagen
+            if (!file.type.startsWith('image/')) {
+                alert('El archivo seleccionado no es una imagen');
+                input.value = '';
                 preview.classList.add('d-none');
                 return;
             }
 
             const reader = new FileReader();
+
             reader.onload = function (event) {
                 preview.src = event.target.result;
                 preview.classList.remove('d-none');
@@ -371,251 +334,133 @@ Nuevo Producto
 
             reader.readAsDataURL(file);
         });
-    </script>
+    });
+</script>
 
-    
-    <script>
-        //calcularStock
-        document.addEventListener('DOMContentLoaded', function () {
 
-            const cantidadInput = document.querySelector('input[name="cantidad_ingresada"]');
-            const stockInput    = document.getElementById('stock');
+  {{-- ================= JS PRESENTACIONES ================= --}}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
 
-            const unidadesPorPaquete = document.querySelector('input[name="unidades_por_paquete"]');
-            const paquetesPorCaja   = document.querySelector('input[name="paquetes_por_caja"]');
+        const chkPaquete = document.getElementById('chk_paquete');
+        const chkCaja    = document.getElementById('chk_caja');
 
-            const radiosIngreso = document.querySelectorAll('input[name="nivel_ingreso"]');
+        const grpUP = document.getElementById('grupo_unidades_paquete');
+        const grpPC = document.getElementById('grupo_paquetes_caja');
+        const grpUC = document.getElementById('grupo_unidades_caja');
 
-            const preview       = document.getElementById('preview_stock');
-            const textoPreview  = document.getElementById('texto_stock');
+        function ocultar(grupo) {
+            grupo.classList.add('d-none');
+            const input = grupo.querySelector('input');
+            if (input) input.value = '';
+        }
 
-            function calcularStock() {
+        function mostrar(grupo) {
+            grupo.classList.remove('d-none');
+        }
 
-                const cantidadInput = document.querySelector('input[name="cantidad_ingresada"]');
-                const stockInput    = document.getElementById('stock');
+        function updateUI() {
 
-                const unidadesPorPaquete = document.querySelector('input[name="unidades_por_paquete"]');
-                const paquetesPorCaja   = document.querySelector('input[name="paquetes_por_caja"]');
+            // RESET
+            ocultar(grpUP);
+            ocultar(grpPC);
+            ocultar(grpUC);
 
-                const preview      = document.getElementById('preview_stock');
-                const textoPreview = document.getElementById('texto_stock');
-
-                const cantidad = parseInt(cantidadInput.value) || 0;
-                if (cantidad <= 0) {
-                    stockInput.value = '';
-                    preview.classList.add('d-none');
-                    return;
-                }
-
-                const nivel = document.querySelector('input[name="nivel_ingreso"]:checked')?.value;
-                if (!nivel) return;
-
-                const up = parseInt(unidadesPorPaquete?.value) || 0;
-                const pc = parseInt(paquetesPorCaja?.value) || 0;
-
-                let stock = 0;
-                let detalle = '';
-
-                // ========= UNIDAD =========
-                if (nivel === 'unidad') {
-                    stock = cantidad;
-                    detalle = `${cantidad} unidades`;
-                }
-
-                // ========= PAQUETE =========
-                if (nivel === 'paquete') {
-                    if (up <= 0) return;
-                    stock = cantidad * up;
-                    detalle = `${cantidad} paquetes × ${up} unidades`;
-                }
-
-                // ========= CAJA =========
-                if (nivel === 'caja') {
-
-                    // 👉 CAJA → PAQUETE → UNIDAD
-                    if (pc > 0 && up > 0) {
-                        stock = cantidad * pc * up;
-                        detalle = `${cantidad} cajas × ${pc} paquetes × ${up} unidades`;
-                    }
-
-                    // 👉 CAJA → UNIDAD DIRECTO (aceite, vino)
-                    else if (up > 0) {
-                        stock = cantidad * up;
-                        detalle = `${cantidad} cajas × ${up} unidades`;
-                    }
-                    else {
-                        return;
-                    }
-                }
-
-                stockInput.value = stock;
-                textoPreview.textContent = `${detalle} = ${stock} unidades`;
-                preview.classList.remove('d-none');
+            // ===== SOLO PAQUETE =====
+            if (chkPaquete.checked && !chkCaja.checked) {
+                mostrar(grpUP);
             }
 
-            // ====== EVENTOS ======
-            cantidadInput.addEventListener('input', calcularStock);
-            unidadesPorPaquete?.addEventListener('input', calcularStock);
-            paquetesPorCaja?.addEventListener('input', calcularStock);
-
-            radiosIngreso.forEach(radio => {
-                radio.addEventListener('change', calcularStock);
-            });
-
-        });
-    </script>
-
-      
-    <script>
-        // MOSTRAR OCULTAR UNPUTS  
-        document.addEventListener('DOMContentLoaded', function () {
-
-            const chkPaquete = document.getElementById('usa_paquete');
-            const chkCaja    = document.getElementById('usa_caja');
-
-            const grupoUnidadesBase = document.getElementById('grupo_unidades_base');
-            const labelUnidadesBase = document.getElementById('label_unidades_base');
-
-            const grupoPaquetesCaja  = document.getElementById('grupo_paquetes_caja');
-            const grupoPrecioPaquete = document.getElementById('grupo_precio_paquete');
-            const grupoPrecioCaja    = document.getElementById('grupo_precio_caja');
-
-            const ingresoPaquete = document.getElementById('ingreso_paquete');
-            const ingresoCaja    = document.getElementById('ingreso_caja');
-
-            function mostrar(el) {
-                el.classList.remove('d-none');
+            // ===== SOLO CAJA (directo a unidad) =====
+            if (!chkPaquete.checked && chkCaja.checked) {
+                mostrar(grpUC);
             }
 
-            function ocultar(el) {
-                el.classList.add('d-none');
+            // ===== PAQUETE + CAJA =====
+            if (chkPaquete.checked && chkCaja.checked) {
+                mostrar(grpUP);
+                mostrar(grpPC);
+                // 🚫 NO mostrar unidades_por_caja
             }
+        }
 
-            function actualizarPresentaciones() {
+        chkPaquete.addEventListener('change', updateUI);
+        chkCaja.addEventListener('change', updateUI);
 
-                // ===== UNIDADES BASE (PAQUETE O CAJA) =====
-                if (chkPaquete.checked) {
-                    mostrar(grupoUnidadesBase);
-                    labelUnidadesBase.textContent = 'Unidades por paquete';
-                }
-                else if (chkCaja.checked) {
-                    mostrar(grupoUnidadesBase);
-                    labelUnidadesBase.textContent = 'Unidades por caja';
-                }
-                else {
-                    ocultar(grupoUnidadesBase);
-                }
+        updateUI();
+    });
+</script>
 
-                // ===== PRECIO + INGRESO PAQUETE =====
-                if (chkPaquete.checked) {
-                    mostrar(grupoPrecioPaquete);
-                    mostrar(ingresoPaquete);
-                } else {
-                    ocultar(grupoPrecioPaquete);
-                    ocultar(ingresoPaquete);
-                }
-
-                // ===== CAJA =====
-                if (chkCaja.checked) {
-                    mostrar(grupoPrecioCaja);
-                    mostrar(ingresoCaja);
-
-                    // Paquetes por caja SOLO si existe paquete
-                    if (chkPaquete.checked) {
-                        mostrar(grupoPaquetesCaja);
-                    } else {
-                        ocultar(grupoPaquetesCaja);
-                    }
-
-                } else {
-                    ocultar(grupoPaquetesCaja);
-                    ocultar(grupoPrecioCaja);
-                    ocultar(ingresoCaja);
-                }
-            }
-
-            chkPaquete.addEventListener('change', actualizarPresentaciones);
-            chkCaja.addEventListener('change', actualizarPresentaciones);
-
-            actualizarPresentaciones();
-        });
-    </script>
 
 <script>
+    // GUARDAR CATEGORÍA
+    $("#btnGuardarCategoria").click(function () {
 
-// GUARDAR CATEGORÍA
-$("#btnGuardarCategoria").click(function() {
-    let nombre = $("#nueva_categoria_nombre").val().trim();
-
-    if (!nombre) {
-        $("#error_categoria").text("El nombre es obligatorio.").removeClass("d-none");
-        return;
-    }
-
-    $.post("{{ route('categoria.ajax.store') }}", {
-        nombre: nombre,
-        _token: '{{ csrf_token() }}'
-    }, function(response) {
-
-        // Si ya existe
-        if (response.error) {
-            $("#error_categoria").text(response.message).removeClass("d-none");
+        let nombre = $("#nueva_categoria_nombre").val().trim();
+        if (!nombre) {
+            $("#error_categoria").text("El nombre es obligatorio.").removeClass("d-none");
             return;
         }
 
-        // Si se guarda correctamente, limpiar errores
-        $("#error_categoria").addClass("d-none").text("");
+        $.post("{{ route('categoria.ajax.store') }}", {
+            nombre,
+            _token: '{{ csrf_token() }}'
+        }, function (response) {
 
-        // Insertar en el select y seleccionar automáticamente
-        $("#categoria_id").append(
-            `<option value="${response.data.id}" selected>${response.data.nombre}</option>`
-        );
+            if (response.error) {
+                $("#error_categoria").text(response.message).removeClass("d-none");
+                return;
+            }
 
-        // Cerrar modal
-        $("#modalNuevaCategoria").modal("hide");
-        $("#nueva_categoria_nombre").val("");
+            $("#error_categoria").addClass("d-none");
 
-        Swal.fire("Éxito", "Categoría registrada correctamente.", "success");
+            const select = $("#categoria_id");
+
+            select.append(
+                new Option(response.data.nombre, response.data.id, true, true)
+            ).trigger("change");
+
+            $("#modalNuevaCategoria").modal("hide");
+            $("#nueva_categoria_nombre").val("");
+
+            Swal.fire("Éxito", "Categoría registrada correctamente.", "success");
+        });
     });
-});
 
-// GUARDAR MARCA
-$("#btnGuardarMarca").click(function() {
-    let nombre = $("#nueva_marca_nombre").val().trim();
 
-    if (!nombre) {
-        $("#error_marca").text("El nombre es obligatorio.").removeClass("d-none");
-        return;
-    }
+    // GUARDAR MARCA
+    $("#btnGuardarMarca").click(function () {
 
-    $.post("{{ route('marca.ajax.store') }}", {
-        nombre: nombre,
-        _token: '{{ csrf_token() }}'
-    }, function(response) {
-
-        // Si la marca ya existe
-        if (response.error) {
-            $("#error_marca").text(response.message).removeClass("d-none");
+        let nombre = $("#nueva_marca_nombre").val().trim();
+        if (!nombre) {
+            $("#error_marca").text("El nombre es obligatorio.").removeClass("d-none");
             return;
         }
 
-        // Si se guarda correctamente
-        $("#error_marca").addClass("d-none").text("");
+        $.post("{{ route('marca.ajax.store') }}", {
+            nombre,
+            _token: '{{ csrf_token() }}'
+        }, function (response) {
 
-        // Agregar al select y seleccionar automáticamente
-        $("#marca_id").append(
-            `<option value="${response.data.id}" selected>${response.data.nombre}</option>`
-        );
+            if (response.error) {
+                $("#error_marca").text(response.message).removeClass("d-none");
+                return;
+            }
 
-        // Cerrar modal
-        $("#modalNuevaMarca").modal("hide");
-        $("#nueva_marca_nombre").val("");
+            $("#error_marca").addClass("d-none");
 
-        Swal.fire("Éxito", "Marca registrada correctamente.", "success");
+            const select = $("#marca_id");
+
+            select.append(
+                new Option(response.data.nombre, response.data.id, true, true)
+            ).trigger("change");
+
+            $("#modalNuevaMarca").modal("hide");
+            $("#nueva_marca_nombre").val("");
+
+            Swal.fire("Éxito", "Marca registrada correctamente.", "success");
+        });
     });
-});
-
-
 </script>
 
 @endpush

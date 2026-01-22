@@ -12,36 +12,75 @@ use Illuminate\Support\Facades\Storage;
 class ProductoController extends Controller
 {
     public function index(Request $request)
-    {
-        $categoria_id = $request->input('categoria_id');
-        $marca_id = $request->input('marca_id');
-        $search = $request->input('search');
+{
+    $categoria_id = $request->input('categoria_id');
+    $marca_id     = $request->input('marca_id');
+    $search       = $request->input('search');
 
-        extract($this->obtenerCategoriasYMarcas());
+    // categorías y marcas para filtros
+    extract($this->obtenerCategoriasYMarcas());
 
-        $query = Producto::query();
-        // Cargar las relaciones de categoria y marca
-        $query->with('categoria', 'marca');  // Añadido
-
-        if ($categoria_id && $categoria_id != 'todos') {
-            $query->where('categoria_id', $categoria_id);
+    // ===============================
+    // QUERY BASE DE PRODUCTOS
+    // ===============================
+    $query = Producto::with([
+        'categoria',
+        'marca',
+        'lotes' => function ($q) {
+            $q->where('stock_actual', '>', 0)
+              ->orderBy('fecha_ingreso'); // FIFO
         }
+    ]);
 
-        if ($marca_id && $marca_id != 'todos') {
-            $query->where('marca_id', $marca_id);
-        }
-
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('codigo_barras', 'like', "%{$search}%")
-                  ->orWhere('nombre', 'like', "%{$search}%");
-            });
-        }
-
-        $productos = $query->orderBy('id', 'desc')->paginate(10);
-
-        return view('productos.index', compact('productos', 'categorias', 'marcas'));
+    // ===============================
+    // FILTROS
+    // ===============================
+    if ($categoria_id && $categoria_id !== 'todos') {
+        $query->where('categoria_id', $categoria_id);
     }
+
+    if ($marca_id && $marca_id !== 'todos') {
+        $query->where('marca_id', $marca_id);
+    }
+
+    if ($search) {
+        $query->where(function ($q) use ($search) {
+            $q->where('codigo_barras', 'like', "%{$search}%")
+              ->orWhere('nombre', 'like', "%{$search}%");
+        });
+    }
+
+    // ===============================
+    // PAGINACIÓN
+    // ===============================
+    $productos = $query->orderBy('id', 'desc')->paginate(10);
+
+    // ===============================
+    // CALCULAR STOCK Y PRECIO DESDE LOTES
+    // ===============================
+    $productos->getCollection()->transform(function ($producto) {
+
+        // 🔥 STOCK TOTAL = suma de lotes
+        $producto->stock_total = $producto->lotes->sum('stock_actual');
+
+        // 🔥 PRECIO ACTUAL = primer lote FIFO
+        $loteActivo = $producto->lotes->first();
+        $producto->precio_venta_actual = $loteActivo?->precio_unidad ?? 0;
+
+        return $producto;
+    });
+
+    // ===============================
+    // VISTA
+    // ===============================
+    return view('productos.index', compact(
+        'productos',
+        'categorias',
+        'marcas'
+    ));
+}
+
+
 
     public function create()
     {
@@ -56,79 +95,54 @@ class ProductoController extends Controller
         'codigo_barras'        => 'nullable|string|max:50|unique:productos,codigo_barras',
         'nombre'               => 'required|string|max:255',
         'descripcion'          => 'nullable|string',
-        'precio_compra'        => 'required|numeric|min:0',
-        'precio_venta'         => 'required|numeric|min:0',
 
-        'precio_paquete'       => 'nullable|numeric|min:0',
-        'precio_caja'          => 'nullable|numeric|min:0',
-
-        // Conversiones
+        // Presentaciones
         'unidades_por_paquete' => 'nullable|integer|min:1',
         'paquetes_por_caja'    => 'nullable|integer|min:1',
-
-        // Stock (solo visual, pero validamos)
-        'cantidad_ingresada'   => 'required|integer|min:1',
-        'nivel_ingreso'        => 'required|in:unidad,paquete,caja',
+        'unidades_por_caja'    => 'nullable|integer|min:1',
 
         'ubicacion'            => 'nullable|string|max:255',
-        'imagen'               => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,avif|max:2048',
-        'fecha_vencimiento'    => 'nullable|date',
+        'imagen'               => 'nullable|image|mimes:jpeg,png,jpg,webp,avif|max:2048',
+
         'categoria_id'         => 'required|exists:categorias,id',
         'marca_id'             => 'nullable|exists:marcas,id',
     ]);
 
-    // ================== CÁLCULO DE STOCK (BACKEND) ==================
+    /* =====================
+       VALIDACIONES LÓGICAS
+    ===================== */
 
-    $cantidad = (int) $validated['cantidad_ingresada'];
-    $nivel    = $validated['nivel_ingreso'];
+    $up = $validated['unidades_por_paquete'] ?? null;
+    $pc = $validated['paquetes_por_caja'] ?? null;
+    $uc = $validated['unidades_por_caja'] ?? null;
 
-    $up = (int) ($validated['unidades_por_paquete'] ?? 0);
-    $pc = (int) ($validated['paquetes_por_caja'] ?? 0);
-
-    $stock = 0;
-
-    // UNIDAD
-    if ($nivel === 'unidad') {
-        $stock = $cantidad;
+    // ❌ paquetes por caja sin paquete
+    if ($pc && !$up) {
+        return back()->withErrors([
+            'paquetes_por_caja' => 'No puede definir paquetes por caja sin definir unidades por paquete.'
+        ])->withInput();
     }
 
-    // PAQUETE
-    if ($nivel === 'paquete') {
-        if ($up <= 0) {
-            return back()->withErrors([
-                'unidades_por_paquete' => 'Debe indicar las unidades por paquete.'
-            ])->withInput();
-        }
-        $stock = $cantidad * $up;
+    // ❌ paquete + caja directa (ambos)
+    if ($up && $uc) {
+        return back()->withErrors([
+            'unidades_por_caja' => 'No puede definir unidades por caja si la caja se compone de paquetes.'
+        ])->withInput();
     }
 
-    // CAJA
-    if ($nivel === 'caja') {
+    /* =====================
+       EXTRAS
+    ===================== */
 
-        // Caja -> Paquete -> Unidad
-        if ($pc > 0 && $up > 0) {
-            $stock = $cantidad * $pc * $up;
-        }
-        // Caja -> Unidad directo (vino, aceite)
-        elseif ($up > 0) {
-            $stock = $cantidad * $up;
-        }
-        else {
-            return back()->withErrors([
-                'unidades_por_paquete' => 'Debe indicar cuántas unidades trae la caja.'
-            ])->withInput();
-        }
-    }
-
-    $validated['stock'] = $stock;
-
-    // ================== EXTRAS ==================
-
+    $validated['slug'] = Str::slug($validated['nombre']);
     $validated['activo'] = $request->has('activo') ? 1 : 0;
     $validated['visible_en_catalogo'] = $request->has('visible_en_catalogo') ? 1 : 0;
-    $validated['slug'] = Str::slug($validated['nombre']);
+    $validated['maneja_vencimiento'] = $request->has('maneja_vencimiento') ? 1 : 0;
 
-    // Imagen
+    /* =====================
+       IMAGEN
+    ===================== */
+
     if ($request->hasFile('imagen')) {
         $image = $request->file('imagen');
         $imageName = Str::slug($validated['nombre']) . '-' . time() . '.' . $image->getClientOriginalExtension();
@@ -136,15 +150,13 @@ class ProductoController extends Controller
         $validated['imagen'] = $imageName;
     }
 
-    // Campos SOLO visuales → fuera
-    unset($validated['cantidad_ingresada'], $validated['nivel_ingreso']);
-
     Producto::create($validated);
 
     return redirect()
         ->route('productos.create')
         ->with('success', 'Producto creado correctamente.');
 }
+
 
     public function edit($id)
     {
@@ -155,113 +167,74 @@ class ProductoController extends Controller
     }
 
     public function update(Request $request, $id)
-    {
-        $producto = Producto::findOrFail($id);
+{
+    $producto = Producto::findOrFail($id);
 
-        $validated = $request->validate([
-            'codigo_barras'        => 'nullable|string|max:50|unique:productos,codigo_barras,' . $id,
-            'nombre'               => 'required|string|max:255',
-            'descripcion'          => 'nullable|string',
+    $validated = $request->validate([
+        'codigo_barras'        => 'nullable|string|max:50|unique:productos,codigo_barras,' . $producto->id,
+        'nombre'               => 'required|string|max:255',
+        'descripcion'          => 'nullable|string',
 
-            'precio_compra'        => 'required|numeric|min:0',
-            'precio_venta'         => 'required|numeric|min:0',
+        'unidades_por_paquete' => 'nullable|integer|min:1',
+        'paquetes_por_caja'    => 'nullable|integer|min:1',
+        'unidades_por_caja'    => 'nullable|integer|min:1',
 
-            'precio_paquete'       => 'nullable|numeric|min:0',
-            'unidades_por_paquete' => 'nullable|integer|min:1',
-            'paquetes_por_caja'    => 'nullable|integer|min:1',
-            'tipo_paquete'         => 'nullable|string|max:50',
-            'precio_caja'          => 'nullable|numeric|min:0',
+        'ubicacion'            => 'nullable|string|max:255',
 
-            // 👉 ingreso de stock (solo si el usuario lo usa)
-            'cantidad_cajas'       => 'nullable|integer|min:1',
+        'categoria_id'         => 'required|exists:categorias,id',
+        'marca_id'             => 'nullable|exists:marcas,id',
 
-            // stock manual (opción A)
-            'stock'                => 'nullable|integer|min:0',
+        'imagen'               => 'nullable|image|mimes:jpg,jpeg,png,webp,avif|max:2048',
+        
+    ]);
 
-            'ubicacion'            => 'nullable|string|max:255',
-            'imagen'               => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,avif|max:2048',
-            'fecha_vencimiento'    => 'nullable|date',
-            'categoria_id'         => 'required|exists:categorias,id',
-            'marca_id'             => 'nullable|exists:marcas,id',
-        ]);
-
-        /* =====================================================
-        * 🧮 CÁLCULO DE STOCK (SUMAR EN EDITAR)
-        * ===================================================== */
-
-        $stockActual = (int) $producto->stock;
-
-        $cajas    = (int) $request->input('cantidad_cajas');
-        $paquetes = (int) $request->input('paquetes_por_caja');
-        $unidades = (int) $request->input('unidades_por_paquete');
-
-        $nuevoIngreso = 0;
-
-        // Caja → Paquete → Unidad (galletas, cigarro)
-        if ($cajas > 0 && $paquetes > 0 && $unidades > 0) {
-            $nuevoIngreso = $cajas * $paquetes * $unidades;
-        }
-        // Caja → Unidad directo (vino, aceite)
-        elseif ($cajas > 0 && $unidades > 0 && $paquetes === 0) {
-            $nuevoIngreso = $cajas * $unidades;
-        }
-        // Paquete → Unidad (fardos)
-        elseif ($cajas === 0 && $paquetes > 0 && $unidades > 0) {
-            $nuevoIngreso = $paquetes * $unidades;
-        }
-
-        if ($nuevoIngreso > 0) {
-            // 👉 SUMAR al stock actual
-            $validated['stock'] = $stockActual + $nuevoIngreso;
-        } else {
-            // 👉 Stock manual o sin cambios
-            $validated['stock'] = $request->input('stock', $stockActual);
-        }
-
-        /* =====================================================
-        * ESTADO / SLUG
-        * ===================================================== */
-
-        $validated['activo'] = $request->has('activo') ? 1 : 0;
-        $validated['visible_en_catalogo'] = $request->has('visible_en_catalogo') ? 1 : 0;
-
-        // 🔒 Slug NO se cambia en update
-        $validated['slug'] = $producto->slug;
-
-        /* =====================================================
-        * 🖼️ IMAGEN
-        * ===================================================== */
-
-        if ($request->hasFile('imagen')) {
-
-            // borrar imagen anterior
-            if ($producto->imagen && file_exists(public_path('uploads/productos/' . $producto->imagen))) {
-                unlink(public_path('uploads/productos/' . $producto->imagen));
-            }
-
-            $image = $request->file('imagen');
-            $imageName = Str::slug($validated['nombre']) . '-' . time() . '.' . $image->getClientOriginalExtension();
-            $image->move(public_path('uploads/productos'), $imageName);
-
-            $validated['imagen'] = $imageName;
-        }
-
-        /* =====================================================
-        * LIMPIEZA (campos que no existen en BD)
-        * ===================================================== */
-
-        unset($validated['cantidad_cajas']);
-
-        /* =====================================================
-        * ACTUALIZAR
-        * ===================================================== */
-
-        $producto->update($validated);
-
-        return redirect()
-            ->route('productos.edit', $producto->id)
-            ->with('success', 'Producto actualizado correctamente.');
+    // ===== VALIDACIONES LÓGICAS =====
+    if (
+        !empty($validated['paquetes_por_caja']) &&
+        empty($validated['unidades_por_paquete'])
+    ) {
+        return back()->withErrors([
+            'paquetes_por_caja' => 'No puede definir paquetes por caja sin definir unidades por paquete.'
+        ])->withInput();
     }
+
+    if (
+        !empty($validated['unidades_por_paquete']) &&
+        !empty($validated['unidades_por_caja'])
+    ) {
+        return back()->withErrors([
+            'unidades_por_caja' => 'No puede definir unidades por caja si la caja se arma por paquetes.'
+        ])->withInput();
+    }
+
+    // ===== FLAGS =====
+    $validated['activo'] = $request->has('activo') ? 1 : 0;
+    $validated['visible_en_catalogo'] = $request->has('visible_en_catalogo') ? 1 : 0;
+    $validated['maneja_vencimiento'] = $request->has('maneja_vencimiento') ? 1 : 0;
+
+    // slug NO cambia
+    $validated['slug'] = $producto->slug;
+
+    // ===== IMAGEN =====
+    if ($request->hasFile('imagen')) {
+        if ($producto->imagen && file_exists(public_path('uploads/productos/' . $producto->imagen))) {
+            unlink(public_path('uploads/productos/' . $producto->imagen));
+        }
+
+        $image = $request->file('imagen');
+        $imageName = Str::slug($validated['nombre']) . '-' . time() . '.' . $image->getClientOriginalExtension();
+        $image->move(public_path('uploads/productos'), $imageName);
+
+        $validated['imagen'] = $imageName;
+    }
+
+    $producto->update($validated);
+
+    return redirect()
+        ->route('productos.edit', $producto->id)
+        ->with('success', 'Producto actualizado correctamente.');
+}
+
 
 public function toggleEstado($id)
 {
@@ -383,9 +356,41 @@ public function parametros()
     $categorias = Categoria::all();
     return view('productos.parametros', compact('marcas', 'categorias'));
 }
-public function productosIniciales() {
-    return Producto::orderBy('nombre')->get();
+
+public function productosIniciales()
+{
+    $productos = Producto::with(['lotes' => function ($q) {
+        $q->where('stock_actual', '>', 0)
+          ->orderBy('fecha_ingreso', 'asc'); // FIFO
+    }])
+    ->where('activo', 1)
+    ->where('visible_en_catalogo', 1)
+    ->get();
+
+    return $productos->map(function ($p) {
+
+        $stockTotal = $p->lotes->sum('stock_actual');
+        $loteFIFO  = $p->lotes->first();
+
+        return [
+            'id'        => $p->id,
+            'nombre'    => $p->nombre,
+            'descripcion' => $p->descripcion,
+            'imagen'    => $p->imagen,
+            'categoria_id' => $p->categoria_id,
+
+            // 🔥 ventas
+            'stock'     => $stockTotal,
+            'precio'    => $loteFIFO?->precio_unidad ?? 0,
+
+            // presentaciones
+            'unidades_por_paquete' => $p->unidades_por_paquete,
+            'paquetes_por_caja'    => $p->paquetes_por_caja,
+        ];
+    });
 }
+
+
 
 public function ordenar(Request $request)
 {

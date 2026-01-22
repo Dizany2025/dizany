@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Lote;
 use App\Models\Producto;
 use App\Models\Proveedor;
+use Illuminate\Http\Request;
 
 class LoteController extends Controller
 {
+    /* ===============================
+       LISTAR LOTES
+    =============================== */
     public function index()
     {
         $lotes = Lote::with(['producto', 'proveedor'])
@@ -18,74 +21,53 @@ class LoteController extends Controller
         return view('inventario.lotes_index', compact('lotes'));
     }
 
+    /* ===============================
+       FORMULARIO INGRESO LOTE
+    =============================== */
     public function create()
     {
         $productos = Producto::where('activo', 1)
             ->orderBy('nombre')
             ->get();
 
-        $proveedores = Proveedor::where('estado', 'activo')
-            ->orderBy('nombre')
-            ->get();
+        $proveedores = Proveedor::orderBy('nombre')->get();
 
         return view('inventario.lote', compact('productos', 'proveedores'));
     }
 
+    /* ===============================
+       GUARDAR LOTE
+    =============================== */
     public function store(Request $request)
     {
-        // 1) Validación base
-        $rules = [
-            'producto_id'    => 'required|exists:productos,id',
-            'proveedor_id'   => 'nullable|exists:proveedores,id',
-            'cantidad'       => 'required|integer|min:1',
-            'costo_unitario' => 'required|numeric|min:0',
-            'precio_venta'   => 'required|numeric|min:0',
-            'fecha_ingreso'  => 'required|date',
-            'metodo_pago'    => 'required|string|max:50',
-        ];
+        $request->validate([
+            'producto_id'       => 'required|exists:productos,id',
+            'proveedor_id'      => 'nullable|exists:proveedores,id',
+            'stock_inicial'     => 'required|integer|min:1',
+            'precio_compra'     => 'required|numeric|min:0',
+            'precio_unidad'     => 'required|numeric|min:0',
+            'precio_paquete'    => 'nullable|numeric|min:0',
+            'precio_caja'       => 'nullable|numeric|min:0',
+            'fecha_ingreso'     => 'required|date',
+            'fecha_vencimiento' => 'nullable|date|after_or_equal:fecha_ingreso',
+        ]);
 
-        $messages = [
-            'producto_id.required' => 'Seleccione un producto.',
-            'producto_id.exists'   => 'El producto seleccionado no existe.',
-            'cantidad.required'    => 'Ingrese la cantidad.',
-            'cantidad.min'         => 'La cantidad debe ser mayor a 0.',
-            'fecha_ingreso.date'   => 'La fecha de ingreso no es válida.',
-        ];
-
-        // 2) Traer producto para saber si maneja vencimiento
-        $producto = Producto::select('id', 'maneja_vencimiento')->findOrFail($request->producto_id);
-
-        // 3) Regla inteligente según el producto
-        if ((int)$producto->maneja_vencimiento === 1) {
-            $rules['fecha_vencimiento'] = 'required|date|after_or_equal:fecha_ingreso';
-            $messages['fecha_vencimiento.required'] = 'Este producto requiere fecha de vencimiento.';
-            $messages['fecha_vencimiento.after_or_equal'] = 'El vencimiento no puede ser anterior al ingreso.';
-        } else {
-            // Si no maneja vencimiento, permitimos null (si viene algo, debe ser fecha)
-            $rules['fecha_vencimiento'] = 'nullable|date';
-        }
-
-        $validated = $request->validate($rules, $messages);
-
-        // 4) Normalizar: si no maneja vencimiento, guardamos NULL
-        if ((int)$producto->maneja_vencimiento !== 1) {
-            $validated['fecha_vencimiento'] = null;
-        }
-
-        // 5) Crear lote
         Lote::create([
-            'producto_id'       => $validated['producto_id'],
-            'proveedor_id'      => $validated['proveedor_id'] ?? null,
-            'cantidad'          => $validated['cantidad'],
-            'costo_unitario'    => $validated['costo_unitario'],
-            'precio_venta'      => $validated['precio_venta'],
-            'fecha_ingreso'     => $validated['fecha_ingreso'],
-            'fecha_vencimiento' => $validated['fecha_vencimiento'],
-            'estado'            => 'activo',
+            'producto_id'       => $request->producto_id,
+            'proveedor_id'      => $request->proveedor_id,
+            'fecha_ingreso'     => $request->fecha_ingreso,
+            'fecha_vencimiento' => $request->fecha_vencimiento,
+            'stock_inicial'     => $request->stock_inicial,
+            'stock_actual'      => $request->stock_inicial, // 🔥 clave FIFO
+            'precio_compra'     => $request->precio_compra,
+            'precio_unidad'     => $request->precio_unidad,
+            'precio_paquete'    => $request->precio_paquete,
+            'precio_caja'       => $request->precio_caja,
+            'activo'            => 1,
         ]);
 
         return redirect()
-            ->route('inventario.lote')
-            ->with('success', 'Lote registrado correctamente.');
+            ->route('inventario.lotes')
+            ->with('success', 'Lote registrado correctamente');
     }
 }

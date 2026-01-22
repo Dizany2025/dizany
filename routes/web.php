@@ -22,7 +22,6 @@ use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\MarcaController;
 use App\Http\Controllers\DashboardAdminController;
 use App\Http\Controllers\MovimientoController;
-use App\Http\Controllers\LoteController;
 //consultar dni y ruc
 use Illuminate\Support\Facades\Http;
 use App\Models\Producto;
@@ -217,10 +216,16 @@ Route::get('/gastos/{id}/edit', [GastoController::class, 'edit'])
 Route::put('/gastos/{id}', [GastoController::class, 'update'])
     ->name('gastos.update');
 
-// Mostrar formulario
-Route::get('/inventario/lotes', [LoteController::class, 'index'])
+Route::get('/inventario/lote', [InventarioController::class, 'lote'])
+    ->name('inventario.lote');
+
+Route::post('/inventario/lote', [InventarioController::class, 'storeLote'])
+    ->name('inventario.lote.store');
+
+Route::get('/inventario/lotes', [InventarioController::class, 'lotes'])
     ->name('inventario.lotes');
 
-// Guardar lote (ESTA ES LA QUE FALTA O NO COINCIDE)
-Route::post('/inventario/lote', [LoteController::class, 'store'])
-    ->name('inventario.lote.store');
+Route::get(
+    '/ventas/stock-fifo/{producto}',
+    [VentaController::class, 'stockFIFO']
+);

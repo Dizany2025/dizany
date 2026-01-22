@@ -7,6 +7,7 @@ use Illuminate\Support\Str;
 use App\Models\Lote;
 
 
+
 class Producto extends Model
 {
     protected $table = 'productos';
@@ -14,32 +15,34 @@ class Producto extends Model
     protected $fillable = [
         'codigo_barras',
         'nombre',
-        'slug',                    // 🆕 nuevo
+        'slug',
         'descripcion',
-        'precio_compra',
-        'precio_venta',
 
-        // 🆕 nuevos campos correctos
-        'precio_paquete',
+        // Presentaciones / conversiones
         'unidades_por_paquete',
         'paquetes_por_caja',
-        'tipo_paquete',
-        'precio_caja',
+        'unidades_por_caja',
 
-        'stock',
+        // Ubicación / imagen
         'ubicacion',
         'imagen',
-        'fecha_vencimiento',
+
+        // Vencimiento
+        'maneja_vencimiento',
+
+        // Relaciones
         'categoria_id',
         'marca_id',
+
+        // Estados
         'activo',
-        'visible_en_catalogo',      // 🆕 nuevo
+        'visible_en_catalogo',
     ];
 
     protected $casts = [
-        'activo' => 'boolean',
-        'visible_en_catalogo' => 'boolean',   // 🆕
-        'fecha_vencimiento' => 'date',
+        'activo'               => 'boolean',
+        'visible_en_catalogo'  => 'boolean',
+        'maneja_vencimiento'   => 'boolean',
     ];
 
 

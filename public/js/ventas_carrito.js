@@ -75,46 +75,60 @@ document.addEventListener("DOMContentLoaded", () => {
     // ============================
     // AGREGAR PRODUCTO A VENTA ACTIVA
     // ============================
-    function agregarProductoAVentaActiva(producto) {
+    async function agregarProductoAVentaActiva(producto) {
 
-        const v = ventaActiva();
+    const v = ventaActiva();
 
-        const item = {
-            id: Number(producto.id),
-            nombre: producto.nombre,
-            imagen: producto.imagen || "",
-            descripcion: producto.descripcion || "",
-            stock: parseInt(producto.stock) || 0,
+    // ✅ pedir lotes FIFO (con precios por presentación)
+    const res = await fetch(`/ventas/stock-fifo/${producto.id}`);
+    const lotes = await res.json();
 
-            cantidad: 1,
-            tipo_venta: "unidad",
-            precio_unitario: parseFloat(producto.precio_venta || 0),
-
-            precio_venta: parseFloat(producto.precio_venta || 0),
-            precio_paquete: parseFloat(producto.precio_paquete || 0),
-            precio_caja: parseFloat(producto.precio_caja || 0),
-
-            unidades_por_paquete: producto.unidades_por_paquete
-                ? parseInt(producto.unidades_por_paquete)
-                : 0,
-
-            paquetes_por_caja: producto.paquetes_por_caja
-                ? parseInt(producto.paquetes_por_caja)
-                : 0
-        };
-
-        const prodActual =
-            productosCache.get(item.id) || producto;
-
-        if (stockDisponible(prodActual) < unidadesRealesDeItem(item)) {
-            return mostrarAlerta("No hay stock suficiente.");
-        }
-
-        v.productos.push(item);
-
-        posSaveDebounced(snapshotPOS, 10);
-        renderTodo();
+    const loteFIFO = Array.isArray(lotes) ? lotes[0] : null;
+    if (!loteFIFO) {
+        return mostrarAlerta(`No hay lotes con stock para "${producto.nombre}".`);
     }
+
+    const item = {
+        id: Number(producto.id),
+        lote_id: Number(loteFIFO.id), // 👈 importante
+        nombre: producto.nombre,
+        imagen: producto.imagen || "",
+        descripcion: producto.descripcion || "",
+
+        stock: parseInt(producto.stock) || 0,
+
+        cantidad: 1,
+        tipo_venta: "unidad",
+
+        // ✅ precios vienen del LOTE (FIFO)
+        precio_venta: parseFloat(loteFIFO.precio_unidad || 0),
+        precio_paquete: parseFloat(loteFIFO.precio_paquete || 0),
+        precio_caja: parseFloat(loteFIFO.precio_caja || 0),
+
+        // ✅ precio unitario inicial
+        precio_unitario: parseFloat(loteFIFO.precio_unidad || 0),
+
+        // presentaciones (del producto)
+        unidades_por_paquete: producto.unidades_por_paquete
+            ? parseInt(producto.unidades_por_paquete)
+            : 0,
+
+        paquetes_por_caja: producto.paquetes_por_caja
+            ? parseInt(producto.paquetes_por_caja)
+            : 0
+    };
+
+    // Validación stock (tu lógica actual)
+    const prodActual = productosCache.get(item.id) || producto;
+    if (stockDisponible(prodActual) < unidadesRealesDeItem(item)) {
+        return mostrarAlerta("No hay stock suficiente.");
+    }
+
+    v.productos.push(item);
+
+    posSaveDebounced(snapshotPOS, 10);
+    renderTodo();
+}
 
     // ============================
     // COLOR BADGE STOCK
@@ -204,12 +218,22 @@ document.addEventListener("DOMContentLoaded", () => {
         items.forEach((p, index) => {
             const imgSrc = p.imagen ? `/uploads/productos/${p.imagen}` : "/img/sin-imagen.png";
 
-            const precioUnitFinal = calcularPrecioFinal(p.precio_unitario);
+            const precioBase = parseFloat(p.precio_unitario || p.precio_venta || 0);
+            const precioUnitFinal = calcularPrecioFinal(precioBase);
+
             const subtotal = precioUnitFinal * (parseInt(p.cantidad) || 0);
 
             const unidades = unidadesRealesDeItem(p);
+            let stockReal = 0;
+
             const prodActual = productosCache.get(Number(p.id));
-            const stockReal = prodActual ? (parseInt(prodActual.stock) || 0) : (parseInt(p.stock) || 0);
+
+            if (prodActual && prodActual.stock != null) {
+                stockReal = parseInt(prodActual.stock) || 0;
+            } else if (p.stock != null) {
+                stockReal = parseInt(p.stock) || 0;
+            }
+
 
             const card = `
                 <div class="carrito-item border-bottom pb-3 mb-3" data-index="${index}">
@@ -295,22 +319,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const oldUnits = unidadesRealesDeItem(it);
 
-            const nuevo = e.target.value;
-            it.tipo_venta = nuevo;
+            // 🔹 cambiar tipo de venta
+            it.tipo_venta = e.target.value;
 
-            let precioBase = 0;
-            if (nuevo === "unidad")  precioBase = parseFloat(it.precio_venta || 0);
-            if (nuevo === "paquete") precioBase = parseFloat(it.precio_paquete || 0);
-            if (nuevo === "caja")    precioBase = parseFloat(it.precio_caja || 0);
-
-            it.precio_unitario = precioBase;
+            // 🔹 resetear cantidad siempre
             it.cantidad = 1;
 
+            // 🔹 recalcular precio base según presentación
+            let precioBase = 0;
+            if (it.tipo_venta === "unidad")  precioBase = parseFloat(it.precio_venta || 0);
+            if (it.tipo_venta === "paquete") precioBase = parseFloat(it.precio_paquete || 0);
+            if (it.tipo_venta === "caja")    precioBase = parseFloat(it.precio_caja || 0);
+
+            it.precio_unitario = precioBase;
+
+            // 🔹 validar stock para esta presentación
             const stockReal = stockRealProducto(it);
             const newUnits = unidadesRealesDeItem(it);
 
             if (newUnits > stockReal) {
                 mostrarAlerta("Stock insuficiente para esta presentación");
+
+                // volver a unidad
                 it.tipo_venta = "unidad";
                 it.precio_unitario = parseFloat(it.precio_venta || 0);
                 it.cantidad = 1;
@@ -318,7 +348,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
             renderTodo();
         });
-
 
         carritoLista.addEventListener("blur", (e) => {
             if (!e.target.classList.contains("cambiar-cantidad")) return;
