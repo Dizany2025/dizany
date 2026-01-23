@@ -32,9 +32,47 @@ function calcularTotal() {
     };
 }
 
+
+function getProdId(it) {
+  return Number(it.producto_id || it.id);
+}
+
+function recolectarGrupoFIFO(items, indexBase) {
+  const base = items[indexBase];
+  if (!base) return null;
+
+  const pid = getProdId(base);
+  const tipo = base.tipo_venta;
+
+  const idxs = [];
+  let total = 0;
+
+  for (let k = 0; k < items.length; k++) {
+    const it = items[k];
+    if (getProdId(it) === pid && it.tipo_venta === tipo) {
+      idxs.push(k);
+      total += (parseInt(it.cantidad) || 0);
+    }
+  }
+
+  return { pid, tipo, idxs, total };
+}
+
+function factorPresentacion(it) {
+    if (it.tipo_venta === "paquete") {
+        return parseInt(it.unidades_por_paquete) || 0;
+    }
+    if (it.tipo_venta === "caja") {
+        const up = parseInt(it.unidades_por_paquete) || 0;
+        const pc = parseInt(it.paquetes_por_caja) || 0;
+        return up * pc;
+    }
+    return 1; // unidad
+}
+
+
 // 👉 EXPONER TOTALES
 window.calcularTotal = calcularTotal;
-
 // ===============================
 // CARRITO / ITEMS / CANTIDADES
 // ===============================
@@ -72,6 +110,67 @@ document.addEventListener("DOMContentLoaded", () => {
     const buscarInput  = document.getElementById("buscar_producto");
     const btnIrStep2   = document.getElementById("btn-ir-step2");
 
+
+
+    async function descomponerFIFO(producto, cantidad, tipoVenta) {
+
+    const res = await fetch(`/ventas/stock-fifo/${producto.id}`);
+    const lotes = await res.json();
+
+    if (!Array.isArray(lotes) || !lotes.length) {
+        throw new Error("No hay stock disponible");
+    }
+
+    let cantidadRestante = cantidad;
+    const items = [];
+
+    for (const lote of lotes) {
+
+        if (cantidadRestante <= 0) break;
+
+        const stockLote = parseInt(lote.stock_actual) || 0;
+        if (stockLote <= 0) continue;
+
+        const tomar = Math.min(stockLote, cantidadRestante);
+
+        let precioUnit = 0;
+        if (tipoVenta === "unidad")  precioUnit = lote.precio_unidad;
+        if (tipoVenta === "paquete") precioUnit = lote.precio_paquete;
+        if (tipoVenta === "caja")    precioUnit = lote.precio_caja;
+
+        items.push({
+            producto_id: producto.id,
+            lote_id: lote.id,
+
+            nombre: producto.nombre,
+            imagen: producto.imagen,
+            descripcion: producto.descripcion,
+
+            tipo_venta: tipoVenta,
+            cantidad: tomar,
+
+            // 🔥 precios COMPLETOS (no solo unitario)
+            precio_unitario: parseFloat(precioUnit || 0),
+            precio_venta: parseFloat(lote.precio_unidad || 0),
+            precio_paquete: parseFloat(lote.precio_paquete || 0),
+            precio_caja: parseFloat(lote.precio_caja || 0),
+
+            stock_lote: stockLote,
+
+            unidades_por_paquete: producto.unidades_por_paquete || 0,
+            paquetes_por_caja: producto.paquetes_por_caja || 0
+        });
+
+        cantidadRestante -= tomar;
+    }
+
+    if (cantidadRestante > 0) {
+        throw new Error("Stock insuficiente");
+    }
+
+    return items;
+}
+
     // ============================
     // AGREGAR PRODUCTO A VENTA ACTIVA
     // ============================
@@ -89,13 +188,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const item = {
+        // 🔹 identificación correcta
         id: Number(producto.id),
-        lote_id: Number(loteFIFO.id), // 👈 importante
+        producto_id: Number(producto.id),   // 🔥 CLAVE para agrupar
+        lote_id: Number(loteFIFO.id),        // 🔥 FIFO
+
         nombre: producto.nombre,
         imagen: producto.imagen || "",
         descripcion: producto.descripcion || "",
 
-        stock: parseInt(producto.stock) || 0,
+        // 🔥 stock del LOTE (no del producto)
+        stock_lote: parseInt(loteFIFO.stock_actual || 0),
 
         cantidad: 1,
         tipo_venta: "unidad",
@@ -117,6 +220,7 @@ document.addEventListener("DOMContentLoaded", () => {
             ? parseInt(producto.paquetes_por_caja)
             : 0
     };
+
 
     // Validación stock (tu lógica actual)
     const prodActual = productosCache.get(item.id) || producto;
@@ -220,18 +324,63 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const precioBase = parseFloat(p.precio_unitario || p.precio_venta || 0);
             const precioUnitFinal = calcularPrecioFinal(precioBase);
-
             const subtotal = precioUnitFinal * (parseInt(p.cantidad) || 0);
 
             const unidades = unidadesRealesDeItem(p);
-            let stockReal = 0;
 
-            const prodActual = productosCache.get(Number(p.id));
+            const pid = Number(p.producto_id || p.id);
+            
+            // ===============================
+            // 🔥 STOCK POR LOTE (FIFO)
+            // ===============================
+            let stockMostrar = 0;
+            let stockClase = "bg-success";
 
-            if (prodActual && prodActual.stock != null) {
-                stockReal = parseInt(prodActual.stock) || 0;
-            } else if (p.stock != null) {
-                stockReal = parseInt(p.stock) || 0;
+            const stockLote = parseInt(p.stock_lote || 0);
+            const unidadesConsumidas = unidadesRealesDeItem(p);
+            const queda = Math.max(0, stockLote - unidadesConsumidas);
+
+            stockMostrar = queda;
+
+            if (queda <= 0) stockClase = "bg-danger";
+            else if (queda <= 5) stockClase = "bg-warning";
+
+            // ===============================
+            // 🔥 determinar si esta fila es la activa del producto
+            // ===============================
+            let esFilaActiva = false;
+
+            const indicesProducto = items
+                .map((it, idx) => ({ it, idx }))
+                .filter(x => Number(x.it.producto_id || x.it.id) === pid)
+                .map(x => x.idx);
+
+            if (indicesProducto.length > 0) {
+                const indiceUltimaFilaProducto = Math.max(...indicesProducto);
+                esFilaActiva = index === indiceUltimaFilaProducto;
+            }
+
+            let siguienteLote = null;
+
+            if (stockMostrar === 0 && esFilaActiva) {
+                const prod = productosCache.get(pid);
+
+                if (prod && Array.isArray(prod.lotes_fifo)) {
+
+                    // índice del lote actual dentro del orden FEFO
+                    const idxActual = prod.lotes_fifo.findIndex(
+                        l => Number(l.id) === Number(p.lote_id)
+                    );
+
+                    // el siguiente ES el siguiente en el array
+                    if (idxActual !== -1 && prod.lotes_fifo[idxActual + 1]) {
+                        const candidato = prod.lotes_fifo[idxActual + 1];
+
+                        if (parseInt(candidato.stock) > 0) {
+                            siguienteLote = candidato;
+                        }
+                    }
+                }
             }
 
 
@@ -243,7 +392,17 @@ document.addEventListener("DOMContentLoaded", () => {
                             <div>
                                 <div class="d-flex justify-content-between align-items-center" style="min-width:200px;">
                                     <span class="fw-semibold small">${p.nombre}</span>
-                                    <span class="badge ${getStockBadgeColor(stockReal)} ms-2">Stock: ${stockReal}</span>
+                                    <span class="badge ${stockClase} ms-2">
+                                        Stock: ${stockMostrar}
+                                        ${
+                                            stockMostrar === 0 && siguienteLote && esFilaActiva
+                                            ? `<span class="ms-1 text-warning">
+                                                • Lote ${siguienteLote.numero} (+${siguienteLote.stock} und)
+                                            </span>`
+                                            : ""
+                                        }
+                                    </span>
+
                                 </div>
                                 <div class="text-muted extra-small">${p.descripcion || ""}</div>
                             </div>
@@ -334,13 +493,26 @@ document.addEventListener("DOMContentLoaded", () => {
             it.precio_unitario = precioBase;
 
             // 🔹 validar stock para esta presentación
-            const stockReal = stockRealProducto(it);
-            const newUnits = unidadesRealesDeItem(it);
+            // 🔥 validar presentación contra STOCK TOTAL (NO FIFO)
+            const pid = Number(it.producto_id || it.id);
+            const prod = productosCache.get(pid);
+            const stockTotal = prod ? parseInt(prod.stock) || 0 : 0;
 
-            if (newUnits > stockReal) {
+            // cuántas unidades requiere UNA presentación
+            let unidadesPresentacion = 1;
+            if (it.tipo_venta === "paquete") {
+                unidadesPresentacion = it.unidades_por_paquete || 0;
+            }
+            if (it.tipo_venta === "caja") {
+                unidadesPresentacion =
+                    (it.paquetes_por_caja || 0) *
+                    (it.unidades_por_paquete || 0);
+            }
+
+            // validar SOLO la presentación
+            if (unidadesPresentacion > stockTotal) {
                 mostrarAlerta("Stock insuficiente para esta presentación");
 
-                // volver a unidad
                 it.tipo_venta = "unidad";
                 it.precio_unitario = parseFloat(it.precio_venta || 0);
                 it.cantidad = 1;
@@ -361,20 +533,26 @@ document.addEventListener("DOMContentLoaded", () => {
             if (isNaN(cant) || cant < 1) cant = 1;
 
             it.cantidad = cant;
+            
+            const pid = Number(it.producto_id || it.id);
+            const prod = productosCache.get(pid);
+            const stockTotal = prod ? parseInt(prod.stock) || 0 : 0;
 
-            const stockReal = stockRealProducto(it);
-            const newUnits = unidadesRealesDeItem(it);
+            // unidades totales que quiere el usuario
+            const unidadesSolicitadas = unidadesRealesDeItem(it);
 
-            if (newUnits > stockReal) {
+            // 🔥 validar contra stock TOTAL
+            if (unidadesSolicitadas > stockTotal) {
                 mostrarAlerta("Cantidad excede el stock disponible");
                 it.cantidad = 1;
                 e.target.value = 1;
+                renderTodo();
+                return;
             }
-
             renderTodo();
         }, true);
 
-        carritoLista.addEventListener("click", (e) => {
+        carritoLista.addEventListener("click", async (e) => {
             const v = ventaActiva();
 
             const btnSumar = e.target.closest(".btn-sumar");
@@ -386,18 +564,57 @@ document.addEventListener("DOMContentLoaded", () => {
                 const it = v.productos[i];
                 if (!it) return;
 
-                it.cantidad = (parseInt(it.cantidad) || 1) + 1;
+                const grupo = recolectarGrupoFIFO(v.productos, i);
+                if (!grupo) return;
 
-                const stockReal = stockRealProducto(it);
-                const newUnits = unidadesRealesDeItem(it);
+                // 🔥 incremento real según presentación
+                const factor = factorPresentacion(it);
+                const totalDeseado = grupo.total + 1;
 
-                if (newUnits > stockReal) {
-                    mostrarAlerta("No hay stock suficiente");
-                    it.cantidad--;
+                // 🔥 validar contra STOCK TOTAL del producto (en UNIDADES)
+                const pid = Number(it.producto_id || it.id);
+                const prod = productosCache.get(pid);
+                const stockTotal = prod ? parseInt(prod.stock) || 0 : 0;
+
+                const unidadesTotalesDeseadas = totalDeseado * factor;
+
+                if (unidadesTotalesDeseadas > stockTotal) {
+                    mostrarAlerta("Cantidad excede el stock disponible");
+                    return;
                 }
 
-                renderTodo();
-                return;
+                try {
+                    const baseProducto = {
+                        id: grupo.pid,
+                        nombre: it.nombre,
+                        imagen: it.imagen,
+                        descripcion: it.descripcion,
+                        unidades_por_paquete: it.unidades_por_paquete,
+                        paquetes_por_caja: it.paquetes_por_caja
+                    };
+
+                    const nuevosItems = await descomponerFIFO(
+                        baseProducto,
+                        totalDeseado,
+                        grupo.tipo
+                    );
+
+                    // borrar filas antiguas del grupo
+                    grupo.idxs.sort((a, b) => b - a).forEach(idx =>
+                        v.productos.splice(idx, 1)
+                    );
+
+                    // insertar el grupo recalculado
+                    const insertAt = Math.min(...grupo.idxs);
+                    v.productos.splice(insertAt, 0, ...nuevosItems);
+
+                    renderTodo();
+                    return;
+
+                } catch (err) {
+                    mostrarAlerta(err.message || "Stock insuficiente");
+                    return;
+                }
             }
 
             if (btnRestar) {
@@ -478,17 +695,36 @@ function validarStockVentaActiva() {
     const v = ventaActiva();
     if (!v || !v.productos) return true;
 
+    // agrupar por producto + tipo_venta
+    const resumen = {};
+
     for (const it of v.productos) {
-        const prod = productosCache.get(Number(it.id));
-        const stockReal = prod
-            ? parseInt(prod.stock) || 0
-            : parseInt(it.stock) || 0;
+        const pid = Number(it.producto_id || it.id);
+        const key = `${pid}_${it.tipo_venta}`;
 
-        const unidadesNecesarias = unidadesRealesDeItem(it);
+        if (!resumen[key]) {
+            resumen[key] = {
+                nombre: it.nombre,
+                totalSolicitado: 0
+            };
+        }
 
-        if (unidadesNecesarias > stockReal) {
+        resumen[key].totalSolicitado += parseInt(it.cantidad) || 0;
+    }
+
+    // validar contra stock TOTAL del producto (cache)
+    for (const key in resumen) {
+        const pid = Number(key.split("_")[0]);
+        const prod = productosCache.get(pid);
+
+        if (!prod) continue;
+
+        const stockTotal = parseInt(prod.stock) || 0;
+        const solicitado = resumen[key].totalSolicitado;
+
+        if (solicitado > stockTotal) {
             mostrarAlerta(
-                `El producto "${it.nombre}" se quedó sin stock disponible.`
+                `El producto "${resumen[key].nombre}" no tiene stock suficiente.`
             );
             return false;
         }
@@ -496,3 +732,4 @@ function validarStockVentaActiva() {
 
     return true;
 }
+

@@ -400,3 +400,25 @@ html, body {
 footer {
     flex-shrink: 0;
 }
+
+
+/*logo y nombre*/
+.brand-container {
+    max-width: 360px; /* evita que una marca gigante rompa el header */
+}
+
+.brand-logo {
+    height: 48px;      /* tamaño ideal para header */
+    width: auto;
+    max-width: 140px;  /* controla logos muy largos */
+    object-fit: contain;
+}
+
+.brand-name {
+    font-size: 1.25rem; /* más balanceado que h3 */
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;   /* evita desbordes */
+}

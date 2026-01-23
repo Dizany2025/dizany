@@ -360,8 +360,11 @@ public function parametros()
 public function productosIniciales()
 {
     $productos = Producto::with(['lotes' => function ($q) {
-        $q->where('stock_actual', '>', 0)
-          ->orderBy('fecha_ingreso', 'asc'); // FIFO
+       $q->where('stock_actual', '>', 0)
+        ->orderBy('fecha_vencimiento', 'asc')
+        ->orderBy('fecha_ingreso', 'asc')
+        ->orderBy('id', 'asc');
+
     }])
     ->where('activo', 1)
     ->where('visible_en_catalogo', 1)
@@ -369,19 +372,25 @@ public function productosIniciales()
 
     return $productos->map(function ($p) {
 
-        $stockTotal = $p->lotes->sum('stock_actual');
-        $loteFIFO  = $p->lotes->first();
+    return [
+        'id' => $p->id,
+        'nombre' => $p->nombre,
+        'imagen' => $p->imagen,
+        'descripcion' => $p->descripcion,
 
-        return [
-            'id'        => $p->id,
-            'nombre'    => $p->nombre,
-            'descripcion' => $p->descripcion,
-            'imagen'    => $p->imagen,
-            'categoria_id' => $p->categoria_id,
+        // 👇 STOCK TOTAL
+        'stock' => $p->lotes->sum('stock_actual'),
 
-            // 🔥 ventas
-            'stock'     => $stockTotal,
-            'precio'    => $loteFIFO?->precio_unidad ?? 0,
+        // 👇 LOTES ORDENADOS FEFO (CLAVE)
+        'lotes_fifo' => $p->lotes->map(fn($l) => [
+            'id' => $l->id,
+            'numero' => $l->id, // o código_lote si tienes
+            'stock' => $l->stock_actual,
+            'fecha_vencimiento' => $l->fecha_vencimiento,
+            'precio_unidad' => $l->precio_unidad,
+            'precio_paquete' => $l->precio_paquete,
+            'precio_caja' => $l->precio_caja,
+        ])->values(), // 👈 importante
 
             // presentaciones
             'unidades_por_paquete' => $p->unidades_por_paquete,
@@ -389,7 +398,6 @@ public function productosIniciales()
         ];
     });
 }
-
 
 
 public function ordenar(Request $request)

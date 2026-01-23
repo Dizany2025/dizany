@@ -12,18 +12,20 @@
         $config = Configuracion::first();
     @endphp
 
-    <!-- Logo -->
-    <img src="{{ $config && $config->logo ? asset($config->logo) : asset('images/LOGO.png') }}"
-         alt="Logo"
-         width="40"
-         height="40"
-         class="me-2 rounded"
-         style="object-fit: contain;">
+    <div class="d-flex align-items-center brand-container">
+        <!-- Logo -->
+        <img
+            src="{{ $config && $config->logo ? asset($config->logo) : asset('images/LOGO.png') }}"
+            alt="Logo"
+            class="brand-logo me-2"
+        >
 
-    <!-- Nombre empresa -->
-    <h3 class="fw-bold text-white mb-0">
-        {{ $config->nombre_empresa ?? 'Dizany' }}
-    </h3>
+        <!-- Nombre empresa -->
+        <span class="brand-name text-white fw-bold">
+            {{ $config->nombre_empresa ?? 'Dizany' }}
+        </span>
+    </div>
+
 
     {{-- HEADER ACTIONS (si la vista define título) --}}
     @hasSection('header-title')
