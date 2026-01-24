@@ -15,8 +15,10 @@ class LoteController extends Controller
     public function index()
     {
         $lotes = Lote::with(['producto', 'proveedor'])
-            ->orderBy('fecha_ingreso', 'desc')
-            ->get();
+        ->orderByRaw('fecha_vencimiento IS NULL')
+        ->orderBy('fecha_vencimiento', 'asc')
+        ->orderBy('fecha_ingreso', 'asc')
+        ->get();
 
         return view('inventario.lotes_index', compact('lotes'));
     }

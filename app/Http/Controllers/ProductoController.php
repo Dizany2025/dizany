@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 
+
 class ProductoController extends Controller
 {
     public function index(Request $request)
@@ -360,12 +361,13 @@ public function parametros()
 public function productosIniciales()
 {
     $productos = Producto::with(['lotes' => function ($q) {
-       $q->where('stock_actual', '>', 0)
-        ->orderBy('fecha_vencimiento', 'asc')
-        ->orderBy('fecha_ingreso', 'asc')
-        ->orderBy('id', 'asc');
-
+        $q->where('stock_actual', '>', 0)
+        ->orderByRaw('fecha_vencimiento IS NULL') // 👈 los que NO tienen vencimiento al final
+        ->orderBy('fecha_vencimiento', 'asc')    // 👈 FEFO real
+        ->orderBy('fecha_ingreso', 'asc')        // desempate
+        ->orderBy('id', 'asc');                  // último desempate
     }])
+
     ->where('activo', 1)
     ->where('visible_en_catalogo', 1)
     ->get();

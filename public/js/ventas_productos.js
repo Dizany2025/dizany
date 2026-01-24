@@ -27,70 +27,83 @@ document.addEventListener("DOMContentLoaded", () => {
     // ============================
     function crearCardProducto(prod) {
 
-        let nombreImagen = String(prod.imagen || "").trim();
-        if (
-            nombreImagen.includes("<") ||
-            nombreImagen.includes(">") ||
-            nombreImagen.includes("=") ||
-            nombreImagen.includes('"') ||
-            nombreImagen.includes("'")
-        ) {
-            nombreImagen = "";
-        }
+    let nombreImagen = String(prod.imagen || "").trim();
+    if (
+        nombreImagen.includes("<") ||
+        nombreImagen.includes(">") ||
+        nombreImagen.includes("=") ||
+        nombreImagen.includes('"') ||
+        nombreImagen.includes("'")
+    ) {
+        nombreImagen = "";
+    }
 
-        const imgSrc = nombreImagen
-            ? `/uploads/productos/${nombreImagen}`
-            : "/img/sin-imagen.png";
+    const imgSrc = nombreImagen
+        ? `/uploads/productos/${nombreImagen}`
+        : "/img/sin-imagen.png";
 
-        // 🔥 PRECIO VIENE DEL BACKEND (LOTE FIFO)
-        const precioBase  = parseFloat(prod.precio || 0) || 0;
-        const precioFinal = calcularPrecioFinal(precioBase).toFixed(2);
+    // 🔥 STOCK VIENE DEL BACKEND (SUMA DE LOTES)
+    const disponible = Number(prod.stock || 0);
 
-        // 🔥 STOCK VIENE DEL BACKEND (SUMA DE LOTES)
-        const disponible = Number(prod.stock || 0);
+    const stockText = disponible > 0
+        ? `${disponible} disponibles`
+        : "Sin stock";
 
-        const stockText  = disponible > 0
-            ? `${disponible} disponibles`
-            : "Sin stock";
+    // 🔥 PRECIO VIENE DEL BACKEND (LOTE FEFO)
+    let precioBase = 0;
 
-        const v = ventaActiva();
-        const enCarrito = (v.productos || [])
-            .some(it => Number(it.id) === Number(prod.id));
+    if (Array.isArray(prod.lotes_fifo) && prod.lotes_fifo.length > 0) {
+        precioBase = parseFloat(prod.lotes_fifo[0].precio_unidad || 0);
+    }
 
-        return `
-            <div class="col-6 col-md-4 col-xl-3 mb-3">
-                <div class="product-card agregar-carrito
-                    ${disponible <= 0 ? "agotado" : ""}
-                    ${enCarrito ? "en-carrito" : ""}"
-                    data-id="${prod.id}">
+    const precioFinal = calcularPrecioFinal(precioBase);
 
-                    <div class="product-img-wrapper">
-                        <img src="${imgSrc}" alt="${prod.nombre}" class="product-img">
-                        <span class="product-price-badge">S/ ${precioFinal}</span>
+    // 🔥 TEXTO DE PRECIO PARA LA GRILLA
+    const precioLabel = disponible > 0
+        ? `S/ ${precioFinal.toFixed(2)}`
+        : "Sin stock";
+
+    const v = ventaActiva();
+    const enCarrito = (v.productos || [])
+        .some(it => Number(it.id) === Number(prod.id));
+
+    return `
+        <div class="col-6 col-md-4 col-xl-3 mb-3">
+            <div class="product-card agregar-carrito
+                ${disponible <= 0 ? "agotado" : ""}
+                ${enCarrito ? "en-carrito" : ""}"
+                data-id="${prod.id}">
+
+                <div class="product-img-wrapper">
+                    <img src="${imgSrc}" alt="${prod.nombre}" class="product-img">
+                    <span class="product-price-badge">
+                        ${precioLabel}
+                    </span>
+                </div>
+
+                <div class="product-info">
+                    ${IGV_PERCENT > 0
+                        ? `<small class="text-success fw-bold d-block" style="font-size:12px;">Incl. IGV</small>`
+                        : ""
+                    }
+
+                    <div class="product-name" title="${prod.nombre}">
+                        ${prod.nombre}
                     </div>
 
-                    <div class="product-info">
-                        ${IGV_PERCENT > 0
-                            ? `<small class="text-success fw-bold d-block" style="font-size:12px;">Incl. IGV</small>`
-                            : ""
-                        }
+                    <div class="product-desc" title="${prod.descripcion || ""}">
+                        ${cortar(prod.descripcion, 35) || "&nbsp;"}
+                    </div>
 
-                        <div class="product-name" title="${prod.nombre}">
-                            ${prod.nombre}
-                        </div>
-
-                        <div class="product-desc" title="${prod.descripcion || ""}">
-                            ${cortar(prod.descripcion, 35) || "&nbsp;"}
-                        </div>
-
-                        <div class="product-stock ${disponible > 0 ? "stock-ok" : "stock-low"}">
-                            <i class="fas fa-box-open"></i> ${stockText}
-                        </div>
+                    <div class="product-stock ${disponible > 0 ? "stock-ok" : "stock-low"}">
+                        <i class="fas fa-box-open"></i> ${stockText}
                     </div>
                 </div>
             </div>
-        `;
-    }
+        </div>
+    `;
+}
+
 
     // ============================
     // RENDER GRILLA

@@ -110,35 +110,51 @@ document.addEventListener("DOMContentLoaded", () => {
     const buscarInput  = document.getElementById("buscar_producto");
     const btnIrStep2   = document.getElementById("btn-ir-step2");
 
+    async function descomponerFIFO(producto, cantidadPresentaciones, tipoVenta) {
 
+        const res = await fetch(`/ventas/stock-fifo/${producto.id}`);
+        const lotes = await res.json();
 
-    async function descomponerFIFO(producto, cantidad, tipoVenta) {
+        if (!Array.isArray(lotes) || !lotes.length) {
+            throw new Error("No hay stock disponible");
+        }
 
-    const res = await fetch(`/ventas/stock-fifo/${producto.id}`);
-    const lotes = await res.json();
+        // factor en UNIDADES por presentación
+        let factor = 1;
+        if (tipoVenta === "paquete") {
+            factor = parseInt(producto.unidades_por_paquete) || 0;
+        } else if (tipoVenta === "caja") {
+            const up = parseInt(producto.unidades_por_paquete) || 0;
+            const pc = parseInt(producto.paquetes_por_caja) || 0;
+            factor = up * pc;
+        }
 
-    if (!Array.isArray(lotes) || !lotes.length) {
-        throw new Error("No hay stock disponible");
-    }
+        if (factor <= 0) {
+            throw new Error("Presentación inválida (factor 0). Revisa unidades/paquetes.");
+        }
 
-    let cantidadRestante = cantidad;
-    const items = [];
+        let restante = parseInt(cantidadPresentaciones) || 0; // PRESENTACIONES
+        const items = [];
 
-    for (const lote of lotes) {
+        for (const lote of lotes) {
+            if (restante <= 0) break;
 
-        if (cantidadRestante <= 0) break;
+            const stockUnidades = parseInt(lote.stock || 0); // 👈 unidades
+            if (stockUnidades <= 0) continue;
 
-        const stockLote = parseInt(lote.stock_actual) || 0;
-        if (stockLote <= 0) continue;
+            // cuántas presentaciones completas caben en este lote
+            const capacidadPres = Math.floor(stockUnidades / factor);
+            if (capacidadPres <= 0) continue;
 
-        const tomar = Math.min(stockLote, cantidadRestante);
+            const tomarPres = Math.min(capacidadPres, restante);
+            const tomarUnidades = tomarPres * factor;
 
-        let precioUnit = 0;
-        if (tipoVenta === "unidad")  precioUnit = lote.precio_unidad;
-        if (tipoVenta === "paquete") precioUnit = lote.precio_paquete;
-        if (tipoVenta === "caja")    precioUnit = lote.precio_caja;
+            let precioUnit = 0;
+            if (tipoVenta === "unidad")  precioUnit = lote.precio_unidad;
+            if (tipoVenta === "paquete") precioUnit = lote.precio_paquete;
+            if (tipoVenta === "caja")    precioUnit = lote.precio_caja;
 
-        items.push({
+            items.push({
             producto_id: producto.id,
             lote_id: lote.id,
 
@@ -147,30 +163,27 @@ document.addEventListener("DOMContentLoaded", () => {
             descripcion: producto.descripcion,
 
             tipo_venta: tipoVenta,
-            cantidad: tomar,
+            cantidad: tomarPres, // 👈 PRESENTACIONES (no unidades)
 
-            // 🔥 precios COMPLETOS (no solo unitario)
             precio_unitario: parseFloat(precioUnit || 0),
             precio_venta: parseFloat(lote.precio_unidad || 0),
             precio_paquete: parseFloat(lote.precio_paquete || 0),
             precio_caja: parseFloat(lote.precio_caja || 0),
 
-            stock_lote: stockLote,
-
+            stock_lote: stockUnidades, // 👈 unidades del lote (para badge)
             unidades_por_paquete: producto.unidades_por_paquete || 0,
             paquetes_por_caja: producto.paquetes_por_caja || 0
-        });
+            });
 
-        cantidadRestante -= tomar;
-    }
+            restante -= tomarPres;
+        }
 
-    if (cantidadRestante > 0) {
-        throw new Error("Stock insuficiente");
-    }
+        if (restante > 0) {
+            throw new Error("Stock insuficiente");
+        }
 
-    return items;
-}
-
+        return items;
+        }
     // ============================
     // AGREGAR PRODUCTO A VENTA ACTIVA
     // ============================
@@ -198,7 +211,7 @@ document.addEventListener("DOMContentLoaded", () => {
         descripcion: producto.descripcion || "",
 
         // 🔥 stock del LOTE (no del producto)
-        stock_lote: parseInt(loteFIFO.stock_actual || 0),
+        stock_lote: parseInt(loteFIFO.stock || 0),
 
         cantidad: 1,
         tipo_venta: "unidad",

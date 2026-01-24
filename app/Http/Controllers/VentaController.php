@@ -43,6 +43,8 @@ class VentaController extends Controller
 
         return view('ventas.index', compact('config', 'categorias', 'productos'));
     }
+
+
 public function filtrarPorCategoria(Request $request)
 {
     $productos = Producto::where('categoria_id', $request->id)
@@ -586,25 +588,29 @@ public function show($id)
 
 
 
-public function stockFIFO($productoId)
+public function stockFifo($productoId)
 {
     $lotes = Lote::where('producto_id', $productoId)
         ->where('stock_actual', '>', 0)
-        ->orderBy('fecha_ingreso', 'asc') // FIFO real
-        ->get([
-            'id',
-            'producto_id',
-            'stock_actual',
-            'precio_unidad',
-            'precio_paquete',
-            'precio_caja'
-        ]);
+        ->orderByRaw('fecha_vencimiento IS NULL') // null al final
+        ->orderBy('fecha_vencimiento', 'asc')     // FEFO real
+        ->orderBy('fecha_ingreso', 'asc')
+        ->orderBy('id', 'asc')
+        ->get();
 
-    return response()->json($lotes);
+    return response()->json(
+        $lotes->map(fn($l) => [
+            'id' => $l->id,
+            'numero' => $l->id, // o $l->codigo_lote si tienes
+            'stock' => (int) $l->stock_actual,     // 👈 OJO: stock en UNIDADES
+            'precio_unidad' => (float) $l->precio_unidad,
+            'precio_paquete' => (float) $l->precio_paquete,
+            'precio_caja' => (float) $l->precio_caja,
+            'fecha_vencimiento' => $l->fecha_vencimiento,
+            'fecha_ingreso' => $l->fecha_ingreso,
+        ])
+    );
 }
-
-
-
 public function autorizar(Request $request)
 {
     $usuario = $request->input('usuario');
