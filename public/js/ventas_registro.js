@@ -100,12 +100,12 @@ document.addEventListener("DOMContentLoaded", () => {
             );
         }
 
-        const productosEnviar =
-            v.productos.map(it => ({
-                producto_id: it.id,
-                cantidad: it.cantidad,
-                presentacion: it.tipo_venta
-            }));
+        const productosEnviar = v.productos.map(it => ({
+            producto_id: it.producto_id ?? it.id ?? it.producto?.id,
+            cantidad: it.cantidad,
+            presentacion: it.tipo_venta
+        })).filter(p => p.producto_id);
+
 
         fetch("/ventas/registrar", {
             method: "POST",

@@ -136,16 +136,17 @@ public function registrarVenta(Request $request)
                     default   => $cantidad
                 };
 
-                if ($producto->stock < $unidadesAfectadas) {
-                    throw new Exception("Stock insuficiente para {$producto->nombre}");
+                $precioPresentacion = match ($presentacion) {
+                    'unidad'  => $producto->precio_venta ?? 0,
+                    'paquete' => $producto->precio_paquete ?? ($producto->precio_venta ?? 0),
+                    'caja'    => $producto->precio_caja ?? ($producto->precio_venta ?? 0),
+                    default   => $producto->precio_venta ?? 0
+                };
+
+                if ($precioPresentacion <= 0) {
+                    throw new \Exception("No hay precio definido para {$producto->nombre}");
                 }
 
-                $precioPresentacion = match ($presentacion) {
-                    'unidad'  => $producto->precio_venta,
-                    'paquete' => $producto->precio_paquete,
-                    'caja'    => $producto->precio_caja,
-                    default   => $producto->precio_venta
-                };
 
                 $subtotal = $precioPresentacion * $cantidad;
                 $opGravadas += $subtotal;
@@ -166,7 +167,7 @@ public function registrarVenta(Request $request)
                     'activo'             => 1
                 ]);
 
-                $producto->decrement('stock', $unidadesAfectadas);
+                $producto->decrement('stock_unidades', $unidadesAfectadas);
                 }
 
                 /* ================= IGV + TOTAL ================= */
@@ -178,8 +179,8 @@ public function registrarVenta(Request $request)
                 $montoPagado = round((float) $request->monto_pagado, 2);
 
                 if ($montoPagado > 0 && empty($request->metodo_pago)) {
-                    throw new Exception("Debe seleccionar un método de pago.");
-                }
+                        throw new \Exception("Debe seleccionar un método de pago.");
+                    }
 
                 $vuelto = 0;
                 if ($montoPagado > $total) {

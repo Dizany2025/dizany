@@ -34,7 +34,7 @@ public function actualizarStock(Request $request, $id)
 
 public function obtenerNotificaciones()
 {
-    $stock_bajo = Producto::where('stock', '<=', 10)->count();
+    $stock_bajo = Producto::where('stock_unidades', '<=', 10)->count();
 
     $proximos_a_vencer = Producto::whereNotNull('fecha_vencimiento')
         ->where('fecha_vencimiento', '<=', now()->addDays(30))
