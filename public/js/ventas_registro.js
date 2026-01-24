@@ -107,13 +107,13 @@ document.addEventListener("DOMContentLoaded", () => {
         })).filter(p => p.producto_id);
 
 
-        fetch("/ventas/registrar", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-TOKEN":
-                    document.querySelector('meta[name="csrf-token"]').content
-            },
+        fetch("/ventas/registrar", {    
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN":
+                        document.querySelector('meta[name="csrf-token"]').content
+                },
             body: JSON.stringify({
                 tipo_comprobante: tipoComprobante,
                 documento: documento,
