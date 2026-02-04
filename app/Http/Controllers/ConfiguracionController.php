@@ -30,7 +30,7 @@ class ConfiguracionController extends Controller
             'telefono'       => 'nullable|string|max:20',
             'correo'         => 'nullable|email|max:100',
             'tema'           => 'required|in:claro,oscuro',
-            'logo'           => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048'
+            'logo'           => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240'
         ]);
 
         $config = Configuracion::first();

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 22-01-2026 a las 06:00:34
+-- Tiempo de generación: 28-01-2026 a las 01:42:41
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -109,7 +109,7 @@ CREATE TABLE `configuracion` (
 --
 
 INSERT INTO `configuracion` (`id`, `nombre_empresa`, `ruc`, `logo`, `moneda`, `igv`, `direccion`, `telefono`, `correo`, `tema`) VALUES
-(1, 'DIZANY', '10763633328', 'uploads/logos/1766438312_logo.png', 'S/', 0.00, 'AV. MARGINAL - PACAYZAPA', '958196510', 'admin@dizany.com', 'claro');
+(1, 'DIZANY', '10763633328', 'uploads/logos/1769127060_DA.png', 'S/', 0.00, 'AV. MARGINAL - PACAYZAPA', '958196510', 'admin@dizany.com', 'claro');
 
 -- --------------------------------------------------------
 
@@ -127,6 +127,19 @@ CREATE TABLE `detalle_lote_ventas` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `detalle_lote_ventas`
+--
+
+INSERT INTO `detalle_lote_ventas` (`id`, `detalle_venta_id`, `lote_id`, `cantidad`, `fecha_vencimiento`, `precio_lote`, `created_at`, `updated_at`) VALUES
+(1, 74, 26, 1, '2026-04-29', 15.00, '2026-01-27 03:56:26', '2026-01-27 03:56:26'),
+(2, 75, 24, 5, '2026-04-23', 2.50, '2026-01-27 03:56:26', '2026-01-27 03:56:26'),
+(3, 76, 23, 10, '2026-08-26', 2.00, '2026-01-27 03:56:26', '2026-01-27 03:56:26'),
+(4, 77, 26, 2, '2026-04-29', 15.00, '2026-01-27 03:59:26', '2026-01-27 03:59:26'),
+(5, 78, 27, 1, '2026-05-27', 2.50, '2026-01-27 04:03:05', '2026-01-27 04:03:05'),
+(6, 79, 26, 12, '2026-04-29', 15.00, '2026-01-27 04:03:05', '2026-01-27 04:03:05'),
+(7, 80, 25, 1, '2026-09-30', 21.00, '2026-01-27 04:03:05', '2026-01-27 04:03:05');
 
 -- --------------------------------------------------------
 
@@ -147,6 +160,19 @@ CREATE TABLE `detalle_ventas` (
   `ganancia` decimal(10,2) NOT NULL DEFAULT 0.00,
   `activo` tinyint(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `detalle_ventas`
+--
+
+INSERT INTO `detalle_ventas` (`id`, `venta_id`, `producto_id`, `presentacion`, `cantidad`, `unidades_afectadas`, `precio_presentacion`, `precio_unitario`, `subtotal`, `ganancia`, `activo`) VALUES
+(74, 42, 37, 'unidad', 1, 1, 15.00, 15.00, 15.00, 3.00, 1),
+(75, 42, 39, 'unidad', 5, 5, 2.50, 0.50, 12.50, 7.50, 1),
+(76, 42, 39, 'unidad', 10, 10, 2.00, 0.20, 20.00, 10.00, 1),
+(77, 43, 37, 'unidad', 2, 2, 15.00, 7.50, 30.00, 6.00, 1),
+(78, 44, 40, 'unidad', 1, 1, 2.50, 2.50, 2.50, 1.50, 1),
+(79, 44, 37, 'unidad', 12, 12, 15.00, 1.25, 180.00, 36.00, 1),
+(80, 44, 37, 'unidad', 1, 1, 21.00, 21.00, 21.00, 6.00, 1);
 
 -- --------------------------------------------------------
 
@@ -234,10 +260,12 @@ CREATE TABLE `lotes` (
 --
 
 INSERT INTO `lotes` (`id`, `producto_id`, `proveedor_id`, `codigo_lote`, `fecha_ingreso`, `fecha_vencimiento`, `stock_inicial`, `stock_actual`, `precio_compra`, `precio_unidad`, `precio_paquete`, `precio_caja`, `activo`, `created_at`, `updated_at`) VALUES
-(1, 38, NULL, NULL, '2026-01-20', '2026-05-22', 60, 60, 0.50, 1.00, 5.00, 48.00, 1, '2026-01-22 03:00:13', '2026-01-22 03:00:13'),
-(2, 37, NULL, NULL, '2026-01-21', '2026-06-24', 20, 20, 25.00, 70.00, NULL, NULL, 1, '2026-01-22 04:19:22', '2026-01-22 04:19:22'),
-(3, 39, NULL, NULL, '2026-01-21', '2026-07-29', 36, 36, 2.00, 2.50, 25.00, NULL, 1, '2026-01-22 04:20:16', '2026-01-22 04:20:16'),
-(4, 40, NULL, NULL, '2026-01-21', '2026-09-30', 50, 50, 1.00, 1.50, 45.00, NULL, 1, '2026-01-22 04:20:55', '2026-01-22 04:20:55');
+(23, 39, NULL, NULL, '2026-01-23', '2026-08-26', 10, 0, 1.00, 2.00, 12.00, 18.00, 1, '2026-01-24 03:49:38', '2026-01-27 03:56:26'),
+(24, 39, NULL, NULL, '2026-01-23', '2026-04-23', 5, 0, 1.00, 2.50, 12.00, 20.00, 1, '2026-01-24 03:49:59', '2026-01-27 03:56:26'),
+(25, 37, NULL, NULL, '2026-01-23', '2026-09-30', 20, 19, 15.00, 21.00, NULL, NULL, 1, '2026-01-24 04:15:14', '2026-01-27 04:03:05'),
+(26, 37, NULL, NULL, '2026-01-23', '2026-04-29', 15, 0, 12.00, 15.00, NULL, NULL, 1, '2026-01-24 04:15:29', '2026-01-27 04:03:05'),
+(27, 40, NULL, NULL, '2026-01-23', '2026-05-27', 25, 24, 1.00, 2.50, 50.00, NULL, 1, '2026-01-24 04:17:05', '2026-01-27 04:03:05'),
+(28, 40, NULL, NULL, '2026-01-23', '2026-08-26', 25, 25, 1.00, 2.00, 48.00, NULL, 1, '2026-01-24 04:17:34', '2026-01-24 04:17:34');
 
 -- --------------------------------------------------------
 
@@ -319,6 +347,15 @@ CREATE TABLE `movimientos` (
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Volcado de datos para la tabla `movimientos`
+--
+
+INSERT INTO `movimientos` (`id`, `fecha`, `hora`, `tipo`, `subtipo`, `concepto`, `monto`, `metodo_pago`, `estado`, `referencia_id`, `referencia_tipo`, `created_at`, `updated_at`) VALUES
+(131, '2026-01-26', NULL, 'ingreso', 'venta', 'Venta boleta B001-000001', 47.50, 'efectivo', 'pagado', 42, 'venta', '2026-01-27 03:56:29', '2026-01-27 03:56:29'),
+(132, '2026-01-26', NULL, 'ingreso', 'venta', 'Venta pendiente factura F001-000001', 30.00, 'fiado', 'pendiente', 43, 'venta', '2026-01-27 03:59:40', '2026-01-27 03:59:40'),
+(133, '2026-01-26', NULL, 'ingreso', 'venta', 'Venta factura F001-000002', 203.50, 'yape', 'pagado', 44, 'venta', '2026-01-27 04:03:19', '2026-01-27 04:03:19');
+
 -- --------------------------------------------------------
 
 --
@@ -335,6 +372,14 @@ CREATE TABLE `pagos_venta` (
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `pagos_venta`
+--
+
+INSERT INTO `pagos_venta` (`id`, `venta_id`, `usuario_id`, `monto`, `metodo_pago`, `fecha_pago`, `created_at`, `updated_at`) VALUES
+(102, 42, 4, 47.50, 'efectivo', '2026-01-26 22:56:26', '2026-01-27 03:56:26', '2026-01-27 03:56:26'),
+(103, 44, 4, 203.50, 'yape', '2026-01-26 23:03:05', '2026-01-27 04:03:05', '2026-01-27 04:03:05');
 
 -- --------------------------------------------------------
 
@@ -506,6 +551,15 @@ CREATE TABLE `ventas` (
   `igv` decimal(10,2) DEFAULT 0.00,
   `saldo` decimal(10,2) NOT NULL DEFAULT 0.00
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `ventas`
+--
+
+INSERT INTO `ventas` (`id`, `cliente_id`, `usuario_id`, `fecha`, `tipo_comprobante`, `serie`, `correlativo`, `metodo_pago`, `total`, `estado`, `estado_sunat`, `hash`, `xml_url`, `pdf_url`, `cdr_url`, `activo`, `op_gravadas`, `igv`, `saldo`) VALUES
+(42, 34, 4, '2026-01-26 22:56:26', 'boleta', 'B001', 1, 'efectivo', 47.50, 'pagado', 'pendiente', NULL, NULL, NULL, NULL, 1, 47.50, 0.00, 0.00),
+(43, 22, 4, '2026-01-26 22:59:25', 'factura', 'F001', 1, NULL, 30.00, 'pendiente', 'pendiente', NULL, NULL, NULL, NULL, 1, 30.00, 0.00, 30.00),
+(44, 20, 4, '2026-01-26 23:03:04', 'factura', 'F001', 2, 'yape', 203.50, 'pagado', 'pendiente', NULL, NULL, NULL, NULL, 1, 203.50, 0.00, 0.00);
 
 --
 -- Índices para tablas volcadas
@@ -685,13 +739,13 @@ ALTER TABLE `clientes`
 -- AUTO_INCREMENT de la tabla `detalle_lote_ventas`
 --
 ALTER TABLE `detalle_lote_ventas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT de la tabla `detalle_ventas`
 --
 ALTER TABLE `detalle_ventas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=72;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=81;
 
 --
 -- AUTO_INCREMENT de la tabla `facturas`
@@ -715,7 +769,7 @@ ALTER TABLE `gastos`
 -- AUTO_INCREMENT de la tabla `lotes`
 --
 ALTER TABLE `lotes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT de la tabla `marcas`
@@ -733,13 +787,13 @@ ALTER TABLE `migrations`
 -- AUTO_INCREMENT de la tabla `movimientos`
 --
 ALTER TABLE `movimientos`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=131;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=134;
 
 --
 -- AUTO_INCREMENT de la tabla `pagos_venta`
 --
 ALTER TABLE `pagos_venta`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=102;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=104;
 
 --
 -- AUTO_INCREMENT de la tabla `personal_access_tokens`
@@ -781,7 +835,7 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `ventas`
 --
 ALTER TABLE `ventas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
 
 --
 -- Restricciones para tablas volcadas

@@ -1,3 +1,25 @@
+// ============================
+// TOTALES / CÁLCULOS GLOBALES
+// ============================
+
+/**
+ * Formatea un número a 2 o 3 decimales dependiendo si el tercer decimal es cero.
+ * Usa toLocaleString para el formato de moneda peruano (comas/puntos).
+ */
+function formatPrecioDinamico(precio) {
+    // Verificar si el precio tiene un tercer decimal distinto de cero
+    const precioRedondeadoA2 = Math.round(precio * 100) / 100;
+    const usaTresDecimales = Math.abs(precio - precioRedondeadoA2) > 0.0001; // Un pequeño margen de error
+
+    if (usaTresDecimales) {
+        // Formato con 3 decimales: 0.125 -> 0,125
+        return precio.toLocaleString('es-PE', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+    } else {
+        // Formato con 2 decimales: 1.5 -> 1,50 | 1.0 -> 1,00
+        return precio.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+}
+
 // ===============================
 // UI / STEPS / CLIENTE / PAGO / VUELTO / SERIE-CORRELATIVO
 // ===============================
@@ -142,12 +164,14 @@ function actualizarBotonCarrito() {
     }
 
     const { total } = calcularTotal();
+    // 👇 AHORA USA LA FUNCIÓN DINÁMICA
+    const totalFormateado = formatPrecioDinamico(total);
 
     btnIrStep2.disabled = false;
     btnIrStep2.innerHTML = `
         <span class="badge bg-dark me-2">${cantidad}</span>
         <span class="flex-grow-1 text-start">Continuar</span>
-        <span class="fw-semibold">S/ ${total.toFixed(2)}</span>
+        <span class="fw-semibold">S/ ${totalFormateado}</span>
         <i class="fas fa-arrow-right ms-2"></i>
     `;
 }
@@ -162,7 +186,7 @@ function prepararFase3() {
 
     const { total } = calcularTotal();
 
-    if (inputTotalVenta) inputTotalVenta.value = total.toFixed(2);
+    if (inputTotalVenta) inputTotalVenta.value = formatPrecioDinamico(total);
     if (inputPaga) inputPaga.value = "";
     if (inputVuelto) inputVuelto.value = "";
 }
@@ -177,7 +201,7 @@ function prepararFase3Credito() {
 
     const { total } = calcularTotal();
 
-    if (inputTotalVenta) inputTotalVenta.value = total.toFixed(2);
+    if (inputTotalVenta) inputTotalVenta.value = formatPrecioDinamico(total);
 
     if (inputPaga) {
         inputPaga.value = "";
@@ -476,13 +500,13 @@ document.addEventListener("DOMContentLoaded", () => {
         if (estado === "credito") {
             let saldo = total - monto;
             if (saldo < 0) saldo = 0;
-            if (inputVuelto) inputVuelto.value = `Saldo pendiente: S/ ${saldo.toFixed(2)}`;
+            if (inputVuelto) inputVuelto.value = `Saldo pendiente: S/ ${formatPrecioDinamico(saldo)}`;
             return;
         }
 
         let vuelto = monto - total;
         if (vuelto < 0) vuelto = 0;
-        if (inputVuelto) inputVuelto.value = `S/ ${vuelto.toFixed(2)}`;
+        if (inputVuelto) inputVuelto.value = `S/ ${formatPrecioDinamico(vuelto)}`;
     });
 
     // Inicial UI

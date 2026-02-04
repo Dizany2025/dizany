@@ -2,6 +2,29 @@
 // TOTALES / CÁLCULOS GLOBALES
 // ============================
 
+/**
+ * Formatea un número a 2 o 3 decimales dependiendo si el tercer decimal es cero.
+ * Usa toLocaleString para el formato de moneda peruano (comas/puntos).
+ */
+function formatPrecioDinamico(precio) {
+    // Verificar si el precio tiene un tercer decimal distinto de cero
+    const precioRedondeadoA2 = Math.round(precio * 100) / 100;
+    const usaTresDecimales = Math.abs(precio - precioRedondeadoA2) > 0.0001; // Un pequeño margen de error
+
+    if (usaTresDecimales) {
+        // Formato con 3 decimales: 0.125 -> 0,125
+        return precio.toLocaleString('es-PE', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+    } else {
+        // Formato con 2 decimales: 1.5 -> 1,50 | 1.0 -> 1,00
+        return precio.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+}
+
+
+// ============================
+// TOTALES / CÁLCULOS GLOBALES
+// ============================
+
 function calcularSubtotal() {
     const v = ventaActiva();
     return (v.productos || []).reduce(
@@ -340,6 +363,9 @@ document.addEventListener("DOMContentLoaded", () => {
             const subtotal = precioUnitFinal * (parseInt(p.cantidad) || 0);
 
             const unidades = unidadesRealesDeItem(p);
+            
+            // 👇 USA LA FUNCIÓN DINÁMICA
+            const subtotalFormateado = formatPrecioDinamico(subtotal);
 
             const pid = Number(p.producto_id || p.id);
             
@@ -459,13 +485,13 @@ document.addEventListener("DOMContentLoaded", () => {
                         </div>
 
                         <div class="text-end" style="width:90px;">
-                            <div class="fw-semibold small">S/ ${precioUnitFinal.toFixed(2)}</div>
+                            <div class="fw-semibold small">S/ ${subtotalFormateado}</div>
                         </div>
                     </div>
 
                     <div class="mt-2 small">
                         <span class="text-muted">Precio por <strong>${unidades}</strong> unidades:</span>
-                        <span class="fw-semibold"> S/ ${subtotal.toFixed(2)}</span>
+                        <span class="fw-semibold"> S/ ${subtotalFormateado}</span>
                     </div>
                 </div>
             `;

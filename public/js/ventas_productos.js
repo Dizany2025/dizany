@@ -4,6 +4,29 @@
 
 document.addEventListener("DOMContentLoaded", () => {
 
+
+    // ============================
+    // FUNCIÓN DE FORMATO DINÁMICO (NUEVA)
+    // ============================
+    /**
+     * Formatea un número a 2 o 3 decimales dependiendo si el tercer decimal es cero.
+     * Usa toLocaleString para el formato de moneda peruano (comas/puntos).
+     */
+    function formatPrecioDinamico(precio) {
+        // Verificar si el precio tiene un tercer decimal distinto de cero
+        const precioRedondeadoA2 = Math.round(precio * 100) / 100;
+        const usaTresDecimales = Math.abs(precio - precioRedondeadoA2) > 0.0001; // Un pequeño margen de error
+
+        if (usaTresDecimales) {
+            // Formato con 3 decimales: 0.125 -> 0,125
+            return precio.toLocaleString('es-PE', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+        } else {
+            // Formato con 2 decimales: 1.5 -> 1,50 | 1.0 -> 1,00
+            return precio.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+    }
+
+
     // ============================
     // ELEMENTOS
     // ============================
@@ -58,9 +81,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const precioFinal = calcularPrecioFinal(precioBase);
 
+    // 👇 AHORA USA LA FUNCIÓN DINÁMICA
+    const precioFormateado = formatPrecioDinamico(precioFinal);
+
     // 🔥 TEXTO DE PRECIO PARA LA GRILLA
     const precioLabel = disponible > 0
-        ? `S/ ${precioFinal.toFixed(2)}`
+        ? `S/ ${precioFormateado}`
         : "Sin stock";
 
     const v = ventaActiva();

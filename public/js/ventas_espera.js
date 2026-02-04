@@ -1,3 +1,24 @@
+// ============================
+// TOTALES / CÁLCULOS GLOBALES
+// ============================
+
+/**
+ * Formatea un número a 2 o 3 decimales dependiendo si el tercer decimal es cero.
+ * Usa toLocaleString para el formato de moneda peruano (comas/puntos).
+ */
+function formatPrecioDinamico(precio) {
+    // Verificar si el precio tiene un tercer decimal distinto de cero
+    const precioRedondeadoA2 = Math.round(precio * 100) / 100;
+    const usaTresDecimales = Math.abs(precio - precioRedondeadoA2) > 0.0001; // Un pequeño margen de error
+
+    if (usaTresDecimales) {
+        // Formato con 3 decimales: 0.125 -> 0,125
+        return precio.toLocaleString('es-PE', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+    } else {
+        // Formato con 2 decimales: 1.5 -> 1,50 | 1.0 -> 1,00
+        return precio.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+}
 // ===============================
 // VENTAS EN ESPERA / MULTI-VENTA
 // ===============================
@@ -100,14 +121,19 @@ document.addEventListener("DOMContentLoaded", () => {
             const total = totalVentaRapido(v);
             const cantidad = (v.productos || []).length;
             const label = cantidad === 1 ? "producto" : "productos";
+            
+            // 👇 DEFINIMOS la variable totalFormateado usando tu función
+            const totalFormateado = formatPrecioDinamico(total);
 
             const item = document.createElement("div");
+            // 👇 Eliminamos esta línea que no usaba variables definidas
+            // const precioFormateado = formatPrecioDinamico(precioFinal); 
             item.className = "pos-espera-item" + (v.id === POS.ventaActivaId ? " active" : "");
 
             item.innerHTML = `
                 <div class="info">
                     <strong>${nombreVenta(v)}</strong>
-                    <span>S/ ${total.toFixed(2)} • ${cantidad} ${label}</span>
+                    <span>S/ ${totalFormateado} • ${cantidad} ${label}</span>
                 </div>
                 <button class="delete" type="button" title="Eliminar venta">
                     <i class="fas fa-trash"></i>
