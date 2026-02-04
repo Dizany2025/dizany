@@ -379,6 +379,7 @@ public function productosIniciales()
         'nombre' => $p->nombre,
         'imagen' => $p->imagen,
         'descripcion' => $p->descripcion,
+        'categoria_id' => $p->categoria_id,
 
         // 👇 STOCK TOTAL
         'stock' => $p->lotes->sum('stock_actual'),

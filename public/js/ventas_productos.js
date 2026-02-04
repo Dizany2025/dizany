@@ -227,6 +227,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .then(lista => {
                 if (Array.isArray(lista)) {
                     window.PRODUCTOS_INICIALES = lista;
+                    window.PRODUCTOS_SNAPSHOT = [...lista]; // 🔥 CLAVE
                     renderGrillaProductos(lista);
                 }
             });
@@ -255,11 +256,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 ) return;
 
                 if (catID === 0) {
-                    return renderGrillaProductos(window.PRODUCTOS_INICIALES);
+                    return renderGrillaProductos(window.PRODUCTOS_SNAPSHOT);
                 }
 
                 const filtrados =
-                    window.PRODUCTOS_INICIALES.filter(
+                    window.PRODUCTOS_SNAPSHOT.filter(
                         p => Number(p.categoria_id) === catID
                     );
 
@@ -277,7 +278,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const q = buscarInput.value.trim();
 
             if (!q) {
-                renderGrillaProductos(window.PRODUCTOS_INICIALES || []);
+                renderGrillaProductos(window.PRODUCTOS_SNAPSHOT || []);
                 return;
             }
 

@@ -100,6 +100,18 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    function actualizarContadorVentasEspera() {
+        if (!posEsperaCount) return;
+
+        const ventasConItems = Object.values(POS.ventas || {})
+            .filter(v => (v.productos || []).length > 0);
+
+        document.querySelectorAll("#pos-espera-count").forEach(el => {
+            el.innerText = ventasConItems.length;
+        });
+    }
+
+
     function renderVentasEsperaPanel() {
         if (!posEsperaPanel || !posEsperaCount) return;
 
@@ -226,5 +238,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // EXPONER
     window.renderVentasEsperaPanel = renderVentasEsperaPanel;
+    window.actualizarContadorVentasEspera = actualizarContadorVentasEspera;
 
 });

@@ -267,7 +267,8 @@ document.addEventListener("DOMContentLoaded", () => {
     v.productos.push(item);
 
     posSaveDebounced(snapshotPOS, 10);
-    renderTodo();
+    actualizarContadorVentasEspera();
+    renderCarritoTreinta();
 }
 
     // ============================
@@ -557,7 +558,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 it.cantidad = 1;
             }
 
-            renderTodo();
+            renderCarritoTreinta();
         });
 
         carritoLista.addEventListener("blur", (e) => {
@@ -585,10 +586,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 mostrarAlerta("Cantidad excede el stock disponible");
                 it.cantidad = 1;
                 e.target.value = 1;
-                renderTodo();
+                renderCarritoTreinta();
                 return;
             }
-            renderTodo();
+            renderCarritoTreinta();
         }, true);
 
         carritoLista.addEventListener("click", async (e) => {
@@ -647,7 +648,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     const insertAt = Math.min(...grupo.idxs);
                     v.productos.splice(insertAt, 0, ...nuevosItems);
 
-                    renderTodo();
+                    renderCarritoTreinta();
                     return;
 
                 } catch (err) {
@@ -664,14 +665,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 const c = parseInt(it.cantidad) || 1;
                 if (c > 1) it.cantidad = c - 1;
 
-                renderTodo();
+                renderCarritoTreinta();
                 return;
             }
 
             if (btnEliminar) {
                 const i = Number(btnEliminar.dataset.index);
                 v.productos.splice(i, 1);
-                renderTodo();
+                actualizarContadorVentasEspera();
+                renderCarritoTreinta();
+
                 return;
             }
         });
@@ -718,7 +721,8 @@ document.addEventListener("DOMContentLoaded", () => {
             }).then(r => {
                 if (!r.isConfirmed) return;
                 v.productos = [];
-                renderTodo();
+                actualizarContadorVentasEspera();
+                renderCarritoTreinta();
             });
         });
     }
