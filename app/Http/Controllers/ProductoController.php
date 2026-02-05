@@ -249,29 +249,58 @@ public function toggleEstado($id)
 
    public function buscar(Request $request)
 {
-    $searchTerm = $request->input('search');
+    $searchTerm = trim($request->input('search'));
 
-    $productos = Producto::query()
+    $productos = Producto::with(['lotes' => function ($q) {
+            $q->where('stock_actual', '>', 0)
+              ->orderByRaw('fecha_vencimiento IS NULL')
+              ->orderBy('fecha_vencimiento', 'asc')
+              ->orderBy('fecha_ingreso', 'asc')
+              ->orderBy('id', 'asc');
+        }])
         ->where('activo', 1)
-        ->when($searchTerm, function ($query, $searchTerm) {
-            return $query->where('nombre', 'like', "%{$searchTerm}%")
-                         ->orWhere('codigo_barras', 'like', "%{$searchTerm}%");
+        ->where('visible_en_catalogo', 1)
+        ->when($searchTerm, function ($query) use ($searchTerm) {
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('nombre', 'like', "%{$searchTerm}%")
+                  ->orWhere('codigo_barras', 'like', "%{$searchTerm}%");
+            });
+        })
+        ->whereHas('lotes', function ($q) {
+            $q->where('stock_actual', '>', 0);
         })
         ->limit(10)
-        ->get([
-            'id',
-            'nombre',
-            'descripcion',
-            'precio_venta',
-            'precio_paquete',
-            'unidades_por_paquete',
-            'precio_caja',
-            'paquetes_por_caja',
-            'stock',
-            'imagen'
-        ]);
+        ->get();
 
-    return response()->json($productos);
+    return response()->json(
+        $productos->map(function ($p) {
+
+            return [
+                'id' => $p->id,
+                'nombre' => $p->nombre,
+                'descripcion' => $p->descripcion,
+                'imagen' => $p->imagen,
+
+                // 🔥 STOCK TOTAL REAL
+                'stock' => $p->lotes->sum('stock_actual'),
+
+                // 🔥 LOTES FIFO (CLAVE PARA PRECIO)
+                'lotes_fifo' => $p->lotes->map(fn ($l) => [
+                    'id' => $l->id,
+                    'numero' => $l->id,
+                    'stock' => (int) $l->stock_actual,
+                    'fecha_vencimiento' => $l->fecha_vencimiento,
+                    'precio_unidad' => (float) $l->precio_unidad,
+                    'precio_paquete' => (float) $l->precio_paquete,
+                    'precio_caja' => (float) $l->precio_caja,
+                ])->values(),
+
+                'unidades_por_paquete' => $p->unidades_por_paquete,
+                'paquetes_por_caja'    => $p->paquetes_por_caja,
+                'categoria_id'         => $p->categoria_id,
+            ];
+        })
+    );
 }
 
     // validar si el código de barras existe
