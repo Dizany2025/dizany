@@ -1,0 +1,130 @@
+/* ===============================
+   AJUSTE DE INVENTARIO – UI
+   =============================== */
+
+/* CONTENEDOR GENERAL */
+.card.border-warning {
+    border-radius: 14px;
+}
+
+.card.border-warning .card-header {
+    border-radius: 14px 14px 0 0;
+}
+
+/* ALERTA */
+.card.border-warning .alert {
+    border-radius: 12px;
+}
+
+/* ===============================
+   FORM CONTROLS (uniformes)
+   =============================== */
+
+.card.border-warning input.form-control,
+.card.border-warning select.form-select {
+    height: 42px;
+    border-radius: 12px;
+    font-size: 14px;
+}
+
+/* ===============================
+   TIPO DE AJUSTE (TOGGLE)
+   =============================== */
+
+.card.border-warning .btn-group {
+    width: 100%;
+}
+
+.card.border-warning .btn-group .btn {
+    height: 42px;
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+/* bordes limpios */
+.card.border-warning .btn-group .btn:first-child {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+.card.border-warning .btn-group .btn:last-child {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+/* ===============================
+   CONTROL DE CANTIDAD
+   =============================== */
+
+.qty-control {
+    display: flex;
+    align-items: center;
+}
+
+.qty-control input {
+    max-width: 90px;
+    text-align: center;
+    font-weight: 700;
+    border-radius: 12px;
+}
+
+/* Quitar flechas */
+#ajuste_cantidad::-webkit-inner-spin-button,
+#ajuste_cantidad::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+#ajuste_cantidad {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+/* Botones + / - */
+.btn-qty {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+/* ===============================
+   STOCK RESULTANTE
+   =============================== */
+
+#stock_resultante {
+    font-size: 13px;
+    margin-top: 6px;
+}
+
+/* ===============================
+   SELECT MOTIVO (mejor look)
+   =============================== */
+
+#ajuste_motivo {
+    padding-right: 36px;
+}
+
+/* ===============================
+   BOTÓN APLICAR
+   =============================== */
+
+#btn_aplicar_ajuste {
+    height: 44px;
+    border-radius: 14px;
+    font-weight: 600;
+}
+
+#btn_aplicar_ajuste:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ===============================
+   FOCUS STATES (pro)
+   =============================== */
+
+.card.border-warning input:focus,
+.card.border-warning select:focus {
+    box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+    border-color: #ffc107;
+}

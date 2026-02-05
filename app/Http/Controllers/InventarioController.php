@@ -99,8 +99,31 @@ public function storeLote(Request $request)
         ->with('success', 'Lote registrado correctamente');
 }
 
-public function edit(Lote $lote)
-{
-    return view('inventario.lote_edit', compact('lote'));
-}
+    public function edit(Lote $lote)
+    {
+        return view('inventario.lote_edit', compact('lote'));
+    }
+
+    public function update(Request $request, Lote $lote)
+    {
+        $request->validate([
+            'proveedor_id'      => 'nullable|exists:proveedores,id',
+            'fecha_vencimiento' => 'nullable|date|after_or_equal:today',
+            'precio_unidad'     => 'required|numeric|min:0',
+            'precio_paquete'    => 'nullable|numeric|min:0',
+            'precio_caja'       => 'nullable|numeric|min:0',
+        ]);
+
+        $lote->update([
+            'proveedor_id'      => $request->proveedor_id,
+            'fecha_vencimiento' => $request->fecha_vencimiento,
+            'precio_unidad'     => $request->precio_unidad,
+            'precio_paquete'    => $request->precio_paquete,
+            'precio_caja'       => $request->precio_caja,
+        ]);
+
+        return redirect()
+            ->route('lotes.index')
+            ->with('success', 'Lote actualizado correctamente');
+    }
 }
