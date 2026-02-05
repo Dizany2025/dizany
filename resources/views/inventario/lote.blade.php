@@ -51,7 +51,8 @@ Ingreso de Mercadería
                                 <option value="">Buscar producto...</option>
                                 @foreach($productos as $producto)
                                     <option value="{{ $producto->id }}"
-                                        data-vencimiento="{{ $producto->maneja_vencimiento }}">
+                                        data-vencimiento="{{ $producto->maneja_vencimiento }}"
+                                        data-descripcion="{{ \Illuminate\Support\Str::limit($producto->descripcion, 40) }}">
                                         {{ $producto->nombre }}
                                     </option>
                                 @endforeach
@@ -87,32 +88,70 @@ Ingreso de Mercadería
                         {{-- STOCK + COSTOS --}}
                         <div class="row">
                             <div class="col-md-4 mb-3">
-                                <label class="inv-label">Cantidad (unidades)</label>
+                                <label class="inv-label">Cantidad (unds)</label>
                                 <input type="number" name="stock_inicial" class="form-control inv-input" min="1" required>
                             </div>
 
                             <div class="col-md-4 mb-3">
                                 <label class="inv-label">Costo compra (S/)</label>
-                                <input type="number" name="precio_compra" class="form-control inv-input" step="0.01" min="0" required>
+                                <input type="number" name="precio_compra" class="form-control inv-input" step="0.001" min="0" required>
                             </div>
 
                             <div class="col-md-4 mb-3">
                                 <label class="inv-label">Precio unidad (S/)</label>
-                                <input type="number" name="precio_unidad" class="form-control inv-input" step="0.01" min="0" required>
+                                <input type="number" name="precio_unidad" class="form-control inv-input" step="0.001" min="0" required>
                             </div>
                         </div>
 
+                        {{-- PRESENTACIONES --}}
+                        <h6 class="fw-semibold mb-2 text-muted">
+                            Presentaciones disponibles (marca las que aplican)
+                        </h6>
                         {{-- PRECIOS OPCIONALES --}}
                         <div class="row">
+
+                            {{-- PRECIO PAQUETE --}}
                             <div class="col-md-6 mb-3">
-                                <label class="inv-label">Precio paquete (S/)</label>
-                                <input type="number" name="precio_paquete" class="form-control inv-input" step="0.01" min="0">
+                                <label class="inv-label d-flex align-items-center gap-2">
+                                    <input
+                                        type="checkbox"
+                                        id="chk_precio_paquete"
+                                        class="form-check-input mt-0"
+                                    >
+                                    Precio paquete (S/)
+                                </label>
+
+                                <input
+                                    type="number"
+                                    name="precio_paquete"
+                                    id="input_precio_paquete"
+                                    class="form-control inv-input d-none"
+                                    step="0.001"
+                                    min="0"
+                                >
                             </div>
 
+                            {{-- PRECIO CAJA --}}
                             <div class="col-md-6 mb-3">
-                                <label class="inv-label">Precio caja (S/)</label>
-                                <input type="number" name="precio_caja" class="form-control inv-input" step="0.01" min="0">
+                                <label class="inv-label d-flex align-items-center gap-2">
+                                    <input
+                                        type="checkbox"
+                                        id="chk_precio_caja"
+                                        class="form-check-input mt-0"
+                                    >
+                                    Precio caja (S/)
+                                </label>
+
+                                <input
+                                    type="number"
+                                    name="precio_caja"
+                                    id="input_precio_caja"
+                                    class="form-control inv-input d-none"
+                                    step="0.001"
+                                    min="0"
+                                >
                             </div>
+
                         </div>
 
                         {{-- FECHAS --}}
@@ -175,47 +214,107 @@ Ingreso de Mercadería
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
 
 <script>
-flatpickr(".date-ingreso", {
-    locale: "es",
-    dateFormat: "Y-m-d",
-    altInput: true,
-    altFormat: "d F Y",
-    disableMobile: true
-});
+    flatpickr(".date-ingreso", {
+        locale: "es",
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d F Y",
+        disableMobile: true
+    });
 
-flatpickr(".date-vencimiento", {
-    locale: "es",
-    dateFormat: "Y-m-d",
-    altInput: true,
-    altFormat: "d F Y",
-    minDate: "today",
-    disableMobile: true
-});
+    flatpickr(".date-vencimiento", {
+        locale: "es",
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d F Y",
+        minDate: "today",
+        disableMobile: true
+    });
 </script>
 
 <script>
-$('#producto-select').on('change', function () {
-    const vence = $(this).find(':selected').data('vencimiento');
-    if (vence == 1) {
-        $('#grupo-vencimiento').slideDown();
-    } else {
-        $('#grupo-vencimiento').slideUp();
-        $('input[name="fecha_vencimiento"]').val('');
-    }
-});
+    $(document).ready(function () {
 
-$(document).ready(function () {
-    $('#producto-select').select2({
-        placeholder: 'Buscar producto...',
-        allowClear: true,
-        width: '100%'
-    });
+        // ===============================
+        // FORMATO SELECT2 PRODUCTOS
+        // ===============================
+        function formatProducto(producto) {
+            if (!producto.id) return producto.text;
 
-    $('#proveedor-select').select2({
-        placeholder: 'Buscar proveedor...',
-        allowClear: true,
-        width: '100%'
+            const descripcion = producto.element.dataset.descripcion || '';
+
+            return $(`
+                <div style="line-height:1.25">
+                    <div style="font-weight:600;">
+                        ${producto.text}
+                    </div>
+                    ${
+                        descripcion
+                            ? `<div style="font-size:12px; color:#6c757d;">
+                                ${descripcion}
+                            </div>`
+                            : ''
+                    }
+                </div>
+            `);
+        }
+
+        // ===============================
+        // SELECT PRODUCTO
+        // ===============================
+        $('#producto-select').select2({
+            placeholder: 'Buscar producto...',
+            allowClear: true,
+            width: '100%',
+            templateResult: formatProducto,
+            templateSelection: formatProducto,
+            escapeMarkup: m => m
+        });
+
+        // ===============================
+        // MOSTRAR / OCULTAR VENCIMIENTO
+        // ===============================
+        $('#producto-select').on('change', function () {
+            const vence = $(this).find(':selected').data('vencimiento');
+            if (vence == 1) {
+                $('#grupo-vencimiento').slideDown();
+            } else {
+                $('#grupo-vencimiento').slideUp();
+                $('input[name="fecha_vencimiento"]').val('');
+            }
+        });
+
+        // ===============================
+        // SELECT PROVEEDOR
+        // ===============================
+        $('#proveedor-select').select2({
+            placeholder: 'Buscar proveedor...',
+            allowClear: true,
+            width: '100%'
+        });
+
     });
-});
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+
+        const chkPaquete = document.getElementById("chk_precio_paquete");
+        const inputPaquete = document.getElementById("input_precio_paquete");
+
+        const chkCaja = document.getElementById("chk_precio_caja");
+        const inputCaja = document.getElementById("input_precio_caja");
+
+        chkPaquete.addEventListener("change", () => {
+            inputPaquete.classList.toggle("d-none", !chkPaquete.checked);
+            if (!chkPaquete.checked) inputPaquete.value = "";
+        });
+
+        chkCaja.addEventListener("change", () => {
+            inputCaja.classList.toggle("d-none", !chkCaja.checked);
+            if (!chkCaja.checked) inputCaja.value = "";
+        });
+
+    });
 </script>
 @endpush

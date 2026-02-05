@@ -99,4 +99,8 @@ public function storeLote(Request $request)
         ->with('success', 'Lote registrado correctamente');
 }
 
+public function edit(Lote $lote)
+{
+    return view('inventario.lote_edit', compact('lote'));
+}
 }

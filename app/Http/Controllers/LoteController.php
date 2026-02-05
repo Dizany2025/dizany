@@ -72,4 +72,7 @@ class LoteController extends Controller
             ->route('inventario.lotes')
             ->with('success', 'Lote registrado correctamente');
     }
+
+    
+
 }
