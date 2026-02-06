@@ -9,6 +9,7 @@ use App\Models\Categoria;
 use App\Models\Proveedor;
 use App\Models\Movimiento;
 use App\Models\Lote;
+use App\Models\LoteMovimiento;
 
 class InventarioController extends Controller
 {
@@ -104,26 +105,81 @@ public function storeLote(Request $request)
         return view('inventario.lote_edit', compact('lote'));
     }
 
-    public function update(Request $request, Lote $lote)
-    {
-        $request->validate([
-            'proveedor_id'      => 'nullable|exists:proveedores,id',
-            'fecha_vencimiento' => 'nullable|date|after_or_equal:today',
-            'precio_unidad'     => 'required|numeric|min:0',
-            'precio_paquete'    => 'nullable|numeric|min:0',
-            'precio_caja'       => 'nullable|numeric|min:0',
-        ]);
+public function update(Request $request, Lote $lote)
+{
+    $request->validate([
+        'fecha_vencimiento' => 'nullable|date',
+        'precio_unidad'     => 'nullable|numeric|min:0',
+        'precio_paquete'    => 'nullable|numeric|min:0',
+        'precio_caja'       => 'nullable|numeric|min:0',
+    ]);
 
-        $lote->update([
-            'proveedor_id'      => $request->proveedor_id,
-            'fecha_vencimiento' => $request->fecha_vencimiento,
-            'precio_unidad'     => $request->precio_unidad,
-            'precio_paquete'    => $request->precio_paquete,
-            'precio_caja'       => $request->precio_caja,
-        ]);
+    $lote->update([
+        'fecha_vencimiento' => $request->fecha_vencimiento,
+        'precio_unidad'     => $request->precio_unidad,
+        'precio_paquete'    => $request->precio_paquete,
+        'precio_caja'       => $request->precio_caja,
+    ]);
 
-        return redirect()
-            ->route('lotes.index')
-            ->with('success', 'Lote actualizado correctamente');
+    return redirect()
+        ->route('inventario.lotes')
+        ->with('success', 'Lote actualizado correctamente');
+}
+    
+
+public function ajustarStock(Request $request, Lote $lote)
+{
+    $request->validate([
+        'tipo'     => 'required|in:sumar,restar',
+        'cantidad' => 'required|integer|min:1',
+        'motivo'   => 'required|string|max:255',
+    ]);
+
+    $stockAntes = $lote->stock_actual;
+
+    if ($request->tipo === 'restar') {
+        if ($request->cantidad > $stockAntes) {
+            return response()->json([
+                'message' => 'No puedes restar más stock del disponible'
+            ], 422);
+        }
+        $nuevoStock = $stockAntes - $request->cantidad;
+    } else {
+        $nuevoStock = $stockAntes + $request->cantidad;
     }
+
+    // Actualizar stock
+    $lote->update([
+        'stock_actual' => $nuevoStock
+    ]);
+
+    // Registrar movimiento de AJUSTE
+    LoteMovimiento::create([
+        'lote_id'       => $lote->id,
+        'usuario_id'    => auth()->id(),
+        'tipo'          => 'ajuste',
+        'cantidad'      => $request->cantidad,
+        'stock_antes'   => $stockAntes,
+        'stock_despues' => $nuevoStock,
+        'motivo'        => $request->motivo,
+        'creado_en'     => now(),
+    ]);
+
+    return response()->json([
+        'message' => 'Ajuste aplicado correctamente',
+        'stock'   => $nuevoStock
+    ]);
+}
+
+public function movimientos(Lote $lote)
+{
+    $movimientos = $lote->movimientos()
+        ->with('usuario')
+        ->orderBy('creado_en', 'desc')
+        ->paginate(10);
+
+    return view('inventario.lote_movimientos', compact('lote', 'movimientos'));
+}
+
+
 }

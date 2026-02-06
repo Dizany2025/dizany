@@ -86,6 +86,17 @@ Ingreso de Mercadería
                         </div>
 
                         {{-- STOCK + COSTOS --}}
+                        <div class="mb-3">
+                            <label class="inv-label">
+                                Código de lote
+                                <small class="text-muted">(opcional)</small>
+                            </label>
+                            <input type="text"
+                                name="codigo_lote"
+                                class="form-control inv-input"
+                                placeholder="Ej: LOTE-2026-02-A">
+                        </div>
+
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label class="inv-label">Cantidad (unds)</label>

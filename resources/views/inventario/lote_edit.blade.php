@@ -69,7 +69,7 @@ Panel de Editar
 
                         <div class="mb-3">
                             <label class="form-label">Precio unidad (S/)</label>
-                            <input type="number" step="0.01" min="0"
+                            <input type="number" step="0.001" min="0"
                                 name="precio_unidad"
                                 class="form-control"
                                 value="{{ $lote->precio_unidad }}">
@@ -77,7 +77,7 @@ Panel de Editar
 
                         <div class="mb-3">
                             <label class="form-label">Precio paquete (S/)</label>
-                            <input type="number" step="0.01" min="0"
+                            <input type="number" step="0.001" min="0"
                                 name="precio_paquete"
                                 class="form-control"
                                 value="{{ $lote->precio_paquete }}">
@@ -85,7 +85,7 @@ Panel de Editar
 
                         <div class="mb-3">
                             <label class="form-label">Precio caja (S/)</label>
-                            <input type="number" step="0.01" min="0"
+                            <input type="number" step="0.001" min="0"
                                 name="precio_caja"
                                 class="form-control"
                                 value="{{ $lote->precio_caja }}">
@@ -193,10 +193,12 @@ Panel de Editar
 
 {{-- ===================== STYLES ===================== --}}
 @push('styles')
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link rel="stylesheet" href="{{ asset('css/ajuste_lote.css') }}">
 @endpush
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", () => {
 
@@ -257,10 +259,98 @@ Panel de Editar
         );
 
         inputCantidad.addEventListener("input", recalcular);
-        motivo.addEventListener("change", recalcular);
+        $('#ajuste_motivo').on('change', recalcular);
 
         // primer render
         recalcular();
     });
 </script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        $('#ajuste_motivo').select2({
+            placeholder: 'Seleccionar motivo',
+            allowClear: true,
+            width: '100%',
+            minimumResultsForSearch: Infinity, // 👈 oculta buscador
+            dropdownParent: $('#ajuste_motivo').closest('.card-body')
+        });
+
+    });
+</script>
+
+<script>
+    document.getElementById('btn_aplicar_ajuste').addEventListener('click', () => {
+
+        const tipo = document.querySelector('input[name="tipo_ajuste"]:checked')?.value;
+        const cantidad = parseInt(document.getElementById('ajuste_cantidad').value) || 0;
+        const motivo = document.getElementById('ajuste_motivo').value;
+
+        if (!tipo || cantidad <= 0 || !motivo) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Datos incompletos',
+                text: 'Completa todos los campos del ajuste',
+                width: 320,
+                confirmButtonText: 'Entendido'
+            });
+            return;
+        }
+
+        Swal.fire({
+            title: 'Confirmar ajuste',
+            text: `¿Deseas ${tipo === 'sumar' ? 'sumar' : 'restar'} ${cantidad} unidades?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Aplicar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: tipo === 'sumar' ? '#198754' : '#dc3545',
+            cancelButtonColor: '#6c757d',
+            width: 360,
+            reverseButtons: true
+        }).then((result) => {
+
+            if (!result.isConfirmed) return;
+
+            fetch("{{ route('lotes.ajustar', $lote->id) }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    tipo: tipo,
+                    cantidad: cantidad,
+                    motivo: motivo
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Ajuste aplicado',
+                    text: data.message,
+                    timer: 1500,
+                    showConfirmButton: false,
+                    width: 320
+                }).then(() => {
+                    location.reload(); // ver stock actualizado
+                });
+            })
+            .catch(() => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo aplicar el ajuste',
+                    width: 320
+                });
+            });
+
+        });
+    });
+</script>
+
+
+
 @endpush

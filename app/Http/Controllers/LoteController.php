@@ -42,9 +42,10 @@ class LoteController extends Controller
     =============================== */
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'producto_id'       => 'required|exists:productos,id',
             'proveedor_id'      => 'nullable|exists:proveedores,id',
+            'codigo_lote' => 'nullable|string|max:100|unique:lotes,codigo_lote',
             'stock_inicial'     => 'required|integer|min:1',
             'precio_compra'     => 'required|numeric|min:0',
             'precio_unidad'     => 'required|numeric|min:0',
@@ -54,17 +55,19 @@ class LoteController extends Controller
             'fecha_vencimiento' => 'nullable|date|after_or_equal:fecha_ingreso',
         ]);
 
+
         Lote::create([
-            'producto_id'       => $request->producto_id,
-            'proveedor_id'      => $request->proveedor_id,
-            'fecha_ingreso'     => $request->fecha_ingreso,
-            'fecha_vencimiento' => $request->fecha_vencimiento,
-            'stock_inicial'     => $request->stock_inicial,
-            'stock_actual'      => $request->stock_inicial, // 🔥 clave FIFO
-            'precio_compra'     => $request->precio_compra,
-            'precio_unidad'     => $request->precio_unidad,
-            'precio_paquete'    => $request->precio_paquete,
-            'precio_caja'       => $request->precio_caja,
+            'producto_id'       => $validated['producto_id'],
+            'proveedor_id'      => $validated['proveedor_id'] ?? null,
+            'codigo_lote'       => $validated['codigo_lote'] ?? null,
+            'fecha_ingreso'     => $validated['fecha_ingreso'],
+            'fecha_vencimiento' => $validated['fecha_vencimiento'] ?? null,
+            'stock_inicial'     => $validated['stock_inicial'],
+            'stock_actual'      => $validated['stock_inicial'], // FEFO correcto
+            'precio_compra'     => $validated['precio_compra'],
+            'precio_unidad'     => $validated['precio_unidad'],
+            'precio_paquete'    => $validated['precio_paquete'] ?? null,
+            'precio_caja'       => $validated['precio_caja'] ?? null,
             'activo'            => 1,
         ]);
 

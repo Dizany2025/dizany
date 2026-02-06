@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\Producto;
 use App\Models\Proveedor;
 use App\Models\DetalleLoteVenta;
+use App\Models\LoteMovimiento;
 
 class Lote extends Model
 {
@@ -40,5 +41,10 @@ public function ventas()
 {
     return $this->hasMany(DetalleLoteVenta::class);
 }
+public function movimientos()
+    {
+        return $this->hasMany(LoteMovimiento::class, 'lote_id')
+                    ->orderBy('creado_en', 'desc');
+    }
 
 }

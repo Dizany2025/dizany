@@ -231,6 +231,14 @@ Route::get('/inventario/lotes', [InventarioController::class, 'lotes'])
 
     Route::put('/{lote}', [InventarioController::class, 'update'])
         ->name('lotes.update');
+        
+    Route::post('/lotes/{lote}/ajuste', [InventarioController::class, 'ajustarStock'])
+    ->name('lotes.ajustar');
+
+    Route::get('lotes/{lote}/movimientos', [InventarioController::class, 'movimientos'])
+    ->name('lotes.movimientos');
+
+
 
 Route::get(
     '/ventas/stock-fifo/{producto}',

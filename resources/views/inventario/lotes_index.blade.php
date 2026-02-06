@@ -25,6 +25,7 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
+                            <th>Cód. Lote</th>
                             <th class="text-center" style="width:60px;">FEFO</th>
                             <th class="text-center" style="width:80px;">N° Lote</th>
                             <th>Producto</th>
@@ -59,6 +60,12 @@
                             @endphp
 
                             <tr>
+                                <td>
+                                    <td>
+                                    <strong>{{ blank($lote->codigo_lote) ? '—' : $lote->codigo_lote }}</strong>
+                                </td>
+
+                                </td>
                                 {{-- FEFO --}}
                                 <td class="text-center">
                                     {!! $fefoIcon !!}
@@ -118,10 +125,17 @@
                                 {{-- ACCIONES --}}
                                 <td class="text-center">
                                     <div class="btn-group btn-group-sm" role="group">
+                                        {{-- EDITAR --}}
                                         <a href="{{ route('lotes.edit', $lote->id) }}"
                                         class="btn btn-sm btn-outline-primary"
                                         title="Editar lote">
                                             <i class="fas fa-pen"></i>
+                                        </a>
+                                         {{-- MOVIMIENTOS --}}
+                                        <a href="{{ route('lotes.movimientos', $lote->id) }}"
+                                        class="btn btn-outline-secondary"
+                                        title="Ver movimientos">
+                                            <i class="fas fa-list-alt"></i>
                                         </a>
                                     </div>
                                 </td>
