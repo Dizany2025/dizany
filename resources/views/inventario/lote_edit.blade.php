@@ -38,6 +38,15 @@ Panel de Editar
                     <div class="col-md-6">
 
                         <div class="mb-3">
+                            <label class="inv-label">Código de lote</label>
+                            <input type="text"
+                                name="codigo_lote"
+                                class="form-control inv-input"
+                                value="{{ old('codigo_lote', $lote->codigo_lote) }}"
+                                placeholder="LOTE-2026-01-A">
+                        </div>
+
+                        <div class="mb-3">
                             <label class="form-label">Producto</label>
                             <input type="text" class="form-control" disabled
                                 value="{{ $lote->producto->nombre }}">
@@ -69,25 +78,25 @@ Panel de Editar
 
                         <div class="mb-3">
                             <label class="form-label">Precio unidad (S/)</label>
-                            <input type="number" step="0.001" min="0"
+                            <input type="text"
                                 name="precio_unidad"
-                                class="form-control"
+                                class="form-control precio-decimal"
                                 value="{{ $lote->precio_unidad }}">
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Precio paquete (S/)</label>
-                            <input type="number" step="0.001" min="0"
+                            <input type="text"
                                 name="precio_paquete"
-                                class="form-control"
+                                class="form-control precio-decimal"
                                 value="{{ $lote->precio_paquete }}">
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Precio caja (S/)</label>
-                            <input type="number" step="0.001" min="0"
+                            <input type="text"
                                 name="precio_caja"
-                                class="form-control"
+                                class="form-control precio-decimal"
                                 value="{{ $lote->precio_caja }}">
                         </div>
 
@@ -351,6 +360,52 @@ Panel de Editar
     });
 </script>
 
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        function formatearPrecio(input) {
+            let valor = input.value.replace(',', '.').trim();
+
+            if (valor === '' || isNaN(valor)) {
+                input.value = '';
+                return;
+            }
+
+            let numero = parseFloat(valor);
+
+            // Máximo 3 decimales
+            let formateado = numero.toFixed(3);
+
+            // Quitar .000, .00 innecesarios
+            formateado = formateado.replace(/\.?0+$/, '');
+
+            // Asegurar mínimo 2 decimales
+            if (!formateado.includes('.')) {
+                formateado += '.00';
+            } else {
+                let decimales = formateado.split('.')[1].length;
+                if (decimales === 1) {
+                    formateado += '0';
+                }
+            }
+
+            input.value = formateado;
+        }
+
+        document.querySelectorAll('.precio-decimal').forEach(input => {
+
+            // 🔥 FORMATEAR AL CARGAR
+            formatearPrecio(input);
+
+            // 🔥 FORMATEAR AL SALIR
+            input.addEventListener('blur', function () {
+                formatearPrecio(this);
+            });
+
+        });
+
+    });
+</script>
 
 
 @endpush

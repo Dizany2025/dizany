@@ -92,9 +92,10 @@ Ingreso de Mercadería
                                 <small class="text-muted">(opcional)</small>
                             </label>
                             <input type="text"
-                                name="codigo_lote"
-                                class="form-control inv-input"
-                                placeholder="Ej: LOTE-2026-02-A">
+                                    name="codigo_lote"
+                                    class="form-control inv-input"
+                                    placeholder="LOTE-2026-02-A"
+                                    value="{{ old('codigo_lote') }}">
                         </div>
 
                         <div class="row">

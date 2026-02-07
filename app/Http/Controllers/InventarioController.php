@@ -13,17 +13,20 @@ use App\Models\LoteMovimiento;
 
 class InventarioController extends Controller
 {
-    public function stock()
+    public function lotes()
 {
-    $stock_bajo = Producto::where('stock', '<=', 10)->orderBy('stock', 'asc')->get();
-    $proximos_a_vencer = Producto::whereNotNull('fecha_vencimiento')
-        ->where('fecha_vencimiento', '<=', Carbon::now()->addDays(30))
-        ->orderBy('fecha_vencimiento', 'asc')->get();
+    $lotes = Lote::with(['producto', 'proveedor'])
+        ->where('activo', 1)
+        ->orderByRaw('fecha_vencimiento IS NULL') // los sin vencimiento al final
+        ->orderBy('fecha_vencimiento', 'asc')    // FEFO REAL
+        ->orderBy('fecha_ingreso', 'asc')        // desempate
+        ->get();
 
-    $categorias = Categoria::orderBy('nombre')->get();
+        $productos = Producto::where('activo', 1)->orderBy('nombre')->get();
 
-    return view('inventario.stock', compact('stock_bajo', 'proximos_a_vencer', 'categorias'));
+    return view('inventario.lotes_index', compact('lotes', 'productos'));
 }
+
 public function actualizarStock(Request $request, $id)
 {
     $producto = Producto::findOrFail($id);
@@ -47,14 +50,6 @@ public function obtenerNotificaciones()
     ]);
 }
 
-public function lotes()
-{
-    $lotes = Lote::with('producto')
-        ->orderBy('fecha_ingreso', 'desc')
-        ->get();
-
-    return view('inventario.lotes_index', compact('lotes'));
-}
 public function lote()
 {
     $productos = Producto::where('activo', 1)
@@ -72,6 +67,7 @@ public function storeLote(Request $request)
     $request->validate([
         'producto_id'       => 'required|exists:productos,id',
         'proveedor_id'      => 'nullable|exists:proveedores,id',
+        'codigo_lote'       => 'nullable|string|max:100', // 👈 AÑADIDO
         'stock_inicial'     => 'required|integer|min:1',
         'precio_compra'     => 'required|numeric|min:0',
         'precio_unidad'     => 'required|numeric|min:0',
@@ -84,6 +80,7 @@ public function storeLote(Request $request)
     $lote = Lote::create([
         'producto_id'       => $request->producto_id,
         'proveedor_id'      => $request->proveedor_id,
+        'codigo_lote'       => $request->codigo_lote, // 👈 AÑADIDO
         'fecha_ingreso'     => $request->fecha_ingreso,
         'fecha_vencimiento' => $request->fecha_vencimiento,
         'stock_inicial'     => $request->stock_inicial,
@@ -108,6 +105,7 @@ public function storeLote(Request $request)
 public function update(Request $request, Lote $lote)
 {
     $request->validate([
+        'codigo_lote'        => 'nullable|string|max:100',
         'fecha_vencimiento' => 'nullable|date',
         'precio_unidad'     => 'nullable|numeric|min:0',
         'precio_paquete'    => 'nullable|numeric|min:0',
@@ -115,6 +113,7 @@ public function update(Request $request, Lote $lote)
     ]);
 
     $lote->update([
+        'codigo_lote'        => $request->codigo_lote,
         'fecha_vencimiento' => $request->fecha_vencimiento,
         'precio_unidad'     => $request->precio_unidad,
         'precio_paquete'    => $request->precio_paquete,

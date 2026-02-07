@@ -9,7 +9,7 @@
 @section('header-title', 'Lotes de Productos')
 
 @section('content')
-<div class="container-fluid px-3">
+<div class="container-fluid px-3 mt-4">
 
     <div class="card shadow-sm">
         <div class="card-header bg-primary text-white">
@@ -22,6 +22,60 @@
         <div class="card-body p-0">
 
             <div class="table-responsive">
+                {{-- FILTROS (van arriba de la tabla) --}}
+                <div class="filtros-lotes">
+                    <div class="row mb-3 g-2">
+                        <div class="col-md-2">
+                            <select id="filtroEstado" class="form-select">
+                                <option value="">Estado</option>
+                                <option value="vencido">Vencidos</option>
+                                <option value="10">Vence ≤ 10 días</option>
+                                <option value="30">Vence ≤ 30 días</option>
+                                <option value="ok">Vigentes</option>
+                                <option value="sin">Sin vencimiento</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-2">
+                            <select id="filtroProducto" class="form-select">
+                                <option value="">Producto</option>
+                                @foreach ($productos as $producto)
+                                    <option value="{{ strtolower($producto->nombre) }}">
+                                        {{ $producto->nombre }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="col-md-2">
+                            <select id="filtroStock" class="form-select">
+                                <option value="">Stock</option>
+                                <option value="con">Con stock</option>
+                                <option value="sin">Sin stock</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-2">
+                            <select id="filtroFefo" class="form-select">
+                                <option value="">FEFO</option>
+                                <option value="1">Prioridad FEFO</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-3 d-flex align-items-center gap-1">
+                            <input type="text" id="filtroBuscar" class="form-control"
+                                placeholder="Buscar lote o producto…">
+
+                                <button type="button"
+                                        id="btnLimpiarFiltros"
+                                        class="btn btn-outline-secondary"
+                                        title="Limpiar filtros">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="tabla-scroll">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
@@ -45,6 +99,9 @@
 
                         @forelse ($lotes as $lote)
                             @php
+                                // =========================
+                                // FEFO POR PRODUCTO
+                                // =========================
                                 $pid = $lote->producto_id;
                                 $fefoIndex[$pid] = ($fefoIndex[$pid] ?? 0) + 1;
 
@@ -57,15 +114,65 @@
                                 } else {
                                     $fefoIcon = '<i class="fas fa-circle text-secondary" title="Lote posterior"></i>';
                                 }
+
+                                // =========================
+                                // ESTADO DE VENCIMIENTO (PARA FILTROS)
+                                // =========================
+                                $hoy = \Carbon\Carbon::today();
+                                $dias = $lote->fecha_vencimiento
+                                    ? $hoy->diffInDays(\Carbon\Carbon::parse($lote->fecha_vencimiento), false)
+                                    : null;
+
+                                if (is_null($dias)) {
+                                    $estadoVenc = 'sin';
+                                } elseif ($dias < 0) {
+                                    $estadoVenc = 'vencido';
+                                } elseif ($dias <= 10) {
+                                    $estadoVenc = '10';
+                                } elseif ($dias <= 30) {
+                                    $estadoVenc = '30';
+                                } else {
+                                    $estadoVenc = 'ok';
+                                }
                             @endphp
 
-                            <tr>
+                            <tr
+                                data-estado="{{ $estadoVenc }}"
+                                data-producto="{{ strtolower($lote->producto->nombre ?? '') }}"
+                                data-stock="{{ $lote->stock_actual > 0 ? 'con' : 'sin' }}"
+                                data-fefo="{{ $fefoIndex[$pid] === 1 ? '1' : '0' }}"
+                                data-texto="{{ strtolower(
+                                    ($lote->codigo_lote ?? '') . ' ' .
+                                    ($lote->producto->nombre ?? '')
+                                ) }}"
+                            >
+                                {{-- CODIGO LOTE --}}
                                 <td>
-                                    <td>
                                     <strong>{{ blank($lote->codigo_lote) ? '—' : $lote->codigo_lote }}</strong>
+
+                                    @if (is_null($dias))
+                                        <div>
+                                            <span class="badge bg-secondary mt-1">Sin vencimiento</span>
+                                        </div>
+                                    @elseif ($dias < 0)
+                                        <div>
+                                            <span class="badge bg-danger mt-1">Vencido</span>
+                                        </div>
+                                    @elseif ($dias <= 10)
+                                        <div>
+                                            <span class="badge bg-danger mt-1">
+                                                Vence en {{ $dias }} días
+                                            </span>
+                                        </div>
+                                    @elseif ($dias <= 30)
+                                        <div>
+                                            <span class="badge bg-warning text-dark mt-1">
+                                                Vence en {{ $dias }} días
+                                            </span>
+                                        </div>
+                                    @endif
                                 </td>
 
-                                </td>
                                 {{-- FEFO --}}
                                 <td class="text-center">
                                     {!! $fefoIcon !!}
@@ -124,16 +231,15 @@
 
                                 {{-- ACCIONES --}}
                                 <td class="text-center">
-                                    <div class="btn-group btn-group-sm" role="group">
-                                        {{-- EDITAR --}}
+                                    <div class="d-flex justify-content-center gap-1">
                                         <a href="{{ route('lotes.edit', $lote->id) }}"
                                         class="btn btn-sm btn-outline-primary"
                                         title="Editar lote">
                                             <i class="fas fa-pen"></i>
                                         </a>
-                                         {{-- MOVIMIENTOS --}}
+
                                         <a href="{{ route('lotes.movimientos', $lote->id) }}"
-                                        class="btn btn-outline-secondary"
+                                        class="btn btn-sm btn-outline-info"
                                         title="Ver movimientos">
                                             <i class="fas fa-list-alt"></i>
                                         </a>
@@ -142,14 +248,15 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="text-center py-4 text-muted">
+                                <td colspan="10" class="text-center py-4 text-muted">
                                     No hay lotes registrados
                                 </td>
                             </tr>
                         @endforelse
                     </tbody>
-
                 </table>
+                </div>
+
             </div>
 
         </div>
@@ -157,3 +264,170 @@
 
 </div>
 @endsection
+
+{{-- ===================== STYLES ===================== --}}
+@push('styles')
+<style>
+    
+    .btn-outline-info:hover {
+        color: #fff;
+    }
+    /*FEFO*/
+    .badge.bg-danger {
+        animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: .6; }
+        100% { opacity: 1; }
+    }
+
+    /* =========================
+    FILTROS LOTES
+    ========================= */
+    .filtros-lotes {
+        background: #f8faff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+
+    .filtros-lotes .form-select,
+    .filtros-lotes .form-control {
+        border-radius: 10px;
+        border: 1px solid #cfe2ff;
+        font-weight: 500;
+    }
+
+    .filtros-lotes .form-select:focus,
+    .filtros-lotes .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.15rem rgba(13,110,253,.15);
+    }
+
+    .filtros-lotes .form-select option:first-child {
+        color: #6c757d;
+    }
+
+    .filtro-activo {
+        border-color: #0d6efd !important;
+        background-color: #e7f1ff;
+    }
+    /* =========================
+    SCROLL HORIZONTAL PRO
+    ========================= */
+    .tabla-scroll {
+        overflow-x: auto;
+        scrollbar-width: thin;            /* Firefox */
+        scrollbar-color: #c1c9d6 transparent;
+    }
+
+    .tabla-scroll::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .tabla-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .tabla-scroll::-webkit-scrollbar-thumb {
+        background-color: #c1c9d6;
+        border-radius: 10px;
+    }
+
+    .tabla-scroll::-webkit-scrollbar-thumb:hover {
+        background-color: #9aa5b1;
+    }
+
+    #btnLimpiarFiltros {
+    padding: 0 12px;
+    height: 38px;
+    }
+
+    #btnLimpiarFiltros:hover {
+        background-color: #ffd20c;
+        border-color: #ffd20c;
+        color: #0c0c0c;
+    }
+
+</style>
+
+@endpush
+
+{{-- ===================== SCRIPTS ===================== --}}
+@push('scripts')
+
+<script>
+    document.getElementById('btnLimpiarFiltros')
+        .addEventListener('click', function () {
+
+            document.getElementById('filtroEstado').value = '';
+            document.getElementById('filtroProducto').value = '';
+            document.getElementById('filtroStock').value = '';
+            document.getElementById('filtroFefo').value = '';
+            document.getElementById('filtroBuscar').value = '';
+
+            document.querySelectorAll('.filtro-activo')
+                .forEach(el => el.classList.remove('filtro-activo'));
+
+            // Mostrar todas las filas
+            document.querySelectorAll('tbody tr').forEach(tr => {
+                tr.style.display = '';
+            });
+    });
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        const filas = document.querySelectorAll('tbody tr');
+
+        const estado = document.getElementById('filtroEstado');
+        const producto = document.getElementById('filtroProducto');
+        const stock = document.getElementById('filtroStock');
+        const fefo = document.getElementById('filtroFefo');
+        const buscar = document.getElementById('filtroBuscar');
+
+        function filtrar() {
+            const vEstado = estado.value;
+            const vProducto = producto.value;
+            const vStock = stock.value;
+            const vFefo = fefo.value;
+            const vBuscar = buscar.value.toLowerCase();
+
+            filas.forEach(tr => {
+                let visible = true;
+
+                if (vEstado && tr.dataset.estado !== vEstado) visible = false;
+                if (vProducto && tr.dataset.producto !== vProducto) visible = false;
+                if (vStock && tr.dataset.stock !== vStock) visible = false;
+                if (vFefo && tr.dataset.fefo !== vFefo) visible = false;
+                if (vBuscar && !tr.dataset.texto.includes(vBuscar)) visible = false;
+
+                tr.style.display = visible ? '' : 'none';
+            });
+        }
+
+        [estado, producto, stock, fefo].forEach(el =>
+            el.addEventListener('change', filtrar)
+        );
+
+        buscar.addEventListener('input', filtrar);
+    });
+</script>
+
+<script>
+    document.querySelectorAll('.filtros-lotes select, .filtros-lotes input')
+        .forEach(el => {
+            el.addEventListener('change', () => {
+                el.classList.toggle('filtro-activo', el.value !== '');
+            });
+            el.addEventListener('input', () => {
+                el.classList.toggle('filtro-activo', el.value !== '');
+            });
+    });
+</script>
+
+@endpush
