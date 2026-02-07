@@ -121,34 +121,24 @@ public function registrarVenta(Request $request)
 
         foreach ($request->productos as $item) {
 
-            // ✅ seguridad básica del payload
+            // 1️⃣ seguridad básica
             $productoId = $item['producto_id'] ?? null;
             if (!$productoId) {
-                throw new \Exception("Producto inválido en el carrito (producto_id faltante).");
+                throw new \Exception("Producto inválido en el carrito.");
             }
 
             $producto = Producto::findOrFail($productoId);
 
-            $cantidad     = (int) ($item['cantidad'] ?? 0);
+            // 2️⃣ datos que VIENEN DEL FRONTEND
             $presentacion = (string) ($item['presentacion'] ?? 'unidad');
+            $unidadesAfectadas = (int) ($item['unidades'] ?? 0);
+            $loteId = $item['lote_id'] ?? null;
 
-            if ($cantidad <= 0) {
+            if ($unidadesAfectadas <= 0) {
                 throw new \Exception("Cantidad inválida para {$producto->nombre}");
             }
 
-            $uPaquete = (int) ($producto->unidades_por_paquete ?? 1);
-            $pCaja    = (int) ($producto->paquetes_por_caja ?? 1);
-
-            $unidadesAfectadas = match ($presentacion) {
-                'unidad'  => $cantidad,
-                'paquete' => $cantidad * $uPaquete,
-                'caja'    => $cantidad * $uPaquete * $pCaja,
-                default   => $cantidad
-            };
-
-            // ✅ 1) elegir lote: si viene lote_id lo uso; si no, FEFO automático
-            $loteId = $item['lote_id'] ?? null;
-
+            // 3️⃣ elegir lote (RESPETA frontend)
             $loteQuery = Lote::where('producto_id', $producto->id)
                 ->where('stock_actual', '>', 0)
                 ->orderByRaw('fecha_vencimiento IS NULL')
@@ -164,12 +154,14 @@ public function registrarVenta(Request $request)
                 throw new \Exception("No hay stock disponible por lotes para {$producto->nombre}");
             }
 
-            // ✅ 2) validar stock del lote (lo que tú querías)
-            if ((int)$lote->stock_actual < $unidadesAfectadas) {
-                throw new \Exception("Stock insuficiente en el lote seleccionado para {$producto->nombre}. Quedan {$lote->stock_actual} und.");
+            // 4️⃣ validar stock SOLO DEL LOTE
+            if ((int) $lote->stock_actual < $unidadesAfectadas) {
+                throw new \Exception(
+                    "Stock insuficiente en el lote {$lote->codigo_lote}. Quedan {$lote->stock_actual} und."
+                );
             }
 
-            // ✅ 3) precio desde lote (NO desde producto)
+            // 5️⃣ precio según presentación (esto SÍ se conserva)
             $precioPresentacion = match ($presentacion) {
                 'unidad'  => (float) ($lote->precio_unidad ?? 0),
                 'paquete' => (float) ($lote->precio_paquete ?? 0),
@@ -178,22 +170,23 @@ public function registrarVenta(Request $request)
             };
 
             if ($precioPresentacion <= 0) {
-                throw new \Exception("No hay precio definido en el lote para {$producto->nombre}");
+                throw new \Exception("No hay precio definido para {$producto->nombre}");
             }
 
-            $subtotal = round($precioPresentacion * $cantidad, 2);
+            // 6️⃣ subtotal y ganancia
+            $subtotal = round($precioPresentacion, 2);
             $opGravadas += $subtotal;
 
-            // costo/ganancia (si tu costo está por lote, úsalo; si no, fallback producto)
-            $costoUnit = (float) ($lote->precio_compra ?? $producto->precio_compra ?? 0);
+            $costoUnit  = (float) ($lote->precio_compra ?? 0);
             $costoTotal = round($costoUnit * $unidadesAfectadas, 2);
             $ganancia   = round($subtotal - $costoTotal, 2);
 
+            // 7️⃣ detalle venta
             $detalle = DetalleVenta::create([
                 'venta_id'            => $venta->id,
                 'producto_id'         => $producto->id,
                 'presentacion'        => $presentacion,
-                'cantidad'            => $cantidad,
+                'cantidad'            => 1, // 👈 ya no importa, es solo visual
                 'unidades_afectadas'  => $unidadesAfectadas,
                 'precio_presentacion' => $precioPresentacion,
                 'precio_unitario'     => round($precioPresentacion / max($unidadesAfectadas, 1), 4),
@@ -202,41 +195,21 @@ public function registrarVenta(Request $request)
                 'activo'              => 1
             ]);
 
-            // ================= PASO 2️⃣ FEFO POR LOTES =================
-            $unidadesRestantes = $unidadesAfectadas;
+            // 8️⃣ descontar SOLO del lote elegido
+            $lote->stock_actual -= $unidadesAfectadas;
+            $lote->save();
 
-            $lotes = Lote::where('producto_id', $producto->id)
-                ->where('stock_actual', '>', 0)
-                ->orderByRaw('fecha_vencimiento IS NULL')
-                ->orderBy('fecha_vencimiento', 'asc')
-                ->orderBy('fecha_ingreso', 'asc')
-                ->lockForUpdate()
-                ->get();
-
-            foreach ($lotes as $lote) {
-                if ($unidadesRestantes <= 0) break;
-
-                $tomar = min($lote->stock_actual, $unidadesRestantes);
-
-                DB::table('detalle_lote_ventas')->insert([
-                    'detalle_venta_id' => $detalle->id,
-                    'lote_id'          => $lote->id,
-                    'cantidad'         => $tomar,
-                    'precio_lote'      => $lote->precio_unidad,
-                    'fecha_vencimiento'=> $lote->fecha_vencimiento,
-                    'created_at'       => now(),
-                    'updated_at'       => now(),
-                ]);
-
-                $lote->decrement('stock_actual', $tomar);
-                $unidadesRestantes -= $tomar;
-            }
-
-            if ($unidadesRestantes > 0) {
-                throw new \Exception("Stock insuficiente por lotes para {$producto->nombre}");
-            }
-
+            DB::table('detalle_lote_ventas')->insert([
+                'detalle_venta_id' => $detalle->id,
+                'lote_id'          => $lote->id,
+                'cantidad'         => $unidadesAfectadas,
+                'precio_lote'      => $precioPresentacion,
+                'fecha_vencimiento'=> $lote->fecha_vencimiento,
+                'created_at'       => now(),
+                'updated_at'       => now(),
+            ]);
         }
+
 
         /* ================= IGV + TOTAL ================= */
         $opGravadas = round($opGravadas, 2);
@@ -338,7 +311,7 @@ public function registrarVenta(Request $request)
         $ruta = public_path("comprobantes");
         if (!is_dir($ruta)) mkdir($ruta, 0775, true);
 
-        $pdf->save("$ruta/$nombreArchivo");
+        /*$pdf->save("$ruta/$nombreArchivo");*/
         $pdfUrl = asset("comprobantes/$nombreArchivo");
         $venta->update(['pdf_url' => $pdfUrl]);
 
@@ -415,10 +388,10 @@ public function registrarVenta(Request $request)
         DB::rollBack();
         \Log::error("Error registrarVenta: " . $e->getMessage());
 
-        return response()->json([
+        /*return response()->json([
             'success' => false,
             'message' => $e->getMessage()
-        ], 500);
+        ], 500);*/
     }
 }
 

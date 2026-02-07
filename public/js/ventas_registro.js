@@ -100,12 +100,25 @@ document.addEventListener("DOMContentLoaded", () => {
             );
         }
 
-        const productosEnviar = v.productos.map(it => ({
-            producto_id: it.producto_id ?? it.id ?? it.producto?.id,
-            cantidad: it.cantidad,
-            presentacion: it.tipo_venta
-        })).filter(p => p.producto_id);
+        const productosEnviar = v.productos.map(it => {
+            if (!it.lote_id) {
+                throw new Error(`El producto ${it.nombre} no tiene lote asignado`);
+            }
 
+            const factor =
+                it.tipo_venta === "paquete"
+                    ? it.unidades_por_paquete
+                    : it.tipo_venta === "caja"
+                        ? it.unidades_por_paquete * it.paquetes_por_caja
+                        : 1;
+
+            return {
+                producto_id: it.producto_id ?? it.id,
+                lote_id: it.lote_id,
+                unidades: it.cantidad * factor,
+                presentacion: it.tipo_venta
+            };
+        });
 
         fetch("/ventas/registrar", {    
                 method: "POST",

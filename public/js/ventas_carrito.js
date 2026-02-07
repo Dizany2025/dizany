@@ -280,6 +280,40 @@ document.addEventListener("DOMContentLoaded", () => {
         return "bg-danger";
     }
 
+
+    //___________________________________
+    function buildBaseProductoFromItem(it) {
+  return {
+    id: Number(it.producto_id || it.id),
+    nombre: it.nombre,
+    imagen: it.imagen,
+    descripcion: it.descripcion,
+    unidades_por_paquete: it.unidades_por_paquete || 0,
+    paquetes_por_caja: it.paquetes_por_caja || 0
+  };
+}
+
+/**
+ * Recalcula y reemplaza TODAS las filas del grupo (mismo producto + tipo_venta)
+ * usando descomponerFIFO (FEFO real por presentación).
+ */
+async function recalcularYReemplazarGrupo(items, indexBase, totalDeseado, nuevoTipo) {
+  const grupo = recolectarGrupoFIFO(items, indexBase);
+  if (!grupo) return;
+
+  const baseItem = items[indexBase];
+  const baseProducto = buildBaseProductoFromItem(baseItem);
+
+  const nuevosItems = await descomponerFIFO(baseProducto, totalDeseado, nuevoTipo);
+
+  // borrar filas antiguas del grupo
+  grupo.idxs.sort((a, b) => b - a).forEach(idx => items.splice(idx, 1));
+
+  // insertar el grupo recalculado
+  const insertAt = Math.min(...grupo.idxs);
+  items.splice(insertAt, 0, ...nuevosItems);
+}
+
     // ============================
     // RENDER CARRITO
     // ============================
@@ -508,89 +542,51 @@ document.addEventListener("DOMContentLoaded", () => {
     // ============================
     if (carritoLista) {
 
-        carritoLista.addEventListener("change", (e) => {
-            if (!e.target.classList.contains("tipo-venta")) return;
+        carritoLista.addEventListener("change", async (e) => {
+        if (!e.target.classList.contains("tipo-venta")) return;
 
-            const v = ventaActiva();
-            const i = Number(e.target.dataset.index);
-            const it = v.productos[i];
-            if (!it) return;
+        const v = ventaActiva();
+        const i = Number(e.target.dataset.index);
+        const it = v.productos[i];
+        if (!it) return;
 
-            const oldUnits = unidadesRealesDeItem(it);
+        const nuevoTipo = e.target.value;
 
-            // 🔹 cambiar tipo de venta
-            it.tipo_venta = e.target.value;
-
-            // 🔹 resetear cantidad siempre
-            it.cantidad = 1;
-
-            // 🔹 recalcular precio base según presentación
-            let precioBase = 0;
-            if (it.tipo_venta === "unidad")  precioBase = parseFloat(it.precio_venta || 0);
-            if (it.tipo_venta === "paquete") precioBase = parseFloat(it.precio_paquete || 0);
-            if (it.tipo_venta === "caja")    precioBase = parseFloat(it.precio_caja || 0);
-
-            it.precio_unitario = precioBase;
-
-            // 🔹 validar stock para esta presentación
-            // 🔥 validar presentación contra STOCK TOTAL (NO FIFO)
-            const pid = Number(it.producto_id || it.id);
-            const prod = productosCache.get(pid);
-            const stockTotal = prod ? parseInt(prod.stock) || 0 : 0;
-
-            // cuántas unidades requiere UNA presentación
-            let unidadesPresentacion = 1;
-            if (it.tipo_venta === "paquete") {
-                unidadesPresentacion = it.unidades_por_paquete || 0;
-            }
-            if (it.tipo_venta === "caja") {
-                unidadesPresentacion =
-                    (it.paquetes_por_caja || 0) *
-                    (it.unidades_por_paquete || 0);
-            }
-
-            // validar SOLO la presentación
-            if (unidadesPresentacion > stockTotal) {
-                mostrarAlerta("Stock insuficiente para esta presentación");
-
-                it.tipo_venta = "unidad";
-                it.precio_unitario = parseFloat(it.precio_venta || 0);
-                it.cantidad = 1;
-            }
-
+        try {
+            // recalcular TODA la asignación por FEFO según presentación
+            await recalcularYReemplazarGrupo(v.productos, i, 1, nuevoTipo);
             renderCarritoTreinta();
+        } catch (err) {
+            mostrarAlerta(err.message || "Stock insuficiente para esta presentación");
+            renderCarritoTreinta();
+        }
         });
 
-        carritoLista.addEventListener("blur", (e) => {
-            if (!e.target.classList.contains("cambiar-cantidad")) return;
 
-            const v = ventaActiva();
-            const i = Number(e.target.dataset.index);
-            const it = v.productos[i];
-            if (!it) return;
+        carritoLista.addEventListener("blur", async (e) => {
+        if (!e.target.classList.contains("cambiar-cantidad")) return;
 
-            let cant = parseInt(e.target.value);
-            if (isNaN(cant) || cant < 1) cant = 1;
+        const v = ventaActiva();
+        const i = Number(e.target.dataset.index);
+        const it = v.productos[i];
+        if (!it) return;
 
-            it.cantidad = cant;
-            
-            const pid = Number(it.producto_id || it.id);
-            const prod = productosCache.get(pid);
-            const stockTotal = prod ? parseInt(prod.stock) || 0 : 0;
+        let cant = parseInt(e.target.value);
+        if (isNaN(cant) || cant < 1) cant = 1;
 
-            // unidades totales que quiere el usuario
-            const unidadesSolicitadas = unidadesRealesDeItem(it);
-
-            // 🔥 validar contra stock TOTAL
-            if (unidadesSolicitadas > stockTotal) {
-                mostrarAlerta("Cantidad excede el stock disponible");
-                it.cantidad = 1;
-                e.target.value = 1;
-                renderCarritoTreinta();
-                return;
-            }
+        try {
+            await recalcularYReemplazarGrupo(v.productos, i, cant, it.tipo_venta);
             renderCarritoTreinta();
+        } catch (err) {
+            mostrarAlerta(err.message || "Stock insuficiente");
+            // volver a 1 si falla
+            try {
+            await recalcularYReemplazarGrupo(v.productos, i, 1, it.tipo_venta);
+            } catch (_) {}
+            renderCarritoTreinta();
+        }
         }, true);
+
 
         carritoLista.addEventListener("click", async (e) => {
             const v = ventaActiva();
@@ -657,17 +653,25 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
 
-            if (btnRestar) {
-                const i = Number(btnRestar.dataset.index);
-                const it = v.productos[i];
-                if (!it) return;
+           if (btnRestar) {
+            const i = Number(btnRestar.dataset.index);
+            const it = v.productos[i];
+            if (!it) return;
 
-                const c = parseInt(it.cantidad) || 1;
-                if (c > 1) it.cantidad = c - 1;
+            const grupo = recolectarGrupoFIFO(v.productos, i);
+            if (!grupo) return;
 
+            const totalDeseado = Math.max(1, (grupo.total || 1) - 1);
+
+            try {
+                await recalcularYReemplazarGrupo(v.productos, i, totalDeseado, it.tipo_venta);
                 renderCarritoTreinta();
-                return;
+            } catch (err) {
+                mostrarAlerta(err.message || "No se pudo ajustar");
             }
+            return;
+            }
+
 
             if (btnEliminar) {
                 const i = Number(btnEliminar.dataset.index);
@@ -752,7 +756,7 @@ function validarStockVentaActiva() {
             };
         }
 
-        resumen[key].totalSolicitado += parseInt(it.cantidad) || 0;
+        resumen[key].totalSolicitado += (parseInt(it.cantidad) || 0) * factorPresentacion(it);
     }
 
     // validar contra stock TOTAL del producto (cache)
