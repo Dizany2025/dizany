@@ -62,6 +62,39 @@
                             </select>
                         </div>
 
+                        <div class="col-auto">
+                            <div class="dropdown">
+                                <button
+                                    id="filtroMovimientosBtn"
+                                    class="btn btn-outline-secondary btn-icon"
+                                    type="button"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false"
+                                    title="Filtrar por movimientos"
+                                >
+                                    <i class="fas fa-list-alt"></i>
+                                </button>
+
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" href="#" data-mov="">
+                                            Todos
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="#" data-mov="1">
+                                            Con movimientos
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="#" data-mov="0">
+                                            Sin movimientos
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
                         <div class="col-md-3 d-flex align-items-center gap-1">
                             <input type="text" id="filtroBuscar" class="form-control"
                                 placeholder="Buscar lote o producto…">
@@ -79,11 +112,11 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th>Cód. Lote</th>
+                            <th>Cód. Comprobante</th>
                             <th class="text-center" style="width:60px;">FEFO</th>
-                            <th class="text-center" style="width:80px;">N° Lote</th>
+                            <th class="text-center" style="width:100px;">N° Lote</th>
                             <th>Producto</th>
-                            <th>Proveedor</th>
+                            <th style="width:100px;">Proveedor</th>
                             <th class="text-center">Stock</th>
                             <th>Ingreso</th>
                             <th>Vencimiento</th>
@@ -141,14 +174,15 @@
                                 data-producto="{{ strtolower($lote->producto->nombre ?? '') }}"
                                 data-stock="{{ $lote->stock_actual > 0 ? 'con' : 'sin' }}"
                                 data-fefo="{{ $fefoIndex[$pid] === 1 ? '1' : '0' }}"
+                                data-movimientos="{{ $lote->movimientos_count > 0 ? '1' : '0' }}"
                                 data-texto="{{ strtolower(
-                                    ($lote->codigo_lote ?? '') . ' ' .
+                                    ($lote->codigo_comprobante ?? '') . ' ' .
                                     ($lote->producto->nombre ?? '')
                                 ) }}"
                             >
-                                {{-- CODIGO LOTE --}}
+                                {{-- CODIGO COMPROBANTE --}}
                                 <td>
-                                    <strong>{{ blank($lote->codigo_lote) ? '—' : $lote->codigo_lote }}</strong>
+                                    <strong>{{ blank($lote->codigo_comprobante) ? '—' : $lote->codigo_comprobante }}</strong>
 
                                     @if (is_null($dias))
                                         <div>
@@ -180,7 +214,7 @@
 
                                 {{-- N° LOTE --}}
                                 <td class="text-center fw-bold">
-                                    {{ $fefoIndex[$pid] }}
+                                    LT-{{ str_pad($lote->numero_lote, 5, '0', STR_PAD_LEFT) }}
                                 </td>
 
                                 {{-- PRODUCTO --}}
@@ -230,19 +264,21 @@
                                 </td>
 
                                 {{-- ACCIONES --}}
-                                <td class="text-center">
-                                    <div class="d-flex justify-content-center gap-1">
+                                <td>
+                                    <div class="d-flex gap-1 acciones-lote">
                                         <a href="{{ route('lotes.edit', $lote->id) }}"
                                         class="btn btn-sm btn-outline-primary"
                                         title="Editar lote">
                                             <i class="fas fa-pen"></i>
                                         </a>
 
-                                        <a href="{{ route('lotes.movimientos', $lote->id) }}"
-                                        class="btn btn-sm btn-outline-info"
-                                        title="Ver movimientos">
-                                            <i class="fas fa-list-alt"></i>
-                                        </a>
+                                        @if (($lote->movimientos_count ?? 0) > 0)
+                                            <a href="{{ route('lotes.movimientos', $lote->id) }}"
+                                            class="btn btn-sm btn-outline-info"
+                                            title="Ver movimientos">
+                                                <i class="fas fa-list-alt"></i>
+                                            </a>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -353,7 +389,57 @@
     }
 
 </style>
+<style>
+    /* BOTÓN ICONO FILTRO MOVIMIENTOS */
+    .btn-icon {
+        width: 38px;
+        height: 38px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+    }
 
+    /* Quitar borde azul molesto */
+    .btn-icon:focus,
+    .btn-icon:active,
+    .btn-icon:focus-visible {
+        box-shadow: none !important;
+        outline: none !important;
+    }
+
+    /* Hover elegante */
+    .btn-icon:hover {
+        background-color: #eef4ff;
+        border-color: #0d6efd;
+        color: #0d6efd;
+    }
+
+    /* Cuando el filtro está activo */
+    .btn-icon.activo {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: #fff;
+    }
+
+    /* COLUMNA ACCIONES LOTES */
+    .acciones-lote {
+        justify-content: flex-start; /* 👈 siempre a la izquierda */
+        min-height: 38px;            /* mismo alto visual */
+    }
+
+    /* Botones consistentes */
+    .acciones-lote .btn {
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+</style>
 @endpush
 
 {{-- ===================== SCRIPTS ===================== --}}
@@ -380,7 +466,9 @@
 </script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    let filtroMovimientosValor = "";
+    
+    document.addEventListener('DOMContentLoaded', function () { 
 
         const filas = document.querySelectorAll('tbody tr');
 
@@ -396,6 +484,7 @@
             const vStock = stock.value;
             const vFefo = fefo.value;
             const vBuscar = buscar.value.toLowerCase();
+            const vMov = filtroMovimientosValor;
 
             filas.forEach(tr => {
                 let visible = true;
@@ -405,6 +494,7 @@
                 if (vStock && tr.dataset.stock !== vStock) visible = false;
                 if (vFefo && tr.dataset.fefo !== vFefo) visible = false;
                 if (vBuscar && !tr.dataset.texto.includes(vBuscar)) visible = false;
+                if (vMov && tr.dataset.movimientos !== vMov) visible = false;
 
                 tr.style.display = visible ? '' : 'none';
             });
@@ -414,8 +504,30 @@
             el.addEventListener('change', filtrar)
         );
 
+        [movimientos].forEach(el =>
+            el.addEventListener('change', filtrar)
+        );
+
         buscar.addEventListener('input', filtrar);
     });
+</script>
+<script>
+    document.querySelectorAll('#filtroMovimientosBtn + .dropdown-menu a')
+        .forEach(item => {
+            item.addEventListener('click', e => {
+                e.preventDefault();
+
+                filtroMovimientosValor = item.dataset.mov || "";
+
+                // feedback visual
+                const btn = document.getElementById('filtroMovimientosBtn');
+                btn.classList.toggle('activo', filtroMovimientosValor !== "");
+
+                // aplicar filtro
+                const evento = new Event('change');
+                document.getElementById('filtroEstado').dispatchEvent(evento);
+            });
+        });
 </script>
 
 <script>

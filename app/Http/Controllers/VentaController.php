@@ -311,7 +311,7 @@ public function registrarVenta(Request $request)
         $ruta = public_path("comprobantes");
         if (!is_dir($ruta)) mkdir($ruta, 0775, true);
 
-        /*$pdf->save("$ruta/$nombreArchivo");*/
+        $pdf->save("$ruta/$nombreArchivo");
         $pdfUrl = asset("comprobantes/$nombreArchivo");
         $venta->update(['pdf_url' => $pdfUrl]);
 
@@ -388,10 +388,10 @@ public function registrarVenta(Request $request)
         DB::rollBack();
         \Log::error("Error registrarVenta: " . $e->getMessage());
 
-        /*return response()->json([
+        return response()->json([
             'success' => false,
             'message' => $e->getMessage()
-        ], 500);*/
+        ], 500);
     }
 }
 

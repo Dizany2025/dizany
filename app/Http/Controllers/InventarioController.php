@@ -16,6 +16,7 @@ class InventarioController extends Controller
     public function lotes()
 {
     $lotes = Lote::with(['producto', 'proveedor'])
+        ->withCount('movimientos')
         ->where('activo', 1)
         ->orderByRaw('fecha_vencimiento IS NULL') // los sin vencimiento al final
         ->orderBy('fecha_vencimiento', 'asc')    // FEFO REAL
@@ -67,7 +68,7 @@ public function storeLote(Request $request)
     $request->validate([
         'producto_id'       => 'required|exists:productos,id',
         'proveedor_id'      => 'nullable|exists:proveedores,id',
-        'codigo_lote'       => 'nullable|string|max:100', // 👈 AÑADIDO
+        'codigo_comprobante'       => 'nullable|string|max:100', // 👈 AÑADIDO
         'stock_inicial'     => 'required|integer|min:1',
         'precio_compra'     => 'required|numeric|min:0',
         'precio_unidad'     => 'required|numeric|min:0',
@@ -80,7 +81,7 @@ public function storeLote(Request $request)
     $lote = Lote::create([
         'producto_id'       => $request->producto_id,
         'proveedor_id'      => $request->proveedor_id,
-        'codigo_lote'       => $request->codigo_lote, // 👈 AÑADIDO
+        'codigo_comprobante' => $request->codigo_comprobante, // 👈 AÑADIDO
         'fecha_ingreso'     => $request->fecha_ingreso,
         'fecha_vencimiento' => $request->fecha_vencimiento,
         'stock_inicial'     => $request->stock_inicial,

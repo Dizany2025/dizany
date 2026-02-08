@@ -393,9 +393,9 @@ async function recalcularYReemplazarGrupo(items, indexBase, totalDeseado, nuevoT
         items.forEach((p, index) => {
             const imgSrc = p.imagen ? `/uploads/productos/${p.imagen}` : "/img/sin-imagen.png";
 
-            const precioBase = parseFloat(p.precio_unitario || p.precio_venta || 0);
-            const precioUnitFinal = calcularPrecioFinal(precioBase);
-            const subtotal = precioUnitFinal * (parseInt(p.cantidad) || 0);
+            const precioUnitario = parseFloat(p.precio_unitario || 0); // FIJO
+            const subtotal = precioUnitario * (parseInt(p.cantidad) || 0);
+
 
             const unidades = unidadesRealesDeItem(p);
             
@@ -520,7 +520,9 @@ async function recalcularYReemplazarGrupo(items, indexBase, totalDeseado, nuevoT
                         </div>
 
                         <div class="text-end" style="width:90px;">
-                            <div class="fw-semibold small">S/ ${subtotalFormateado}</div>
+                            <div class="fw-semibold small">
+                                S/ ${formatPrecioDinamico(precioUnitario)}
+                            </div>
                         </div>
                     </div>
 
@@ -542,24 +544,82 @@ async function recalcularYReemplazarGrupo(items, indexBase, totalDeseado, nuevoT
     // ============================
     if (carritoLista) {
 
-        carritoLista.addEventListener("change", async (e) => {
-        if (!e.target.classList.contains("tipo-venta")) return;
+       carritoLista.addEventListener("change", async (e) => {
+            if (!e.target.classList.contains("tipo-venta")) return;
 
-        const v = ventaActiva();
-        const i = Number(e.target.dataset.index);
-        const it = v.productos[i];
-        if (!it) return;
+            const v = ventaActiva();
+            const i = Number(e.target.dataset.index);
+            const it = v.productos[i];
+            if (!it) return;
 
-        const nuevoTipo = e.target.value;
+            const tipoAnterior = it.tipo_venta;
+            const nuevoTipo = e.target.value;
 
-        try {
-            // recalcular TODA la asignación por FEFO según presentación
-            await recalcularYReemplazarGrupo(v.productos, i, 1, nuevoTipo);
-            renderCarritoTreinta();
-        } catch (err) {
-            mostrarAlerta(err.message || "Stock insuficiente para esta presentación");
-            renderCarritoTreinta();
-        }
+            try {
+                // 🔢 calcular factor de presentación
+                let factor = 1;
+                if (nuevoTipo === "paquete") factor = it.unidades_por_paquete || 0;
+                if (nuevoTipo === "caja") {
+                    factor = (it.unidades_por_paquete || 0) * (it.paquetes_por_caja || 0);
+                }
+
+                if (factor <= 0) {
+                    throw new Error("Presentación inválida");
+                }
+
+                // 🔎 verificar si el lote actual alcanza
+                const loteActualInsuficiente =
+                    typeof it.stock_lote === "number" &&
+                    it.stock_lote < factor;
+
+                // 🔎 verificar si existe OTRO lote válido
+                const pid = Number(it.producto_id || it.id);
+                const prod = productosCache.get(pid);
+
+                const hayOtroLoteValido = Array.isArray(prod?.lotes_fifo)
+                    && prod.lotes_fifo.some(
+                        l => Number(l.id) !== Number(it.lote_id)
+                        && parseInt(l.stock) >= factor
+                    );
+
+                // ⚠️ avisar SOLO si:
+                // - el lote actual no alcanza
+                // - existe otro lote que sí puede cubrir la presentación
+                if (loteActualInsuficiente && hayOtroLoteValido) {
+                    const r = await Swal.fire({
+                        icon: "info",
+                        title: "Cambio de lote",
+                        text: "Este lote no cubre la presentación seleccionada. ¿Usar el siguiente disponible?",
+                        showCancelButton: true,
+                        confirmButtonText: "Sí, usar siguiente",
+                        cancelButtonText: "Cancelar",
+                        reverseButtons: true
+                    });
+
+                    if (!r.isConfirmed) {
+                        // 🔙 revertir selección
+                        e.target.value = tipoAnterior;
+                        it.tipo_venta = tipoAnterior;
+                        renderCarritoTreinta();
+                        return;
+                    }
+                }
+
+                // ❌ si no hay ningún lote válido → error directo (sin preguntar)
+                if (loteActualInsuficiente && !hayOtroLoteValido) {
+                    throw new Error("No hay stock suficiente para esta presentación.");
+                }
+
+                // ✅ confirmado → recalcular FEFO real
+                await recalcularYReemplazarGrupo(v.productos, i, 1, nuevoTipo);
+                renderCarritoTreinta();
+
+            } catch (err) {
+                mostrarAlerta(err.message || "Stock insuficiente para esta presentación");
+                e.target.value = tipoAnterior;
+                it.tipo_venta = tipoAnterior;
+                renderCarritoTreinta();
+            }
         });
 
 
