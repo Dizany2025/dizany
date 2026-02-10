@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 28-01-2026 a las 01:42:41
+-- Tiempo de generación: 10-02-2026 a las 05:26:17
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -83,7 +83,8 @@ INSERT INTO `clientes` (`id`, `nombre`, `direccion`, `telefono`, `ruc`, `dni`) V
 (36, 'PACO RAUL VARGAS ROJAS', 'No disponible', NULL, NULL, '00821525'),
 (37, 'GRUPO DELTRON S.A.', 'CAL. RAUL REBAGLIATI NRO. 170 URB. SANTA CATALINA', NULL, '20212331377', NULL),
 (38, 'HOMECENTERS PERUANOS S.A.', 'AV. AVIACION NRO. 2405', NULL, '20536557858', NULL),
-(39, 'HIPERMERCADOS TOTTUS S.A', 'AV. ANGAMOS ESTE NRO. 1805 INT. P10', NULL, '20508565934', NULL);
+(39, 'HIPERMERCADOS TOTTUS S.A', 'AV. ANGAMOS ESTE NRO. 1805 INT. P10', NULL, '20508565934', NULL),
+(40, 'LUDITH. FARRO SILVA', 'No disponible', NULL, NULL, '76560561');
 
 -- --------------------------------------------------------
 
@@ -133,13 +134,12 @@ CREATE TABLE `detalle_lote_ventas` (
 --
 
 INSERT INTO `detalle_lote_ventas` (`id`, `detalle_venta_id`, `lote_id`, `cantidad`, `fecha_vencimiento`, `precio_lote`, `created_at`, `updated_at`) VALUES
-(1, 74, 26, 1, '2026-04-29', 15.00, '2026-01-27 03:56:26', '2026-01-27 03:56:26'),
-(2, 75, 24, 5, '2026-04-23', 2.50, '2026-01-27 03:56:26', '2026-01-27 03:56:26'),
-(3, 76, 23, 10, '2026-08-26', 2.00, '2026-01-27 03:56:26', '2026-01-27 03:56:26'),
-(4, 77, 26, 2, '2026-04-29', 15.00, '2026-01-27 03:59:26', '2026-01-27 03:59:26'),
-(5, 78, 27, 1, '2026-05-27', 2.50, '2026-01-27 04:03:05', '2026-01-27 04:03:05'),
-(6, 79, 26, 12, '2026-04-29', 15.00, '2026-01-27 04:03:05', '2026-01-27 04:03:05'),
-(7, 80, 25, 1, '2026-09-30', 21.00, '2026-01-27 04:03:05', '2026-01-27 04:03:05');
+(18, 91, 60, 20, '2026-12-30', 30.00, '2026-02-10 02:28:52', '2026-02-10 02:28:52'),
+(19, 92, 62, 20, '2026-02-19', 35.00, '2026-02-10 02:42:01', '2026-02-10 02:42:01'),
+(20, 93, 63, 15, '2026-09-30', 36.00, '2026-02-10 02:42:20', '2026-02-10 02:42:20'),
+(21, 94, 59, 12, '2026-08-26', 2.00, '2026-02-10 02:43:15', '2026-02-10 02:43:15'),
+(22, 95, 60, 38, '2026-12-30', 3.00, '2026-02-10 02:43:15', '2026-02-10 02:43:15'),
+(23, 96, 60, 2, '2026-12-30', 3.00, '2026-02-10 04:20:43', '2026-02-10 04:20:43');
 
 -- --------------------------------------------------------
 
@@ -166,13 +166,12 @@ CREATE TABLE `detalle_ventas` (
 --
 
 INSERT INTO `detalle_ventas` (`id`, `venta_id`, `producto_id`, `presentacion`, `cantidad`, `unidades_afectadas`, `precio_presentacion`, `precio_unitario`, `subtotal`, `ganancia`, `activo`) VALUES
-(74, 42, 37, 'unidad', 1, 1, 15.00, 15.00, 15.00, 3.00, 1),
-(75, 42, 39, 'unidad', 5, 5, 2.50, 0.50, 12.50, 7.50, 1),
-(76, 42, 39, 'unidad', 10, 10, 2.00, 0.20, 20.00, 10.00, 1),
-(77, 43, 37, 'unidad', 2, 2, 15.00, 7.50, 30.00, 6.00, 1),
-(78, 44, 40, 'unidad', 1, 1, 2.50, 2.50, 2.50, 1.50, 1),
-(79, 44, 37, 'unidad', 12, 12, 15.00, 1.25, 180.00, 36.00, 1),
-(80, 44, 37, 'unidad', 1, 1, 21.00, 21.00, 21.00, 6.00, 1);
+(91, 56, 40, 'paquete', 1, 20, 30.00, 1.50, 30.00, 0.00, 1),
+(92, 57, 37, 'unidad', 1, 20, 35.00, 1.75, 35.00, -265.00, 1),
+(93, 58, 37, 'unidad', 1, 15, 36.00, 2.40, 36.00, -189.00, 1),
+(94, 59, 40, 'unidad', 1, 12, 2.00, 0.17, 2.00, -10.00, 1),
+(95, 59, 40, 'unidad', 1, 38, 3.00, 0.08, 3.00, -54.00, 1),
+(96, 62, 40, 'unidad', 1, 2, 3.00, 1.50, 3.00, 0.00, 1);
 
 -- --------------------------------------------------------
 
@@ -240,16 +239,17 @@ INSERT INTO `gastos` (`id`, `usuario_id`, `descripcion`, `monto`, `fecha`, `meto
 CREATE TABLE `lotes` (
   `id` int(11) NOT NULL,
   `producto_id` int(11) NOT NULL,
+  `numero_lote` int(11) NOT NULL,
   `proveedor_id` int(11) DEFAULT NULL,
-  `codigo_lote` varchar(100) DEFAULT NULL,
+  `codigo_comprobante` varchar(100) DEFAULT NULL,
   `fecha_ingreso` date NOT NULL,
   `fecha_vencimiento` date DEFAULT NULL,
   `stock_inicial` int(11) NOT NULL,
   `stock_actual` int(11) NOT NULL,
   `precio_compra` decimal(10,2) NOT NULL,
-  `precio_unidad` decimal(10,2) NOT NULL,
-  `precio_paquete` decimal(10,2) DEFAULT NULL,
-  `precio_caja` decimal(10,2) DEFAULT NULL,
+  `precio_unidad` decimal(10,3) DEFAULT NULL,
+  `precio_paquete` decimal(10,3) DEFAULT NULL,
+  `precio_caja` decimal(10,3) DEFAULT NULL,
   `activo` tinyint(1) DEFAULT 1,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
@@ -259,13 +259,36 @@ CREATE TABLE `lotes` (
 -- Volcado de datos para la tabla `lotes`
 --
 
-INSERT INTO `lotes` (`id`, `producto_id`, `proveedor_id`, `codigo_lote`, `fecha_ingreso`, `fecha_vencimiento`, `stock_inicial`, `stock_actual`, `precio_compra`, `precio_unidad`, `precio_paquete`, `precio_caja`, `activo`, `created_at`, `updated_at`) VALUES
-(23, 39, NULL, NULL, '2026-01-23', '2026-08-26', 10, 0, 1.00, 2.00, 12.00, 18.00, 1, '2026-01-24 03:49:38', '2026-01-27 03:56:26'),
-(24, 39, NULL, NULL, '2026-01-23', '2026-04-23', 5, 0, 1.00, 2.50, 12.00, 20.00, 1, '2026-01-24 03:49:59', '2026-01-27 03:56:26'),
-(25, 37, NULL, NULL, '2026-01-23', '2026-09-30', 20, 19, 15.00, 21.00, NULL, NULL, 1, '2026-01-24 04:15:14', '2026-01-27 04:03:05'),
-(26, 37, NULL, NULL, '2026-01-23', '2026-04-29', 15, 0, 12.00, 15.00, NULL, NULL, 1, '2026-01-24 04:15:29', '2026-01-27 04:03:05'),
-(27, 40, NULL, NULL, '2026-01-23', '2026-05-27', 25, 24, 1.00, 2.50, 50.00, NULL, 1, '2026-01-24 04:17:05', '2026-01-27 04:03:05'),
-(28, 40, NULL, NULL, '2026-01-23', '2026-08-26', 25, 25, 1.00, 2.00, 48.00, NULL, 1, '2026-01-24 04:17:34', '2026-01-24 04:17:34');
+INSERT INTO `lotes` (`id`, `producto_id`, `numero_lote`, `proveedor_id`, `codigo_comprobante`, `fecha_ingreso`, `fecha_vencimiento`, `stock_inicial`, `stock_actual`, `precio_compra`, `precio_unidad`, `precio_paquete`, `precio_caja`, `activo`, `created_at`, `updated_at`) VALUES
+(59, 40, 1, NULL, 'E-001', '2026-02-09', '2026-08-26', 12, 2, 1.00, 2.000, 24.000, NULL, 1, '2026-02-10 02:19:16', '2026-02-10 04:24:57'),
+(60, 40, 2, NULL, 'E-002', '2026-02-09', '2026-12-30', 60, 0, 1.50, 3.000, 30.000, NULL, 1, '2026-02-10 02:20:49', '2026-02-10 04:20:43'),
+(62, 37, 1, NULL, 'e-2b', '2026-02-09', '2026-02-19', 20, 0, 15.00, 35.000, NULL, NULL, 1, '2026-02-10 02:33:38', '2026-02-10 02:42:01'),
+(63, 37, 2, NULL, 'e-2c', '2026-02-09', '2026-09-30', 15, 0, 15.00, 36.000, NULL, NULL, 1, '2026-02-10 02:34:50', '2026-02-10 02:42:20');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `lote_movimientos`
+--
+
+CREATE TABLE `lote_movimientos` (
+  `id` int(11) NOT NULL,
+  `lote_id` int(11) NOT NULL,
+  `usuario_id` int(11) DEFAULT NULL,
+  `tipo` enum('ingreso','venta','ajuste','edicion') NOT NULL,
+  `cantidad` int(11) NOT NULL,
+  `stock_antes` int(11) NOT NULL,
+  `stock_despues` int(11) NOT NULL,
+  `motivo` varchar(255) DEFAULT NULL,
+  `creado_en` timestamp NOT NULL DEFAULT current_timestamp()
+) ;
+
+--
+-- Volcado de datos para la tabla `lote_movimientos`
+--
+
+INSERT INTO `lote_movimientos` (`id`, `lote_id`, `usuario_id`, `tipo`, `cantidad`, `stock_antes`, `stock_despues`, `motivo`, `creado_en`) VALUES
+(5, 59, 4, 'ajuste', 2, 0, 2, 'error_registro', '2026-02-10 04:24:57');
 
 -- --------------------------------------------------------
 
@@ -352,9 +375,11 @@ CREATE TABLE `movimientos` (
 --
 
 INSERT INTO `movimientos` (`id`, `fecha`, `hora`, `tipo`, `subtipo`, `concepto`, `monto`, `metodo_pago`, `estado`, `referencia_id`, `referencia_tipo`, `created_at`, `updated_at`) VALUES
-(131, '2026-01-26', NULL, 'ingreso', 'venta', 'Venta boleta B001-000001', 47.50, 'efectivo', 'pagado', 42, 'venta', '2026-01-27 03:56:29', '2026-01-27 03:56:29'),
-(132, '2026-01-26', NULL, 'ingreso', 'venta', 'Venta pendiente factura F001-000001', 30.00, 'fiado', 'pendiente', 43, 'venta', '2026-01-27 03:59:40', '2026-01-27 03:59:40'),
-(133, '2026-01-26', NULL, 'ingreso', 'venta', 'Venta factura F001-000002', 203.50, 'yape', 'pagado', 44, 'venta', '2026-01-27 04:03:19', '2026-01-27 04:03:19');
+(142, '2026-02-09', NULL, 'ingreso', 'venta', 'Venta boleta B001-000001', 30.00, 'yape', 'pagado', 56, 'venta', '2026-02-10 02:28:55', '2026-02-10 02:28:55'),
+(143, '2026-02-09', NULL, 'ingreso', 'venta', 'Venta boleta B001-000002', 35.00, 'yape', 'pagado', 57, 'venta', '2026-02-10 02:42:03', '2026-02-10 02:42:03'),
+(144, '2026-02-09', NULL, 'ingreso', 'venta', 'Venta boleta B001-000003', 36.00, 'yape', 'pagado', 58, 'venta', '2026-02-10 02:42:22', '2026-02-10 02:42:22'),
+(145, '2026-02-09', NULL, 'ingreso', 'venta', 'Venta boleta B001-000004', 5.00, 'yape', 'pagado', 59, 'venta', '2026-02-10 02:43:17', '2026-02-10 02:43:17'),
+(146, '2026-02-09', NULL, 'ingreso', 'venta', 'Venta boleta B001-000005', 3.00, 'yape', 'pagado', 62, 'venta', '2026-02-10 04:20:45', '2026-02-10 04:20:45');
 
 -- --------------------------------------------------------
 
@@ -378,8 +403,11 @@ CREATE TABLE `pagos_venta` (
 --
 
 INSERT INTO `pagos_venta` (`id`, `venta_id`, `usuario_id`, `monto`, `metodo_pago`, `fecha_pago`, `created_at`, `updated_at`) VALUES
-(102, 42, 4, 47.50, 'efectivo', '2026-01-26 22:56:26', '2026-01-27 03:56:26', '2026-01-27 03:56:26'),
-(103, 44, 4, 203.50, 'yape', '2026-01-26 23:03:05', '2026-01-27 04:03:05', '2026-01-27 04:03:05');
+(112, 56, 4, 30.00, 'yape', '2026-02-09 21:28:52', '2026-02-10 02:28:52', '2026-02-10 02:28:52'),
+(113, 57, 4, 35.00, 'yape', '2026-02-09 21:42:01', '2026-02-10 02:42:01', '2026-02-10 02:42:01'),
+(114, 58, 9, 36.00, 'yape', '2026-02-09 21:42:20', '2026-02-10 02:42:20', '2026-02-10 02:42:20'),
+(115, 59, 4, 5.00, 'yape', '2026-02-09 21:43:15', '2026-02-10 02:43:15', '2026-02-10 02:43:15'),
+(116, 62, 9, 3.00, 'yape', '2026-02-09 23:20:43', '2026-02-10 04:20:43', '2026-02-10 04:20:43');
 
 -- --------------------------------------------------------
 
@@ -462,6 +490,13 @@ CREATE TABLE `proveedores` (
   `direccion` varchar(150) DEFAULT NULL,
   `ruc` varchar(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `proveedores`
+--
+
+INSERT INTO `proveedores` (`id`, `nombre`, `contacto`, `telefono`, `direccion`, `ruc`) VALUES
+(3, 'nevada', NULL, NULL, 'moyo', '20121025101');
 
 -- --------------------------------------------------------
 
@@ -557,9 +592,11 @@ CREATE TABLE `ventas` (
 --
 
 INSERT INTO `ventas` (`id`, `cliente_id`, `usuario_id`, `fecha`, `tipo_comprobante`, `serie`, `correlativo`, `metodo_pago`, `total`, `estado`, `estado_sunat`, `hash`, `xml_url`, `pdf_url`, `cdr_url`, `activo`, `op_gravadas`, `igv`, `saldo`) VALUES
-(42, 34, 4, '2026-01-26 22:56:26', 'boleta', 'B001', 1, 'efectivo', 47.50, 'pagado', 'pendiente', NULL, NULL, NULL, NULL, 1, 47.50, 0.00, 0.00),
-(43, 22, 4, '2026-01-26 22:59:25', 'factura', 'F001', 1, NULL, 30.00, 'pendiente', 'pendiente', NULL, NULL, NULL, NULL, 1, 30.00, 0.00, 30.00),
-(44, 20, 4, '2026-01-26 23:03:04', 'factura', 'F001', 2, 'yape', 203.50, 'pagado', 'pendiente', NULL, NULL, NULL, NULL, 1, 203.50, 0.00, 0.00);
+(56, 34, 4, '2026-02-09 21:28:52', 'boleta', 'B001', 1, 'yape', 30.00, 'pagado', 'pendiente', NULL, NULL, NULL, NULL, 1, 30.00, 0.00, 0.00),
+(57, 20, 4, '2026-02-09 21:42:00', 'boleta', 'B001', 2, 'yape', 35.00, 'pagado', 'pendiente', NULL, NULL, NULL, NULL, 1, 35.00, 0.00, 0.00),
+(58, 19, 9, '2026-02-09 21:42:21', 'boleta', 'B001', 3, 'yape', 36.00, 'pagado', 'pendiente', NULL, NULL, NULL, NULL, 1, 36.00, 0.00, 0.00),
+(59, 20, 4, '2026-02-09 21:43:14', 'boleta', 'B001', 4, 'yape', 5.00, 'pagado', 'pendiente', NULL, NULL, NULL, NULL, 1, 5.00, 0.00, 0.00),
+(62, 19, 9, '2026-02-09 23:20:44', 'boleta', 'B001', 5, 'yape', 3.00, 'pagado', 'pendiente', NULL, NULL, NULL, NULL, 1, 3.00, 0.00, 0.00);
 
 --
 -- Índices para tablas volcadas
@@ -627,7 +664,16 @@ ALTER TABLE `gastos`
 --
 ALTER TABLE `lotes`
   ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uniq_producto_lote` (`producto_id`,`numero_lote`),
   ADD KEY `idx_lotes_fifo` (`producto_id`,`activo`,`stock_actual`,`fecha_ingreso`);
+
+--
+-- Indices de la tabla `lote_movimientos`
+--
+ALTER TABLE `lote_movimientos`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_lote_mov_lote` (`lote_id`),
+  ADD KEY `fk_lote_mov_usuario` (`usuario_id`);
 
 --
 -- Indices de la tabla `marcas`
@@ -733,19 +779,19 @@ ALTER TABLE `categorias`
 -- AUTO_INCREMENT de la tabla `clientes`
 --
 ALTER TABLE `clientes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
 -- AUTO_INCREMENT de la tabla `detalle_lote_ventas`
 --
 ALTER TABLE `detalle_lote_ventas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT de la tabla `detalle_ventas`
 --
 ALTER TABLE `detalle_ventas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=81;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=97;
 
 --
 -- AUTO_INCREMENT de la tabla `facturas`
@@ -769,7 +815,13 @@ ALTER TABLE `gastos`
 -- AUTO_INCREMENT de la tabla `lotes`
 --
 ALTER TABLE `lotes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=64;
+
+--
+-- AUTO_INCREMENT de la tabla `lote_movimientos`
+--
+ALTER TABLE `lote_movimientos`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `marcas`
@@ -787,13 +839,13 @@ ALTER TABLE `migrations`
 -- AUTO_INCREMENT de la tabla `movimientos`
 --
 ALTER TABLE `movimientos`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=134;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=147;
 
 --
 -- AUTO_INCREMENT de la tabla `pagos_venta`
 --
 ALTER TABLE `pagos_venta`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=104;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=117;
 
 --
 -- AUTO_INCREMENT de la tabla `personal_access_tokens`
@@ -811,7 +863,7 @@ ALTER TABLE `productos`
 -- AUTO_INCREMENT de la tabla `proveedores`
 --
 ALTER TABLE `proveedores`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `roles`
@@ -835,7 +887,7 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `ventas`
 --
 ALTER TABLE `ventas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=64;
 
 --
 -- Restricciones para tablas volcadas
@@ -872,6 +924,13 @@ ALTER TABLE `gastos`
 --
 ALTER TABLE `lotes`
   ADD CONSTRAINT `fk_lotes_producto` FOREIGN KEY (`producto_id`) REFERENCES `productos` (`id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `lote_movimientos`
+--
+ALTER TABLE `lote_movimientos`
+  ADD CONSTRAINT `fk_lote_mov_lote` FOREIGN KEY (`lote_id`) REFERENCES `lotes` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_lote_mov_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL;
 
 --
 -- Filtros para la tabla `pagos_venta`
