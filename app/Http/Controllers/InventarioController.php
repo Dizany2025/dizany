@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Models\Producto;
 use Carbon\Carbon;
 use App\Models\Categoria;
@@ -78,24 +79,34 @@ public function storeLote(Request $request)
         'fecha_vencimiento' => 'nullable|date|after_or_equal:fecha_ingreso',
     ]);
 
-    $lote = Lote::create([
-        'producto_id'       => $request->producto_id,
-        'proveedor_id'      => $request->proveedor_id,
-        'codigo_comprobante' => $request->codigo_comprobante, // 👈 AÑADIDO
-        'fecha_ingreso'     => $request->fecha_ingreso,
-        'fecha_vencimiento' => $request->fecha_vencimiento,
-        'stock_inicial'     => $request->stock_inicial,
-        'stock_actual'      => $request->stock_inicial, // 🔥 CLAVE
-        'precio_compra'     => $request->precio_compra,
-        'precio_unidad'     => $request->precio_unidad,
-        'precio_paquete'    => $request->precio_paquete,
-        'precio_caja'       => $request->precio_caja,
-        'activo'            => 1,
-    ]);
+        DB::transaction(function () use ($request) {
 
-    return redirect()
-        ->route('inventario.lotes')
-        ->with('success', 'Lote registrado correctamente');
+        $ultimoNumero = Lote::where('producto_id', $request->producto_id)
+            ->lockForUpdate()
+            ->max('numero_lote');
+
+        $numeroLote = ($ultimoNumero ?? 0) + 1;
+
+        Lote::create([
+            'producto_id'       => $request->producto_id,
+            'proveedor_id'      => $request->proveedor_id,
+            'numero_lote'       => $numeroLote, // 👈 AQUÍ
+            'codigo_comprobante'=> $request->codigo_comprobante,
+            'fecha_ingreso'     => $request->fecha_ingreso,
+            'fecha_vencimiento' => $request->fecha_vencimiento,
+            'stock_inicial'     => $request->stock_inicial,
+            'stock_actual'      => $request->stock_inicial,
+            'precio_compra'     => $request->precio_compra,
+            'precio_unidad'     => $request->precio_unidad,
+            'precio_paquete'    => $request->precio_paquete,
+            'precio_caja'       => $request->precio_caja,
+            'activo'            => 1,
+        ]);
+    });
+        return redirect()
+            ->route('inventario.lote')
+            ->with('success', 'Lote registrado correctamente');
+    
 }
 
     public function edit(Lote $lote)
@@ -106,7 +117,7 @@ public function storeLote(Request $request)
 public function update(Request $request, Lote $lote)
 {
     $request->validate([
-        'codigo_lote'        => 'nullable|string|max:100',
+        'codigo_comprobante'        => 'nullable|string|max:100',
         'fecha_vencimiento' => 'nullable|date',
         'precio_unidad'     => 'nullable|numeric|min:0',
         'precio_paquete'    => 'nullable|numeric|min:0',
@@ -114,7 +125,7 @@ public function update(Request $request, Lote $lote)
     ]);
 
     $lote->update([
-        'codigo_lote'        => $request->codigo_lote,
+        'codigo_comprobante'        => $request->codigo_comprobante,
         'fecha_vencimiento' => $request->fecha_vencimiento,
         'precio_unidad'     => $request->precio_unidad,
         'precio_paquete'    => $request->precio_paquete,

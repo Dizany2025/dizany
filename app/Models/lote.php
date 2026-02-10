@@ -15,6 +15,7 @@ class Lote extends Model
     protected $fillable = [
         'producto_id',
         'proveedor_id',
+        'numero_lote',
         'codigo_comprobante',
         'fecha_ingreso',
         'fecha_vencimiento',

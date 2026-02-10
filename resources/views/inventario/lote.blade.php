@@ -88,13 +88,13 @@ Ingreso de Mercadería
                         {{-- STOCK + COSTOS --}}
                         <div class="mb-3">
                             <label class="inv-label">
-                                Código de lote
+                                Cd. Comprobante
                                 <small class="text-muted">(opcional)</small>
                             </label>
                             <input type="text"
-                                    name="codigo_lote"
+                                    name="codigo_comprobante"
                                     class="form-control inv-input"
-                                    placeholder="LOTE-2026-02-A"
+                                    placeholder="E- 0000"
                                     value="{{ old('codigo_lote') }}">
                         </div>
 
