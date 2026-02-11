@@ -121,70 +121,102 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         fetch("/ventas/registrar", {    
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN":
-                        document.querySelector('meta[name="csrf-token"]').content
-                },
-            body: JSON.stringify({
-                tipo_comprobante: tipoComprobante,
-                documento: documento,
-                fecha: fecha,
-                hora: hora,
-                monto_pagado: montoPagado,
-                metodo_pago: metodoPago,
-                productos: productosEnviar,
-                formato: formato
-            })
-        })
-        .then(res => res.json())
-        .then(data => {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-TOKEN":
+            document.querySelector('meta[name="csrf-token"]').content
+    },
+    body: JSON.stringify({
+        tipo_comprobante: tipoComprobante,
+        documento: documento,
+        fecha: fecha,
+        hora: hora,
+        monto_pagado: montoPagado,
+        metodo_pago: metodoPago,
+        productos: productosEnviar,
+        formato: formato
+    })
+})
+.then(async res => {
 
-            if (!data.success) {
-                return mostrarAlerta(
-                    data.message || "Error al registrar venta."
-                );
-            }
+    const data = await res.json();
 
-            configurarBotonesComprobante(data);
-
-            // ============================
-            // 🔥 LIMPIEZA CORRECTA POS
-            // ============================
-            const idConfirmada = POS.ventaActivaId;
-            delete POS.ventas[idConfirmada];
-            asegurarVentaActiva();
-
-            guardarPOSAhora();   // 🔥 CLAVE
-
-
-            // 🔥 GUARDAR SNAPSHOT LIMPIO (CRÍTICO)
-            if (typeof snapshotPOS === "function") {
-                posSaveDebounced(snapshotPOS, 0);
-            }
-
-            actualizarProductosStock();
-
-            if (modalVentaExitosa) {
-                modalVentaExitosa.show();
-            }
-
-            try {
-                const sonidoExito =
-                    new Audio("/sonidos/success.mp3");
-                sonidoExito.play().catch(() => {});
-            } catch {}
-
-            renderTodo();
-        })
-        .catch(() =>
-            mostrarAlerta(
-                "Error inesperado al registrar la venta."
-            )
-        );
+    // 🔥 SI EL BACKEND DEVUELVE 422 U OTRO ERROR
+    if (!res.ok) {
+        throw data;
     }
 
+    return data;
+})
+.then(data => {
+
+    if (!data.success) {
+        return mostrarAlerta(data.message || "Error al registrar venta.");
+    }
+
+    configurarBotonesComprobante(data);
+
+    // 🔥 LIMPIEZA CORRECTA POS
+    const idConfirmada = POS.ventaActivaId;
+    delete POS.ventas[idConfirmada];
+    asegurarVentaActiva();
+
+    guardarPOSAhora();
+
+    if (typeof snapshotPOS === "function") {
+        posSaveDebounced(snapshotPOS, 0);
+    }
+
+    actualizarProductosStock();
+
+    if (modalVentaExitosa) {
+        modalVentaExitosa.show();
+    }
+
+    try {
+        const sonidoExito = new Audio("/sonidos/success.mp3");
+        sonidoExito.play().catch(() => {});
+    } catch {}
+
+    renderTodo();
+})
+.catch(error => {
+
+    // 🔥 ERROR ESPECÍFICO DE STOCK (VENTAS SIMULTÁNEAS)
+    if (error?.type === "stock") {
+
+        Swal.fire({
+            icon: "warning",
+            title: "Stock insuficiente",
+            html: `
+                <b>${error.producto_nombre}</b><br>
+                Disponible: <b>${error.disponible}</b><br>
+                Solicitado: ${error.solicitado}
+            `,
+            confirmButtonText: "OK",
+            confirmButtonColor: "#d33",
+            allowOutsideClick: false,
+            allowEscapeKey: false
+        }).then(() => {
+
+            if (typeof actualizarProductosStock === "function") {
+                actualizarProductosStock();
+            }
+
+            document.getElementById("buscar_producto")?.focus();
+        });
+
+        return;
+    }
+
+    // 🔥 OTROS ERRORES
+    mostrarAlerta(
+        error?.message || "Error inesperado al registrar la venta."
+    );
+}); 
+
+}
     // ============================
     // CONTINUAR VENDIENDO
     // ============================
