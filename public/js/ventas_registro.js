@@ -63,6 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const v = ventaActiva();
+
         const { total } = calcularTotal();
 
         if (!v.productos.length) {
@@ -112,10 +113,16 @@ document.addEventListener("DOMContentLoaded", () => {
                         ? it.unidades_por_paquete * it.paquetes_por_caja
                         : 1;
 
+            const cantidad = parseInt(it.cantidad);
+            if (!cantidad || cantidad <= 0) {
+                throw new Error(`Cantidad inválida para ${it.nombre}`);
+            }
+
             return {
                 producto_id: it.producto_id ?? it.id,
                 lote_id: it.lote_id,
-                unidades: it.cantidad * factor,
+                cantidad: cantidad,
+                unidades: cantidad * factor,
                 presentacion: it.tipo_venta
             };
         });
@@ -183,38 +190,51 @@ document.addEventListener("DOMContentLoaded", () => {
 })
 .catch(error => {
 
-    // 🔥 ERROR ESPECÍFICO DE STOCK (VENTAS SIMULTÁNEAS)
-    if (error?.type === "stock") {
+  // 👇 si vino como string o Error normal, normalizamos
+  const type = error?.type;
+  const msg  = error?.message || "Error inesperado";
 
-        Swal.fire({
-            icon: "warning",
-            title: "Stock insuficiente",
-            html: `
-                <b>${error.producto_nombre}</b><br>
-                Disponible: <b>${error.disponible}</b><br>
-                Solicitado: ${error.solicitado}
-            `,
-            confirmButtonText: "OK",
-            confirmButtonColor: "#d33",
-            allowOutsideClick: false,
-            allowEscapeKey: false
-        }).then(() => {
+ if (type === "stock") {
+    Swal.fire({
+        icon: "warning",
+        title: "Stock insuficiente",
+        html: `
+            <b>${error.producto_nombre}</b><br>
+            Lote: <b>${error.lote ?? '-'}</b><br>
+            Disponible: <b>${error.disponible}</b><br>
+            Solicitado: ${error.solicitado}
+        `,
 
-            if (typeof actualizarProductosStock === "function") {
-                actualizarProductosStock();
-            }
+        confirmButtonText: "OK",
+        confirmButtonColor: "#d33",
+        allowOutsideClick: false,
+        allowEscapeKey: false
+        
+    }).then(() => {
 
-            document.getElementById("buscar_producto")?.focus();
-        });
+        // 🔄 refrescar productos visualmente
+        if (typeof actualizarProductosStock === "function") {
+            actualizarProductosStock();
+        }
 
-        return;
-    }
+        // 🔄 volver a renderizar carrito
+        if (typeof renderCarritoTreinta === "function") {
+            renderCarritoTreinta();
+        }
 
-    // 🔥 OTROS ERRORES
-    mostrarAlerta(
-        error?.message || "Error inesperado al registrar la venta."
-    );
-}); 
+        // 🎯 foco en buscador
+        document.getElementById("buscar_producto")?.focus();
+
+    });
+
+    return;
+}
+
+
+  // otros errores
+  mostrarAlerta(msg);
+});
+
 
 }
     // ============================

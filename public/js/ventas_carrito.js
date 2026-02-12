@@ -623,29 +623,48 @@ async function recalcularYReemplazarGrupo(items, indexBase, totalDeseado, nuevoT
         });
 
 
-        carritoLista.addEventListener("blur", async (e) => {
-        if (!e.target.classList.contains("cambiar-cantidad")) return;
+        carritoLista.addEventListener("input", async (e) => {
 
-        const v = ventaActiva();
-        const i = Number(e.target.dataset.index);
-        const it = v.productos[i];
-        if (!it) return;
+    if (!e.target.classList.contains("cambiar-cantidad")) return;
 
-        let cant = parseInt(e.target.value);
-        if (isNaN(cant) || cant < 1) cant = 1;
+    const v = ventaActiva();
+    const i = Number(e.target.dataset.index);
+    const it = v.productos[i];
+    if (!it) return;
 
-        try {
-            await recalcularYReemplazarGrupo(v.productos, i, cant, it.tipo_venta);
-            renderCarritoTreinta();
-        } catch (err) {
-            mostrarAlerta(err.message || "Stock insuficiente");
-            // volver a 1 si falla
-            try {
-            await recalcularYReemplazarGrupo(v.productos, i, 1, it.tipo_venta);
-            } catch (_) {}
-            renderCarritoTreinta();
-        }
-        }, true);
+    let cant = parseInt(e.target.value);
+
+    if (isNaN(cant) || cant < 1) {
+        it.cantidad = 1;
+        return;
+    }
+
+    // 🔥 actualizar modelo inmediatamente
+    it.cantidad = cant;
+
+});
+carritoLista.addEventListener("blur", async (e) => {
+
+    if (!e.target.classList.contains("cambiar-cantidad")) return;
+
+    const v = ventaActiva();
+    const i = Number(e.target.dataset.index);
+    const it = v.productos[i];
+    if (!it) return;
+
+    let cant = parseInt(e.target.value);
+    if (isNaN(cant) || cant < 1) cant = 1;
+
+    try {
+        await recalcularYReemplazarGrupo(v.productos, i, cant, it.tipo_venta);
+        renderCarritoTreinta();
+    } catch (err) {
+        mostrarAlerta(err.message || "Stock insuficiente");
+        renderCarritoTreinta();
+    }
+
+}, true);
+
 
 
         carritoLista.addEventListener("click", async (e) => {

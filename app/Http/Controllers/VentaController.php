@@ -118,6 +118,7 @@ public function registrarVenta(Request $request)
 
             /* ================= DETALLE + STOCK (POR LOTES) ================= */
             $opGravadas = 0;
+            \Log::info($request->productos);
 
             foreach ($request->productos as $item) {
 
@@ -128,10 +129,11 @@ public function registrarVenta(Request $request)
 
                 $producto = Producto::findOrFail($productoId);
 
-                $presentacion = (string) ($item['presentacion'] ?? 'unidad');
-                $unidadesAfectadas = (int) ($item['unidades'] ?? 0);
+                $cantidadPresentaciones = (int)($item['cantidad'] ?? 0);
+                $unidadesAfectadas = (int)($item['unidades'] ?? 0);
+                $presentacion = (string)($item['presentacion'] ?? 'unidad');
 
-                if ($unidadesAfectadas <= 0) {
+                if ($cantidadPresentaciones <= 0 || $unidadesAfectadas <= 0) {
                     throw new \Exception("Cantidad inválida para {$producto->nombre}");
                 }
 
@@ -145,38 +147,48 @@ public function registrarVenta(Request $request)
                     ->lockForUpdate()
                     ->get();
 
+                // 🚨 CASO 1: No existe ningún lote con stock
                 if ($lotes->isEmpty()) {
+                    throw new \Exception(
+                        "STOCK|{$producto->id}|{$producto->nombre}|0|{$unidadesAfectadas}|"
+                    );
+                }
 
-    return response()->json([
-        'success' => false,
-        'type' => 'stock',
-        'producto_id' => $producto->id,
-        'producto_nombre' => $producto->nombre,
-        'disponible' => 0,
-        'solicitado' => $unidadesAfectadas,
-        'message' => "No hay stock disponible para {$producto->nombre}"
-    ], 422);
-}
+                // 🔢 Calcular stock total disponible
+                $stockDisponible = $lotes->sum('stock_actual');
+
+                // 🚨 CASO 2: Hay lotes pero no alcanza el stock total
+                if ($stockDisponible < $unidadesAfectadas) {
+                    $loteAfectado = $lotes->first();
+
+                    throw new \Exception(
+                        "STOCK|{$producto->id}|{$producto->nombre}|{$stockDisponible}|{$unidadesAfectadas}|"
+                        . ($loteAfectado->numero ?? '')
+                    );
+                }
 
 
-                // 💰 Precio se toma del PRIMER lote FEFO
+
+                // 💰 Precio del primer lote FEFO
                 $lotePrecio = $lotes->first();
 
                 $precioPresentacion = match ($presentacion) {
-                    'unidad'  => (float) ($lotePrecio->precio_unidad ?? 0),
-                    'paquete' => (float) ($lotePrecio->precio_paquete ?? 0),
-                    'caja'    => (float) ($lotePrecio->precio_caja ?? 0),
-                    default   => (float) ($lotePrecio->precio_unidad ?? 0),
+                    'unidad'  => (float)($lotePrecio->precio_unidad ?? 0),
+                    'paquete' => (float)($lotePrecio->precio_paquete ?? 0),
+                    'caja'    => (float)($lotePrecio->precio_caja ?? 0),
+                    default   => (float)($lotePrecio->precio_unidad ?? 0),
                 };
 
                 if ($precioPresentacion <= 0) {
                     throw new \Exception("No hay precio definido para {$producto->nombre}");
                 }
 
-                $subtotal = round($precioPresentacion, 2);
+                // ✅ SUBTOTAL CORRECTO
+                $subtotal = round($precioPresentacion * $cantidadPresentaciones, 2);
                 $opGravadas += $subtotal;
 
-                $costoUnit  = (float) ($lotePrecio->precio_compra ?? 0);
+                // ✅ COSTO Y GANANCIA CORRECTOS
+                $costoUnit  = (float)($lotePrecio->precio_compra ?? 0);
                 $costoTotal = round($costoUnit * $unidadesAfectadas, 2);
                 $ganancia   = round($subtotal - $costoTotal, 2);
 
@@ -184,7 +196,7 @@ public function registrarVenta(Request $request)
                     'venta_id'            => $venta->id,
                     'producto_id'         => $producto->id,
                     'presentacion'        => $presentacion,
-                    'cantidad'            => 1,
+                    'cantidad'            => $cantidadPresentaciones, // ✅ YA NO ES 1
                     'unidades_afectadas'  => $unidadesAfectadas,
                     'precio_presentacion' => $precioPresentacion,
                     'precio_unitario'     => round($precioPresentacion / max($unidadesAfectadas, 1), 4),
@@ -193,10 +205,11 @@ public function registrarVenta(Request $request)
                     'activo'              => 1
                 ]);
 
-                // 🔄 Repartir entre lotes FEFO
+                // 🔄 Descontar FEFO real
                 $restante = $unidadesAfectadas;
 
                 foreach ($lotes as $lote) {
+
                     if ($restante <= 0) break;
 
                     $usar = min($lote->stock_actual, $restante);
@@ -216,9 +229,14 @@ public function registrarVenta(Request $request)
 
                     $restante -= $usar;
                 }
+
+                // 🚨 SI NO ALCANZÓ STOCK REAL
+                if ($restante > 0) {
+                    $vendido = $unidadesAfectadas - $restante;
+
+                    throw new \Exception("STOCK|{$producto->id}|{$producto->nombre}|{$vendido}|{$unidadesAfectadas}");
+                }
             }
-
-
 
             /* ================= IGV + TOTAL ================= */
             $opGravadas = round($opGravadas, 2);
@@ -394,12 +412,34 @@ public function registrarVenta(Request $request)
             ]);
 
         } catch (\Exception $e) {
+
             DB::rollBack();
-            \Log::error("Error registrarVenta: " . $e->getMessage());
+
+            $msg = $e->getMessage();
+
+            // 🚨 Manejo especial para errores de stock
+           if (strpos($msg, "STOCK|") === 0) {
+
+                $partes = explode("|", $msg);
+
+                return response()->json([
+                    'success' => false,
+                    'type' => 'stock',
+                    'producto_id' => (int)($partes[1] ?? 0),
+                    'producto_nombre' => $partes[2] ?? '',
+                    'disponible' => (int)($partes[3] ?? 0),
+                    'solicitado' => (int)($partes[4] ?? 0),
+                    'lote' => $partes[5] ?? null,
+                    'message' => "Stock insuficiente"
+                ], 422);
+            }
+
+
+            \Log::error("Error registrarVenta: " . $msg);
 
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $msg
             ], 500);
         }
     }
