@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Http;
 use App\Models\Producto;
 use App\Models\Marca;
 use App\Models\Categoria;
+use App\Models\ConfiguracionCatalogo;
 
 // Rutas autenticación
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -246,15 +247,64 @@ Route::get(
 //CATALAGO
 Route::get('/catalogo', function () {
 
-    $productos = \App\Models\Producto::with('lotes')
+    $config = ConfiguracionCatalogo::first();
+
+    $productos = Producto::with('categoria')
         ->where('visible_en_catalogo', 1)
         ->where('activo', 1)
         ->get();
 
-    return view('catalogo.index', compact('productos'));
+    $categorias = Categoria::whereHas('productos', function ($q) {
+        $q->where('visible_en_catalogo', 1)
+          ->where('activo', 1);
+    })->get();
+
+    return view('catalogo.index', compact('productos', 'categorias', 'config'));
 });
 
-Route::get('/carrito', function () {
-    return view('catalogo.carrito');
+Route::prefix('catalogo-admin')->middleware('auth')->group(function () {
+
+    Route::get('/', function () {
+        return view('catalogo.admin.index');
+        })->name('catalogo.admin.index');
+
+    Route::get('/configuracion', function () {
+
+        $config = ConfiguracionCatalogo::first();
+
+        return view('catalogo.admin.config', compact('config'));
+
+        })->name('catalogo.admin.config');
+
+        Route::post('/configuracion', function (\Illuminate\Http\Request $request) {
+
+            $config = ConfiguracionCatalogo::first();
+
+            $data = $request->except('logo');
+
+            // Si suben un logo nuevo
+            if ($request->hasFile('logo')) {
+
+                $file = $request->file('logo');
+                $filename = time() . '.' . $file->getClientOriginalExtension();
+
+                // Crear carpeta si no existe
+                if (!file_exists(public_path('uploads/config'))) {
+                    mkdir(public_path('uploads/config'), 0755, true);
+                }
+
+                $file->move(public_path('uploads/config'), $filename);
+
+                $data['logo'] = $filename;
+            }
+
+            $config->update($data);
+
+            return back()->with('success', 'Configuración actualizada correctamente');
+
+        })->name('catalogo.admin.config.update');
+
+
+
 });
 

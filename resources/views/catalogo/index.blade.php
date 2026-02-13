@@ -2,127 +2,169 @@
 
 @section('title', 'Catálogo DIZANY')
 
+@push('styles')
+    <style>
+        .hero {
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-weight: 700;
+            font-size: 2.5rem;
+        }
+
+        .search-box {
+            max-width: 500px;
+            margin: 20px auto;
+        }
+
+        .product-card {
+            border-radius: 15px;
+            transition: 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+
+        .product-img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;   /* llena el espacio */
+            border-radius: 10px;
+        }
+
+        .price {
+            font-weight: bold;
+            color: #16a34a;
+            font-size: 1.2rem;
+        }
+
+        .stock-badge {
+            font-size: 0.8rem;
+        }
+
+        .category-filter button {
+            border-radius: 50px;
+            margin: 5px;
+        }
+
+        .whatsapp-btn {
+            background: #25D366;
+            border: none;
+        }
+
+        .whatsapp-btn:hover {
+            background: #1ebe5d;
+        }
+    </style>
+@endpush
+
 @section('content')
 
-<h4 class="mb-4">Nuestros Productos</h4>
 
-<div class="row g-4">
+<div class="hero">
+    <h1>{{ $config->nombre_empresa }}</h1>
+    <p>Compra fácil y rápido por WhatsApp</p>
 
-@foreach($productos as $producto)
-
-@php
-    $stock = $producto->lotes->sum('stock_actual');
-
-    $loteActivo = $producto->lotes
-        ->where('stock_actual', '>', 0)
-        ->sortBy('fecha_vencimiento')
-        ->first();
-
-    $precio = $loteActivo->precio_unidad ?? 0;
-@endphp
-
-<div class="col-6 col-md-4 col-lg-3">
-    <div class="card shadow-sm border-0 h-100 product-card">
-
-        <img src="{{ asset('uploads/productos/'.$producto->imagen) }}"
-             class="card-img-top p-3"
-             style="height:180px;object-fit:contain;">
-
-        <div class="card-body text-center">
-
-            <h6 class="fw-bold">{{ $producto->nombre }}</h6>
-
-            <div class="text-success fw-bold fs-5">
-                S/ {{ number_format($precio,2) }}
-            </div>
-
-            @if($stock > 0)
-                <span class="badge bg-success mt-2">
-                    Disponible ({{ $stock }})
-                </span>
-
-                <div class="mt-3 d-grid gap-2">
-
-                    <button class="btn btn-dark btn-sm agregar-carrito"
-                            data-id="{{ $producto->id }}"
-                            data-nombre="{{ $producto->nombre }}"
-                            data-precio="{{ $precio }}">
-                        Agregar al carrito
-                    </button>
-
-                    <a target="_blank"
-                       href="https://wa.me/51958196510?text=Hola quiero comprar {{ urlencode($producto->nombre) }}"
-                       class="btn btn-success btn-sm">
-                        Comprar por WhatsApp
-                    </a>
-
-                </div>
-
-            @else
-                <span class="badge bg-danger mt-2">
-                    Sin stock
-                </span>
-            @endif
-
-        </div>
+    <div class="search-box">
+        <input type="text" id="searchInput" class="form-control form-control-lg"
+               placeholder="Buscar producto...">
     </div>
 </div>
 
-@endforeach
+<div class="container py-4">
 
+    <div class="text-center category-filter mb-4">
+        <button class="btn btn-outline-dark active" onclick="filterCategory('all')">Todos</button>
+        @foreach($categorias as $categoria)
+            <button class="btn btn-outline-dark"
+                    onclick="filterCategory('{{ $categoria->id }}')">
+                {{ $categoria->nombre }}
+            </button>
+        @endforeach
+    </div>
+
+    <div class="row" id="productContainer">
+        @foreach($productos as $producto)
+
+        @php
+            $stock = $producto->stock_total ?? 0;
+        @endphp
+
+        <div class="col-md-3 col-sm-6 mb-4 product-item"
+             data-name="{{ strtolower($producto->nombre) }}"
+             data-category="{{ $producto->categoria_id }}">
+
+            <div class="card product-card h-100 text-center p-3">
+
+                <img src="{{ asset('uploads/productos/' . $producto->imagen) }}"
+                     class="product-img mb-3"
+                     alt="{{ $producto->nombre }}">
+
+                <h5>{{ $producto->nombre }}</h5>
+
+                <div class="price mb-2">
+                    S/ {{ number_format($producto->precio_venta ?? 0, 2) }}
+                </div>
+
+                @if($stock > 0)
+                    <span class="badge bg-success stock-badge">
+                        Disponible ({{ $stock }})
+                    </span>
+                @else
+                    <span class="badge bg-danger stock-badge">
+                        Sin stock
+                    </span>
+                @endif
+
+                @if($stock > 0)
+                <div class="mt-3">
+                    <a href="https://wa.me/51958196510?text=Hola,%20quiero%20comprar%20{{ urlencode($producto->nombre) }}"
+                       target="_blank"
+                       class="btn whatsapp-btn w-100 text-white">
+                        Comprar por WhatsApp
+                    </a>
+                </div>
+                @endif
+
+            </div>
+        </div>
+
+        @endforeach
+    </div>
 </div>
 
 @endsection
 
-
 @push('scripts')
 <script>
 
-let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
-
-function actualizarContador() {
-    const total = carrito.reduce((acc, item) => acc + item.cantidad, 0);
-    document.getElementById('contador-carrito').innerText = total;
-}
-
-actualizarContador();
-
-document.querySelectorAll('.agregar-carrito').forEach(btn => {
-
-    btn.addEventListener('click', () => {
-
-        const id = btn.dataset.id;
-        const nombre = btn.dataset.nombre;
-        const precio = parseFloat(btn.dataset.precio);
-
-        const existe = carrito.find(p => p.id == id);
-
-        if (existe) {
-            existe.cantidad++;
-        } else {
-            carrito.push({
-                id,
-                nombre,
-                precio,
-                cantidad: 1
-            });
-        }
-
-        localStorage.setItem('carrito', JSON.stringify(carrito));
-        actualizarContador();
-
-        Swal.fire({
-            icon: 'success',
-            title: 'Producto agregado',
-            timer: 1000,
-            showConfirmButton: false
-        });
-
+// 🔎 Buscador en vivo
+document.getElementById('searchInput').addEventListener('keyup', function() {
+    let value = this.value.toLowerCase();
+    document.querySelectorAll('.product-item').forEach(item => {
+        let name = item.dataset.name;
+        item.style.display = name.includes(value) ? 'block' : 'none';
     });
-
 });
 
-</script>
+// 🏷️ Filtro por categoría
+function filterCategory(categoryId) {
+    document.querySelectorAll('.product-item').forEach(item => {
+        if (categoryId === 'all') {
+            item.style.display = 'block';
+        } else {
+            item.style.display =
+                item.dataset.category == categoryId ? 'block' : 'none';
+        }
+    });
+}
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</script>
 @endpush

@@ -106,6 +106,35 @@
                     <i class="fas fa-cog"></i>
                     <span class="menu-text">Configuración</span>
                 </a>
+                <!-- configuracion de Catálogo -->
+                <div class="submenu">
+                    <button class="submenu-toggle {{ request()->is('catalogo-admin*') ? 'active' : '' }}">
+                        <div class="submenu-left">
+                            <i class="fas fa-store me-2"></i>
+                            <span class="menu-text">Catálogo</span>
+                        </div>
+                        <i class="fas fa-caret-down toggle-icon"></i>
+                    </button>
+
+                    <div class="submenu-items {{ request()->is('catalogo-admin*') ? 'show' : '' }}">
+
+                        <!-- Ver Catálogo -->
+                        <a href="{{ route('catalogo.admin.index') }}"
+                        class="{{ request()->routeIs('catalogo.admin.index') ? 'active' : '' }}">
+                            <i class="fas fa-eye me-1"></i>
+                            <span class="menu-text">Vista Catálogo</span>
+                        </a>
+
+                        <!-- Configuración -->
+                        <a href="{{ route('catalogo.admin.config') }}"
+                        class="{{ request()->routeIs('catalogo.admin.config') ? 'active' : '' }}">
+                            <i class="fas fa-cog me-1"></i>
+                            <span class="menu-text">Configurar Catalago</span>
+                        </a>
+
+                    </div>
+                </div>
+
 
             @elseif(auth()->user()->rol->nombre == 'Empleado')
 
