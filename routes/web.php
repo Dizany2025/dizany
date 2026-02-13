@@ -226,11 +226,12 @@ Route::get('/inventario/lotes', [InventarioController::class, 'lotes'])
     ->name('inventario.lotes');
 
 // ✏️ Editar lote
-    Route::get('/{lote}/edit', [InventarioController::class, 'edit'])
-        ->name('lotes.edit');
+    Route::get('/lotes/{lote}/edit', [InventarioController::class, 'edit'])
+    ->name('lotes.edit');
 
-    Route::put('/{lote}', [InventarioController::class, 'update'])
-        ->name('lotes.update');
+Route::put('/lotes/{lote}', [InventarioController::class, 'update'])
+    ->name('lotes.update');
+
         
     Route::post('/lotes/{lote}/ajuste', [InventarioController::class, 'ajustarStock'])
     ->name('lotes.ajustar');
@@ -238,9 +239,22 @@ Route::get('/inventario/lotes', [InventarioController::class, 'lotes'])
     Route::get('lotes/{lote}/movimientos', [InventarioController::class, 'movimientos'])
     ->name('lotes.movimientos');
 
-
-
 Route::get(
     '/ventas/stock-fifo/{producto}',
     [VentaController::class, 'stockFIFO']
 );
+//CATALAGO
+Route::get('/catalogo', function () {
+
+    $productos = \App\Models\Producto::with('lotes')
+        ->where('visible_en_catalogo', 1)
+        ->where('activo', 1)
+        ->get();
+
+    return view('catalogo.index', compact('productos'));
+});
+
+Route::get('/carrito', function () {
+    return view('catalogo.carrito');
+});
+

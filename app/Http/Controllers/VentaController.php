@@ -147,27 +147,34 @@ public function registrarVenta(Request $request)
                     ->lockForUpdate()
                     ->get();
 
-                // 🚨 CASO 1: No existe ningún lote con stock
-                if ($lotes->isEmpty()) {
-                    throw new \Exception(
-                        "STOCK|{$producto->id}|{$producto->nombre}|0|{$unidadesAfectadas}|"
-                    );
-                }
-
                 // 🔢 Calcular stock total disponible
                 $stockDisponible = $lotes->sum('stock_actual');
 
-                // 🚨 CASO 2: Hay lotes pero no alcanza el stock total
-                if ($stockDisponible < $unidadesAfectadas) {
-                    $loteAfectado = $lotes->first();
+                // 🚨 CASO 1: No existe ningún lote con stock
+                if ($lotes->isEmpty()) {
+
+                    $ultimoLote = Lote::where('producto_id', $producto->id)
+                        ->orderBy('fecha_vencimiento', 'asc')
+                        ->orderBy('fecha_ingreso', 'asc')
+                        ->orderBy('id', 'asc')
+                        ->first();
 
                     throw new \Exception(
-                        "STOCK|{$producto->id}|{$producto->nombre}|{$stockDisponible}|{$unidadesAfectadas}|"
-                        . ($loteAfectado->numero ?? '')
+                        "STOCK|{$producto->id}|{$producto->nombre}|0|{$unidadesAfectadas}|"
+                        . ($ultimoLote->numero_lote ?? '')
                     );
                 }
 
+                // 🚨 CASO 2: Hay lotes pero no alcanza el stock total
+                if ($stockDisponible < $unidadesAfectadas) {
 
+                    $loteAfectado = $lotes->firstWhere('stock_actual', '>', 0);
+
+                    throw new \Exception(
+                        "STOCK|{$producto->id}|{$producto->nombre}|{$stockDisponible}|{$unidadesAfectadas}|"
+                        . ($loteAfectado->numero_lote ?? '')
+                    );
+                }
 
                 // 💰 Precio del primer lote FEFO
                 $lotePrecio = $lotes->first();
