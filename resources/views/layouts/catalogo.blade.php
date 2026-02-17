@@ -7,6 +7,10 @@
 
     @vite(['resources/css/app.css'])
 
+    @stack('styles') {{-- 👈 ESTA LÍNEA FALTABA --}}
+
+    <link rel="stylesheet"href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
     <style>
         body { background:#f5f6f8; }
         .product-card:hover { transform: translateY(-5px); transition: .2s ease; }
@@ -22,19 +26,8 @@
         }
     </style>
 </head>
+
 <body>
-
-<nav class="navbar navbar-catalogo px-4 py-3 d-flex justify-content-between align-items-center">
-    <h5 class="m-0">DIZANY</h5>
-
-    <div class="position-relative">
-        <a href="#" class="text-white text-decoration-none fs-5">
-            🛒
-            <span id="contador-carrito"
-                  class="badge bg-danger cart-badge">0</span>
-        </a>
-    </div>
-</nav>
 
 <div class="container py-4">
     @yield('content')

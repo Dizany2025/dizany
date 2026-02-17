@@ -3,82 +3,63 @@
 @section('title', 'Catálogo DIZANY')
 
 @push('styles')
-    <style>
-        .hero {
-            background: linear-gradient(135deg, #0f172a, #1e293b);
-            color: white;
-            padding: 60px 20px;
-            text-align: center;
-        }
-
-        .hero h1 {
-            font-weight: 700;
-            font-size: 2.5rem;
-        }
-
-        .search-box {
-            max-width: 500px;
-            margin: 20px auto;
-        }
-
-        .product-card {
-            border-radius: 15px;
-            transition: 0.3s ease;
-        }
-
-        .product-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        }
-
-
-        .product-img {
-            width: 100%;
-            height: 220px;
-            object-fit: cover;   /* llena el espacio */
-            border-radius: 10px;
-        }
-
-        .price {
-            font-weight: bold;
-            color: #16a34a;
-            font-size: 1.2rem;
-        }
-
-        .stock-badge {
-            font-size: 0.8rem;
-        }
-
-        .category-filter button {
-            border-radius: 50px;
-            margin: 5px;
-        }
-
-        .whatsapp-btn {
-            background: #25D366;
-            border: none;
-        }
-
-        .whatsapp-btn:hover {
-            background: #1ebe5d;
-        }
-    </style>
+    <link href="{{ asset('css/catalago/catalago.css') }}" rel="stylesheet" />
 @endpush
 
 @section('content')
 
+<div class="catalog-header">
 
-<div class="hero">
-    <h1>{{ $config->nombre_empresa }}</h1>
-    <p>Compra fácil y rápido por WhatsApp</p>
+    <div class="container">
 
-    <div class="search-box">
-        <input type="text" id="searchInput" class="form-control form-control-lg"
-               placeholder="Buscar producto...">
+        <div class="header-wrapper">
+
+            <!-- BLOQUE IZQUIERDO -->
+            <div class="store-block">
+
+                <div class="brand-row">
+                    @if(!empty($config->logo))
+                        <img src="{{ asset('uploads/config/' . $config->logo) }}"
+                             class="catalog-logo">
+                    @endif
+
+                    <div>
+                        <h2>{{ $config->nombre_empresa }}</h2>
+                        <div class="rubro">{{ $config->rubro }}</div>
+                    </div>
+                </div>
+
+                <div class="store-details">
+                    <div>📍 {{ $config->direccion }}</div>
+                    <div>🕒 Abierto 8:00 a.m. - 11:00 p.m.</div>
+                </div>
+
+            </div>
+
+            <!-- BUSCADOR -->
+            <div class="search-block">
+                <input type="text"
+                       id="searchInput"
+                       class="search-input"
+                       placeholder="Buscar producto...">
+            </div>
+
+            <!-- CARRITO -->
+            <div class="cart-block">
+                <div class="cart-button">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span id="contador-carrito" class="cart-badge">0</span>
+                </div>
+            </div>
+
+        </div>
+
     </div>
+
 </div>
 
-<div class="container py-4">
+
+<div class="container-fluid px-4 py-4">
 
     <div class="text-center category-filter mb-4">
         <button class="btn btn-outline-dark active" onclick="filterCategory('all')">Todos</button>
@@ -124,13 +105,11 @@
                 @endif
 
                 @if($stock > 0)
-                <div class="mt-3">
-                    <a href="https://wa.me/51958196510?text=Hola,%20quiero%20comprar%20{{ urlencode($producto->nombre) }}"
-                       target="_blank"
-                       class="btn whatsapp-btn w-100 text-white">
-                        Comprar por WhatsApp
-                    </a>
-                </div>
+                <a href="https://wa.me/{{ $config->telefono ?? '51958196510' }}?text=Hola,%20quiero%20comprar%20{{ urlencode($producto->nombre) }}"
+                    target="_blank"
+                    class="btn whatsapp-btn w-100 text-white">
+                    {{ $config->texto_boton_whatsapp ?? 'Comprar por WhatsApp' }}
+                </a>
                 @endif
 
             </div>
