@@ -174,3 +174,24 @@ input[type="date"]::-moz-focus-inner {
 .select2-container--default .select2-selection__arrow {
     top: 8px;
 }
+
+
+/*boton + nuevo*/
+.btn-icon-add {
+    width: 42px;
+    min-width: 42px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+}
+
+.btn-icon-add i {
+    font-size: 14px;
+}
+
+.btn-icon-add:hover {
+    transform: translateY(-1px);
+    transition: 0.15s ease;
+}

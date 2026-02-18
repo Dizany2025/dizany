@@ -38,12 +38,12 @@ Panel de Editar
                     <div class="col-md-6">
 
                         <div class="mb-3">
-                            <label class="inv-label">Código de lote</label>
+                            <label class="inv-label">Cd. Comprobante</label>
                             <input type="text"
-                                name="codigo_lote"
+                                name="codigo_comprobante"
                                 class="form-control inv-input"
-                                value="{{ old('codigo_lote', $lote->codigo_lote) }}"
-                                placeholder="LOTE-2026-01-A">
+                                value="{{ old('codigo_comprobante', $lote->codigo_comprobante) }}"
+                                placeholder="E-000">
                         </div>
 
                         <div class="mb-3">
@@ -139,15 +139,14 @@ Panel de Editar
                                 <label class="form-label fw-semibold">Cantidad</label>
 
                                 <div class="d-flex align-items-center qty-control">
-                                    <button type="button" class="btn btn-light btn-qty" data-action="minus">−</button>
+                                    <button type="button" id="btn_minus" class="btn btn-light btn-qty" data-action="minus" disabled>−</button>
 
                                     <input type="number"
                                         id="ajuste_cantidad"
                                         class="form-control text-center mx-2"
-                                        min="0"
                                         value="0">
 
-                                    <button type="button" class="btn btn-light btn-qty" data-action="plus">+</button>
+                                    <button type="button" id="btn_plus" class="btn btn-light btn-qty" data-action="plus" disabled>+</button>
                                 </div>
 
                                 <small id="stock_resultante" class="text-muted d-block mt-1">
@@ -208,6 +207,7 @@ Panel de Editar
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
     document.addEventListener("DOMContentLoaded", () => {
 
@@ -216,61 +216,149 @@ Panel de Editar
         const stockResultante = document.getElementById("stock_resultante");
         const btnAplicar = document.getElementById("btn_aplicar_ajuste");
         const motivo = document.getElementById("ajuste_motivo");
+        const btnMinus = document.getElementById("btn_minus");
+        const btnPlus  = document.getElementById("btn_plus");
 
         function tipoAjuste() {
             return document.querySelector('input[name="tipo_ajuste"]:checked')?.value || null;
         }
 
-        function recalcular() {
+        function actualizarBotonesCantidad() {
             const tipo = tipoAjuste();
             const cantidad = parseInt(inputCantidad.value) || 0;
 
-            // 1) Mostrar stock resultante SIN depender del motivo
-            if (!tipo || cantidad <= 0) {
+            if (!tipo) {
+                btnMinus.disabled = true;
+                btnPlus.disabled = true;
+                return;
+            }
+
+            // Si cantidad es 0 solo habilita el principal
+            if (cantidad === 0) {
+                if (tipo === "restar") {
+                    btnMinus.disabled = false;
+                    btnPlus.disabled = true;
+                }
+
+                if (tipo === "sumar") {
+                    btnMinus.disabled = true;
+                    btnPlus.disabled = false;
+                }
+            } else {
+                // Si ya empezó a ajustar, ambos activos
+                btnMinus.disabled = false;
+                btnPlus.disabled = false;
+            }
+        }
+
+        function recalcular() {
+            const tipo = tipoAjuste();
+            const cantidad = parseInt(inputCantidad.value) || 0;
+            const cantidadAbs = Math.abs(cantidad);
+
+            // Mostrar stock resultante
+            if (!tipo || cantidadAbs === 0) {
                 stockResultante.textContent = "Stock resultante: — unidades";
             } else {
                 let nuevoStock = stockActual;
-                if (tipo === "sumar") nuevoStock += cantidad;
-                if (tipo === "restar") nuevoStock -= cantidad;
+
+                if (tipo === "sumar") nuevoStock += cantidadAbs;
+                if (tipo === "restar") nuevoStock -= cantidadAbs;
 
                 stockResultante.textContent = `Stock resultante: ${nuevoStock} unidades`;
 
-                // opcional: si resta y queda negativo, deshabilitar
                 if (nuevoStock < 0) {
-                    stockResultante.textContent = `Stock resultante: ${nuevoStock} unidades (inválido)`;
+                    stockResultante.textContent =
+                        `Stock resultante: ${nuevoStock} unidades (inválido)`;
                 }
             }
 
-            // 2) El botón SOLO se habilita si todo está OK
+            // Validación botón aplicar
             const puedeAplicar = (
                 tipo &&
-                cantidad > 0 &&
+                cantidadAbs > 0 &&
                 motivo.value &&
-                ((tipo === "sumar") || (tipo === "restar")) &&
-                (tipo !== "restar" || (stockActual - cantidad) >= 0)
+                (tipo !== "restar" || (stockActual - cantidadAbs) >= 0)
             );
 
             btnAplicar.disabled = !puedeAplicar;
         }
 
-        document.querySelectorAll('.btn-qty').forEach(btn => {
-        btn.addEventListener("click", () => {
+        function setCantidadMagnitud(magnitud) {
+            const tipo = tipoAjuste();
+            if (!tipo) return;
+
+            magnitud = Math.max(0, magnitud);
+
+            // No permitir restar más del stock
+            if (tipo === "restar" && magnitud > stockActual) {
+                magnitud = stockActual;
+            }
+
+            if (tipo === "sumar") {
+                inputCantidad.value = magnitud;
+            }
+
+            if (tipo === "restar") {
+                inputCantidad.value = -magnitud;
+            }
+
+            actualizarBotonesCantidad();
+            recalcular();
+        }
+
+        btnPlus.addEventListener("click", () => {
+            const tipo = tipoAjuste();
+            if (!tipo) return;
+
             let val = parseInt(inputCantidad.value) || 0;
-            inputCantidad.value = btn.dataset.action === "plus"
-                    ? val + 1
-                    : Math.max(0, val - 1);
-                recalcular();
-            });
+            let magnitud = Math.abs(val);
+
+            if (tipo === "sumar") {
+                setCantidadMagnitud(magnitud + 1);
+            }
+
+            if (tipo === "restar") {
+                // En restar, + reduce la magnitud (acercarse a 0)
+                setCantidadMagnitud(magnitud - 1);
+            }
         });
 
+        btnMinus.addEventListener("click", () => {
+            const tipo = tipoAjuste();
+            if (!tipo) return;
+
+            let val = parseInt(inputCantidad.value) || 0;
+            let magnitud = Math.abs(val);
+
+            if (tipo === "restar") {
+                // 🔥 Aquí está la clave
+                setCantidadMagnitud(magnitud + 1);
+            }
+
+            if (tipo === "sumar") {
+                setCantidadMagnitud(magnitud - 1);
+            }
+        });
+
+
+        // Cambiar tipo
         document.querySelectorAll('input[name="tipo_ajuste"]').forEach(r =>
-            r.addEventListener("change", recalcular)
+            r.addEventListener("change", () => {
+
+                // 🔥 Resetear cantidad al cambiar tipo
+                inputCantidad.value = 0;
+
+                actualizarBotonesCantidad();
+                recalcular();
+            })
         );
 
         inputCantidad.addEventListener("input", recalcular);
         $('#ajuste_motivo').on('change', recalcular);
 
-        // primer render
+        // Inicializar
+        actualizarBotonesCantidad();
         recalcular();
     });
 </script>
@@ -293,10 +381,12 @@ Panel de Editar
     document.getElementById('btn_aplicar_ajuste').addEventListener('click', () => {
 
         const tipo = document.querySelector('input[name="tipo_ajuste"]:checked')?.value;
-        const cantidad = parseInt(document.getElementById('ajuste_cantidad').value) || 0;
+        const cantidadRaw = parseInt(document.getElementById('ajuste_cantidad').value) || 0;
+        const cantidadAbs = Math.abs(cantidadRaw);
         const motivo = document.getElementById('ajuste_motivo').value;
 
-        if (!tipo || cantidad <= 0 || !motivo) {
+        // 🔥 Validación correcta
+        if (!tipo || cantidadAbs === 0 || !motivo) {
             Swal.fire({
                 icon: 'warning',
                 title: 'Datos incompletos',
@@ -309,7 +399,7 @@ Panel de Editar
 
         Swal.fire({
             title: 'Confirmar ajuste',
-            text: `¿Deseas ${tipo === 'sumar' ? 'sumar' : 'restar'} ${cantidad} unidades?`,
+            text: `¿Deseas ${tipo === 'sumar' ? 'sumar' : 'restar'} ${cantidadAbs} unidades?`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Aplicar',
@@ -330,7 +420,7 @@ Panel de Editar
                 },
                 body: JSON.stringify({
                     tipo: tipo,
-                    cantidad: cantidad,
+                    cantidad: cantidadAbs, // 🔥 enviamos positivo
                     motivo: motivo
                 })
             })
@@ -344,7 +434,7 @@ Panel de Editar
                     showConfirmButton: false,
                     width: 320
                 }).then(() => {
-                    location.reload(); // ver stock actualizado
+                    location.reload();
                 });
             })
             .catch(() => {

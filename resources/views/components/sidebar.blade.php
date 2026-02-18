@@ -22,6 +22,12 @@
                     <span class="menu-text">Clientes</span>
                 </a>
 
+                <a href="{{ route('proveedores.index') }}"
+                class="{{ request()->routeIs('proveedores.*') ? 'active' : '' }}">
+                    <i class="fas fa-industry"></i>
+                    <span class="menu-text">Proveedores</span>
+                </a>
+
                 <!-- Menú desplegable Productos -->
                 <div class="submenu">
                     <button class="submenu-toggle {{ request()->is('productos*') ? 'active' : '' }}">    

@@ -360,3 +360,9 @@
   }
 }
 
+.btn-gasto,
+.btn-header-back,
+.btn-gasto:hover,
+.btn-header-back:hover {
+    text-decoration: none !important;
+}

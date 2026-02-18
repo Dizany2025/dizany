@@ -47,30 +47,53 @@ Ingreso de Mercadería
                         {{-- PRODUCTO --}}
                         <div class="mb-3">
                             <label class="inv-label">Producto</label>
-                            <select name="producto_id" id="producto-select" class="form-select inv-select" required>
-                                <option value="">Buscar producto...</option>
-                                @foreach($productos as $producto)
-                                    <option value="{{ $producto->id }}"
-                                        data-vencimiento="{{ $producto->maneja_vencimiento }}"
-                                        data-descripcion="{{ \Illuminate\Support\Str::limit($producto->descripcion, 40) }}">
-                                        {{ $producto->nombre }}
-                                    </option>
-                                @endforeach
-                            </select>
+
+                            <div class="d-flex gap-2 align-items-stretch">
+                                <select name="producto_id"
+                                        id="producto-select"
+                                        class="form-select inv-select"
+                                        required>
+                                    <option value="">Buscar producto...</option>
+                                    @foreach($productos as $producto)
+                                        <option value="{{ $producto->id }}"
+                                            data-vencimiento="{{ $producto->maneja_vencimiento }}"
+                                            data-descripcion="{{ \Illuminate\Support\Str::limit($producto->descripcion, 40) }}">
+                                            {{ $producto->nombre }}
+                                        </option>
+                                    @endforeach
+                                </select>
+
+                                <a href="{{ route('productos.create', ['from' => 'lotes']) }}"
+                                class="btn btn-outline-primary btn-icon-add"
+                                title="Agregar nuevo producto">
+                                    <i class="fas fa-plus"></i>
+                                </a>
+                            </div>
                         </div>
 
                         {{-- PROVEEDOR --}}
                         <div class="mb-3">
                             <label class="inv-label">Proveedor</label>
-                            <select name="proveedor_id" id="proveedor-select" class="form-select inv-select">
-                                <option value="">— Sin proveedor —</option>
-                                @foreach($proveedores as $proveedor)
-                                    <option value="{{ $proveedor->id }}"
-                                        data-doc="{{ $proveedor->ruc ?? $proveedor->documento ?? '—' }}">
-                                        {{ $proveedor->nombre }}
-                                    </option>
-                                @endforeach
-                            </select>
+
+                            <div class="d-flex gap-2 align-items-stretch">
+                                <select name="proveedor_id"
+                                        id="proveedor-select"
+                                        class="form-select inv-select">
+                                    <option value="">— Sin proveedor —</option>
+                                    @foreach($proveedores as $proveedor)
+                                        <option value="{{ $proveedor->id }}"
+                                            data-doc="{{ $proveedor->tipo_documento }} {{ $proveedor->numero_documento }}">
+                                            {{ $proveedor->nombre }}
+                                        </option>
+                                    @endforeach
+                                </select>
+
+                                <a href="{{ route('proveedores.index') }}"
+                                class="btn btn-outline-success btn-icon-add"
+                                title="Agregar nuevo proveedor">
+                                    <i class="fas fa-plus"></i>
+                                </a>
+                            </div>
                         </div>
 
                         <div class="alert alert-info mt-3 mb-0" style="border-radius:12px;border:1px solid #dbe5f3;">
@@ -297,14 +320,40 @@ Ingreso de Mercadería
         });
 
         // ===============================
+        // FORMATO SELECT2 PROVEEDOR
+        // ===============================
+        function formatProveedor(proveedor) {
+            if (!proveedor.id) return proveedor.text;
+
+            const doc = proveedor.element.dataset.doc || '';
+
+            return $(`
+                <div style="line-height:1.25">
+                    <div style="font-weight:600;">
+                        ${proveedor.text}
+                    </div>
+                    ${
+                        doc
+                            ? `<div style="font-size:12px; color:#6c757d;">
+                                ${doc}
+                            </div>`
+                            : ''
+                    }
+                </div>
+            `);
+        }
+
+        // ===============================
         // SELECT PROVEEDOR
         // ===============================
         $('#proveedor-select').select2({
             placeholder: 'Buscar proveedor...',
             allowClear: true,
-            width: '100%'
+            width: '100%',
+            templateResult: formatProveedor,
+            templateSelection: formatProveedor,
+            escapeMarkup: m => m
         });
-
     });
 </script>
 

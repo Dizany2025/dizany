@@ -184,26 +184,30 @@
                                 <td>
                                     <strong>{{ blank($lote->codigo_comprobante) ? '—' : $lote->codigo_comprobante }}</strong>
 
-                                    @if (is_null($dias))
-                                        <div>
-                                            <span class="badge bg-secondary mt-1">Sin vencimiento</span>
-                                        </div>
-                                    @elseif ($dias < 0)
-                                        <div>
-                                            <span class="badge bg-danger mt-1">Vencido</span>
-                                        </div>
-                                    @elseif ($dias <= 10)
-                                        <div>
-                                            <span class="badge bg-danger mt-1">
-                                                Vence en {{ $dias }} días
-                                            </span>
-                                        </div>
-                                    @elseif ($dias <= 30)
-                                        <div>
-                                            <span class="badge bg-warning text-dark mt-1">
-                                                Vence en {{ $dias }} días
-                                            </span>
-                                        </div>
+                                   @if ($lote->stock_actual > 0)
+
+                                        @if (is_null($dias))
+                                            <div>
+                                                <span class="badge bg-secondary mt-1">Sin vencimiento</span>
+                                            </div>
+                                        @elseif ($dias < 0)
+                                            <div>
+                                                <span class="badge bg-danger mt-1">Vencido</span>
+                                            </div>
+                                        @elseif ($dias <= 10)
+                                            <div>
+                                                <span class="badge bg-danger mt-1">
+                                                    Vence en {{ $dias }} días
+                                                </span>
+                                            </div>
+                                        @elseif ($dias <= 30)
+                                            <div>
+                                                <span class="badge bg-warning text-dark mt-1">
+                                                    Vence en {{ $dias }} días
+                                                </span>
+                                            </div>
+                                        @endif
+
                                     @endif
                                 </td>
 
@@ -504,10 +508,7 @@
             el.addEventListener('change', filtrar)
         );
 
-        [movimientos].forEach(el =>
-            el.addEventListener('change', filtrar)
-        );
-
+        
         buscar.addEventListener('input', filtrar);
     });
 </script>

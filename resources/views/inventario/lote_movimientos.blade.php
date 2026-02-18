@@ -40,7 +40,7 @@ Movimientos del lote
 
                 <div class="col-md-4">
                     <strong>Cod. Lote</strong><br>
-                    {{ $lote->codigo_lote ?? '—' }}
+                    {{ $lote->codigo_comprobante ?? '—' }}
                 </div>
 
                 <div class="col-md-4">

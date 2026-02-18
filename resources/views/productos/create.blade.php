@@ -2,11 +2,21 @@
 
 {{-- BOTÓN ATRÁS --}}
 @section('header-back')
-<button class="btn-header-back"
-        type="button"
-        onclick="window.location='{{ route('productos.index') }}'">
-    <i class="fas fa-chevron-left"></i>
-</button>
+
+@php
+    $from = request()->get('from');
+@endphp
+
+@if($from === 'lotes')
+    <a href="{{ route('inventario.lote') }}" class="btn-header-back">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+@else
+    <button class="btn-header-back" onclick="history.back()">
+        <i class="fas fa-arrow-left"></i>
+    </button>
+@endif
+
 @endsection
 
 {{-- TÍTULO --}}

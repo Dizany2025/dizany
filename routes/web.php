@@ -22,6 +22,7 @@ use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\MarcaController;
 use App\Http\Controllers\DashboardAdminController;
 use App\Http\Controllers\MovimientoController;
+use App\Http\Controllers\ProveedorController;
 //consultar dni y ruc
 use Illuminate\Support\Facades\Http;
 use App\Models\Producto;
@@ -125,6 +126,8 @@ Route::get('/buscar-cliente/{dniRuc}', [ClienteController::class, 'buscarCliente
 Route::post('/guardar-cliente', [ClienteController::class, 'guardar'])->name('clientes.guardar');
 Route::post('/clientes', [ClienteController::class, 'store'])->name('clientes.store');
 
+// Guardar proveedor
+Route::resource('proveedores', App\Http\Controllers\ProveedorController::class);
 
 // Ruta para registrar la venta
 Route::post('/ventas/registrar', [VentaController::class, 'registrarVenta'])->middleware('auth');
