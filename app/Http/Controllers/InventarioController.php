@@ -38,19 +38,65 @@ public function actualizarStock(Request $request, $id)
     return response()->json(['success' => true]);
 }
 
-public function obtenerNotificaciones()
+public function resumen()
 {
-    $stock_bajo = Producto::where('stock_unidades', '<=', 10)->count();
+    // 🔴 Productos sin stock total (ningún lote con stock > 0)
+    $productosSinStock = Producto::whereDoesntHave('lotes', function ($q) {
+        $q->where('stock_actual', '>', 0);
+    })->count();
 
-    $proximos_a_vencer = Producto::whereNotNull('fecha_vencimiento')
-        ->where('fecha_vencimiento', '<=', now()->addDays(30))
-        ->count();
 
-    return response()->json([
-        'stock_bajo' => $stock_bajo,
-        'por_vencer' => $proximos_a_vencer
-    ]);
+    // 🟡 Productos con stock bajo (sumando todos los lotes)
+    $productosStockBajo = Producto::withSum('lotes as stock_total', 'stock_actual')
+        ->get()
+        ->filter(function ($producto) {
+            return ($producto->stock_total ?? 0) <= 10;
+        });
+
+
+    // ⚠️ Lotes próximos a vencer (30 días)
+    $lotesPorVencer = Lote::whereNotNull('fecha_vencimiento')
+        ->whereDate('fecha_vencimiento', '<=', now()->addDays(30))
+        ->where('stock_actual', '>', 0)
+        ->with('producto')
+        ->get();
+
+
+    // 📦 Total unidades en almacén
+    $totalUnidades = Lote::sum('stock_actual');
+
+
+    // 💰 Inversión real (lo que te costó)
+    $inversion = Lote::where('activo', 1)
+        ->where('stock_actual', '>', 0)
+        ->sum(DB::raw('stock_actual * precio_compra'));
+
+    // 💵 Valor comercial actual
+    $valorVenta = Lote::where('activo', 1)
+        ->where('stock_actual', '>', 0)
+        ->sum(DB::raw('stock_actual * precio_unidad'));
+
+    // 📈 Margen potencial
+    $margenPotencial = $valorVenta - $inversion;
+
+    // 📊 Porcentaje de rentabilidad
+    $porcentajeRentabilidad = $inversion > 0 
+        ? ($margenPotencial / $inversion) * 100 
+        : 0;
+
+        return view('inventario.resumen', compact(
+        'productosSinStock',
+        'productosStockBajo',
+        'lotesPorVencer',
+        'totalUnidades',
+        'inversion',
+        'valorVenta',
+        'margenPotencial',
+        'porcentajeRentabilidad'
+    ));
+
 }
+
 
 public function lote()
 {

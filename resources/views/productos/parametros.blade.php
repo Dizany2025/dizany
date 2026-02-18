@@ -1,5 +1,22 @@
 @extends('layouts.app')
 
+{{-- BOTÓN ATRÁS --}}
+@section('header-back')
+<button class="btn-header-back" onclick="history.back()">
+    <i class="fas fa-arrow-left"></i>
+</button>
+@endsection
+
+{{-- TÍTULO --}}
+@section('header-title')
+Parametros
+@endsection
+
+{{-- BOTONES DERECHA --}}
+@section('header-buttons')
+
+@endsection
+
 @section('content')
 <div class="container py-4">
     <div class="row g-4">
@@ -36,9 +53,24 @@
                                 <td>{{ $categoria->id }}</td>
                                 <td>{{ $categoria->nombre }}</td>
                                 <td>
-                                    <button type="button" class="btn btn-sm btn-danger btn-eliminar-categoria" data-id="{{ $categoria->id }}">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                    <div class="d-flex justify-content-center gap-1">
+
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-primary btn-editar-categoria"
+                                                data-id="{{ $categoria->id }}"
+                                                data-nombre="{{ $categoria->nombre }}"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modalEditarCategoria">
+                                            <i class="fas fa-pen"></i>
+                                        </button>
+
+                                        <button type="button"
+                                                class="btn btn-sm btn-danger btn-eliminar-categoria"
+                                                data-id="{{ $categoria->id }}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+
+                                    </div>
                                 </td>
                             </tr>
                             @endforeach
@@ -87,9 +119,25 @@
                                 <td>{{ $marca->nombre }}</td>
                                 <td>{{ $marca->descripcion }}</td>
                                 <td>
-                                    <button type="button" class="btn btn-sm btn-danger btn-eliminar-marca" data-id="{{ $marca->id }}">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                    <div class="d-flex justify-content-center gap-1">
+
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-primary btn-editar-marca"
+                                                data-id="{{ $marca->id }}"
+                                                data-nombre="{{ $marca->nombre }}"
+                                                data-descripcion="{{ $marca->descripcion }}"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modalEditarMarca">
+                                            <i class="fas fa-pen"></i>
+                                        </button>
+
+                                        <button type="button"
+                                                class="btn btn-sm btn-danger btn-eliminar-marca"
+                                                data-id="{{ $marca->id }}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+
+                                    </div>
                                 </td>
                             </tr>
                             @endforeach
@@ -128,6 +176,29 @@
     </div>
 </div>
 
+<div class="modal fade" id="modalEditarCategoria" tabindex="-1">
+    <div class="modal-dialog">
+        <form method="POST" id="formEditarCategoria" class="modal-content">
+            @csrf
+            @method('PUT')
+
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Categoría</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <label class="form-label">Nombre</label>
+                <input type="text" name="nombre" id="edit_nombre_categoria" class="form-control" required>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-success" type="submit">Guardar cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Modal Nueva Marca -->
 <div class="modal fade" id="modalMarca" tabindex="-1" aria-labelledby="modalMarcaLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -152,6 +223,33 @@
         </form>
     </div>
 </div>
+
+<div class="modal fade" id="modalEditarMarca" tabindex="-1">
+    <div class="modal-dialog">
+        <form method="POST" id="formEditarMarca" class="modal-content">
+            @csrf
+            @method('PUT')
+
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Marca</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <label class="form-label">Nombre</label>
+                <input type="text" name="nombre" id="edit_nombre_marca" class="form-control" required>
+
+                <label class="form-label mt-2">Descripción</label>
+                <textarea name="descripcion" id="edit_descripcion_marca" class="form-control" rows="2"></textarea>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-success" type="submit">Guardar cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
@@ -230,53 +328,53 @@
     });
 </script>
 <script>
-document.getElementById('buscador-marca').addEventListener('input', function () {
-    const filtro = this.value.toLowerCase();
-    const filas = document.querySelectorAll('#tabla-marca tr');
+    document.getElementById('buscador-marca').addEventListener('input', function () {
+        const filtro = this.value.toLowerCase();
+        const filas = document.querySelectorAll('#tabla-marca tr');
 
-    filas.forEach(fila => {
-        const texto = fila.textContent.toLowerCase();
-        fila.style.display = texto.includes(filtro) ? '' : 'none';
+        filas.forEach(fila => {
+            const texto = fila.textContent.toLowerCase();
+            fila.style.display = texto.includes(filtro) ? '' : 'none';
+        });
     });
-});
 </script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const inputCategoria = document.getElementById('nombre_categoria');
-    const btnGuardarCategoria = document.getElementById('btn-guardar-categoria');
-    const alertaCategoria = document.getElementById('alerta-categoria');
+    document.addEventListener('DOMContentLoaded', function () {
+        const inputCategoria = document.getElementById('nombre_categoria');
+        const btnGuardarCategoria = document.getElementById('btn-guardar-categoria');
+        const alertaCategoria = document.getElementById('alerta-categoria');
 
-    inputCategoria.addEventListener('input', () => {
-        const nombre = inputCategoria.value.trim();
+        inputCategoria.addEventListener('input', () => {
+            const nombre = inputCategoria.value.trim();
 
-        if (nombre.length < 2) {
-            alertaCategoria.textContent = '';
-            btnGuardarCategoria.disabled = true;
-            return;
-        }
+            if (nombre.length < 2) {
+                alertaCategoria.textContent = '';
+                btnGuardarCategoria.disabled = true;
+                return;
+            }
 
-        fetch(`/validar-categoria?nombre=${encodeURIComponent(nombre)}`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.existe) {
-                    alertaCategoria.textContent = '❌ Ya existe una categoría con ese nombre';
+            fetch(`/validar-categoria?nombre=${encodeURIComponent(nombre)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.existe) {
+                        alertaCategoria.textContent = '❌ Ya existe una categoría con ese nombre';
+                        alertaCategoria.classList.add('text-danger');
+                        btnGuardarCategoria.disabled = true;
+                    } else {
+                        alertaCategoria.textContent = '✅ Nombre válido';
+                        alertaCategoria.classList.remove('text-danger');
+                        alertaCategoria.classList.add('text-success');
+                        btnGuardarCategoria.disabled = false;
+                    }
+                })
+                .catch(() => {
+                    alertaCategoria.textContent = '⚠️ Error al validar';
                     alertaCategoria.classList.add('text-danger');
                     btnGuardarCategoria.disabled = true;
-                } else {
-                    alertaCategoria.textContent = '✅ Nombre válido';
-                    alertaCategoria.classList.remove('text-danger');
-                    alertaCategoria.classList.add('text-success');
-                    btnGuardarCategoria.disabled = false;
-                }
-            })
-            .catch(() => {
-                alertaCategoria.textContent = '⚠️ Error al validar';
-                alertaCategoria.classList.add('text-danger');
-                btnGuardarCategoria.disabled = true;
-            });
+                });
+        });
     });
-});
 </script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -314,52 +412,81 @@ document.addEventListener('DOMContentLoaded', function () {
                 alertaMarca.classList.remove('text-success');
                 btnGuardarMarca.disabled = true;
             });
+        });
     });
-});
 </script>
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const modalCategoria = document.getElementById('modalCategoria');
-    const modalMarca = document.getElementById('modalMarca');
+    document.addEventListener('DOMContentLoaded', function () {
+        const modalCategoria = document.getElementById('modalCategoria');
+        const modalMarca = document.getElementById('modalMarca');
 
-    const inputCategoria = document.getElementById('nombre_categoria');
-    const alertaCategoria = document.getElementById('alerta-categoria');
-    const btnGuardarCategoria = document.getElementById('btn-guardar-categoria');
+        const inputCategoria = document.getElementById('nombre_categoria');
+        const alertaCategoria = document.getElementById('alerta-categoria');
+        const btnGuardarCategoria = document.getElementById('btn-guardar-categoria');
 
-    const inputMarca = document.getElementById('nombre_marca');
-    const alertaMarca = document.getElementById('alerta-marca');
-    const btnGuardarMarca = document.getElementById('btn-guardar-marca');
+        const inputMarca = document.getElementById('nombre_marca');
+        const alertaMarca = document.getElementById('alerta-marca');
+        const btnGuardarMarca = document.getElementById('btn-guardar-marca');
 
-    // Al cerrar modal categoría
-    modalCategoria.addEventListener('hidden.bs.modal', function () {
-        inputCategoria.value = '';
-        alertaCategoria.textContent = '';
-        alertaCategoria.classList.remove('text-danger', 'text-success');
-        btnGuardarCategoria.disabled = true;
+        // Al cerrar modal categoría
+        modalCategoria.addEventListener('hidden.bs.modal', function () {
+            inputCategoria.value = '';
+            alertaCategoria.textContent = '';
+            alertaCategoria.classList.remove('text-danger', 'text-success');
+            btnGuardarCategoria.disabled = true;
+        });
+
+        // Al cerrar modal marca
+        modalMarca.addEventListener('hidden.bs.modal', function () {
+            inputMarca.value = '';
+            alertaMarca.textContent = '';
+            alertaMarca.classList.remove('text-danger', 'text-success');
+            btnGuardarMarca.disabled = true;
+        });
     });
-
-    // Al cerrar modal marca
-    modalMarca.addEventListener('hidden.bs.modal', function () {
-        inputMarca.value = '';
-        alertaMarca.textContent = '';
-        alertaMarca.classList.remove('text-danger', 'text-success');
-        btnGuardarMarca.disabled = true;
-    });
-});
 </script>
+<script>
+    // Editar Categoría
+    document.querySelectorAll('.btn-editar-categoria').forEach(button => {
+        button.addEventListener('click', function () {
+            const id = this.dataset.id;
+            const nombre = this.dataset.nombre;
+
+            document.getElementById('edit_nombre_categoria').value = nombre;
+            document.getElementById('formEditarCategoria').action = `/categorias/${id}`;
+        });
+    });
+
+    // Editar Marca
+    document.querySelectorAll('.btn-editar-marca').forEach(button => {
+        button.addEventListener('click', function () {
+            const id = this.dataset.id;
+            const nombre = this.dataset.nombre;
+            const descripcion = this.dataset.descripcion;
+
+             console.log("Nombre recibido:", nombre);
+
+            document.getElementById('edit_nombre_marca').value = nombre;
+            document.getElementById('edit_descripcion_marca').value = descripcion;
+            document.getElementById('formEditarMarca').action = `/marcas/${id}`;
+        });
+    });
+
+</script>
+
 @if(session('success'))
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    Swal.fire({
-        toast: true,
-        icon: 'success',
-        title: '{{ session('success') }}',
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 2500,
-        timerProgressBar: true,
+    document.addEventListener('DOMContentLoaded', function () {
+        Swal.fire({
+            toast: true,
+            icon: 'success',
+            title: '{{ session('success') }}',
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2500,
+            timerProgressBar: true,
+        });
     });
-});
 </script>
 @endif
 

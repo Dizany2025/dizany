@@ -65,11 +65,11 @@
 
                     <div class="submenu-items {{ request()->is('inventario*') ? 'show' : '' }}">
 
-                        <!-- Stock -->
-                        <a href="{{ route('inventario.stock') }}"
-                        class="{{ request()->routeIs('inventario.stock') ? 'active' : '' }}">
-                            <i class="fas fa-boxes-stacked me-1"></i>
-                            <span class="menu-text">Stock</span>
+                        <!-- Resumen -->
+                        <a href="{{ route('inventario.resumen') }}"
+                        class="{{ request()->routeIs('inventario.resumen') ? 'active' : '' }}">
+                            <i class="fas fa-chart-pie me-1"></i>
+                            <span class="menu-text">Resumen</span>
                         </a>
 
                         <!-- Ingreso por Lote -->

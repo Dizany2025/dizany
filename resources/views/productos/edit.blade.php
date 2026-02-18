@@ -8,14 +8,20 @@
 
 {{-- BOTÓN ATRÁS --}}
 @section('header-back')
-<button class="btn-header-back"
-        type="button"
-        onclick="window.location='{{ route('productos.index') }}'">
-    <i class="fas fa-chevron-left"></i>
+<button class="btn-header-back" onclick="history.back()">
+    <i class="fas fa-arrow-left"></i>
 </button>
 @endsection
 
-@section('header-title','Editar Producto')
+{{-- TÍTULO --}}
+@section('header-title')
+Editar Producto
+@endsection
+
+{{-- BOTONES DERECHA --}}
+@section('header-buttons')
+
+@endsection
 
 @section('content')
 <div class="card shadow-sm mx-auto my-4" style="max-width: 960px;">

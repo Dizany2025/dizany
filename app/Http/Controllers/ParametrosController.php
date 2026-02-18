@@ -93,5 +93,37 @@ public function validarCategoria(Request $request)
     return response()->json(['existe' => $existe]);
 }
 
+public function updateMarca(Request $request, $id)
+{
+    $marca = Marca::findOrFail($id);
+
+    $request->validate([
+        'nombre' => 'required|string|max:100',
+        'descripcion' => 'nullable|string'
+    ]);
+
+    $marca->update([
+        'nombre' => $request->nombre,
+        'descripcion' => $request->descripcion
+    ]);
+
+    return redirect()->back()->with('success', 'Marca actualizada correctamente');
+}
+
+public function updateCategoria(Request $request, $id)
+{
+    $categoria = Categoria::findOrFail($id);
+
+    $request->validate([
+        'nombre' => 'required|string|max:100'
+    ]);
+
+    $categoria->update([
+        'nombre' => $request->nombre
+    ]);
+
+    return redirect()->back()->with('success', 'Categoría actualizada correctamente');
+}
+
 
 }

@@ -48,30 +48,45 @@
                 role="button"
                 data-bs-toggle="dropdown"
                 aria-expanded="false">
+
                     <i class="fas fa-bell fa-lg"></i>
-                    <span id="contadorTotal"
-                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">
-                        0
-                    </span>
+
+                    @if($totalAlertas > 0)
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            {{ $totalAlertas }}
+                        </span>
+                    @endif
+
                 </a>
 
                 <ul class="dropdown-menu dropdown-menu-end shadow"
                     aria-labelledby="notificacionesDropdown"
                     style="min-width: 250px;">
+
                     <li>
                         <a class="dropdown-item d-flex justify-content-between align-items-center"
-                        href="{{ route('inventario.stock') }}#stock">
-                            <span><i class="fas fa-boxes text-danger me-2"></i> Bajo stock</span>
-                            <span class="badge bg-danger" id="contadorStock">0</span>
+                        href="{{ route('inventario.resumen') }}">
+                            <span>
+                                <i class="fas fa-boxes text-danger me-2"></i> Bajo stock
+                            </span>
+                            <span class="badge bg-danger">
+                                {{ $alertaStockBajo }}
+                            </span>
                         </a>
                     </li>
+
                     <li>
                         <a class="dropdown-item d-flex justify-content-between align-items-center"
-                        href="{{ route('inventario.stock') }}#vencimiento">
-                            <span><i class="fas fa-calendar-alt text-warning me-2"></i> Por vencer</span>
-                            <span class="badge bg-warning text-dark" id="contadorVencimiento">0</span>
+                        href="{{ route('inventario.resumen') }}">
+                            <span>
+                                <i class="fas fa-calendar-alt text-warning me-2"></i> Por vencer
+                            </span>
+                            <span class="badge bg-warning text-dark">
+                                {{ $alertaPorVencer }}
+                            </span>
                         </a>
                     </li>
+
                 </ul>
             </div>
 

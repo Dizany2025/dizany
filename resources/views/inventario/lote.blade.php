@@ -217,7 +217,7 @@ Ingreso de Mercadería
 
                 {{-- FOOTER --}}
                 <div class="inv-actions mt-4">
-                    <a href="{{ route('inventario.stock') }}" class="btn btn-soft btn-cancel">
+                    <a href="{{ route('inventario.resumen') }}" class="btn btn-soft btn-cancel">
                         Cancelar
                     </a>
                     <button type="submit" class="btn btn-soft btn-save">

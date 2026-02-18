@@ -23,12 +23,14 @@ use App\Http\Controllers\MarcaController;
 use App\Http\Controllers\DashboardAdminController;
 use App\Http\Controllers\MovimientoController;
 use App\Http\Controllers\ProveedorController;
+use App\Http\Controllers\NotificacionController;
 //consultar dni y ruc
 use Illuminate\Support\Facades\Http;
 use App\Models\Producto;
 use App\Models\Marca;
 use App\Models\Categoria;
 use App\Models\ConfiguracionCatalogo;
+
 
 // Rutas autenticación
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -169,10 +171,17 @@ Route::get('/productos/parametros', [ParametrosController::class, 'index'])->nam
 Route::post('/marcas', [ParametrosController::class, 'storeMarca'])->name('parametros.marcas.store');
 Route::delete('/marcas/{id}', [ParametrosController::class, 'destroyMarca'])->name('parametros.marcas.destroy');
 Route::post('/marca/crear', [MarcaController::class, 'ajaxStore'])->name('marca.ajax.store');
+
+Route::put('/marcas/{id}', [ParametrosController::class, 'updateMarca'])
+    ->name('parametros.marcas.update');
+
 // Rutas de CATEGORÍAS
 Route::post('/categorias', [ParametrosController::class, 'storeCategoria'])->name('parametros.categorias.store');
 Route::delete('/categorias/{id}', [ParametrosController::class, 'destroyCategoria'])->name('parametros.categorias.destroy');
 Route::post('/categoria/crear', [CategoriaController::class, 'ajaxStore'])->name('categoria.ajax.store');
+
+Route::put('/categorias/{id}', [ParametrosController::class, 'updateCategoria'])
+    ->name('parametros.categorias.update');
 
 // Validación en tiempo real para marcas
 Route::get('/validar-marca', function (Illuminate\Http\Request $request) {
@@ -184,13 +193,12 @@ Route::get('/validar-categoria', function (Request $request) {
     $existe = Categoria::where('nombre', $request->nombre)->exists();
     return response()->json(['existe' => $existe]);
 });
-// FIN INETRFAZ PARAMETROS
-Route::get('/inventario/stock', [InventarioController::class, 'stock'])->name('inventario.stock');
-Route::get('/inventario/lote', [InventarioController::class, 'lote'])
-    ->name('inventario.lote');
-Route::post('/inventario/actualizar-stock/{id}', [InventarioController::class, 'actualizarStock']);
-Route::get('/notificaciones/inventario', [InventarioController::class, 'obtenerNotificaciones']);
 
+// resumen
+Route::get('/notificaciones/inventario', [NotificacionController::class, 'inventario']);
+
+Route::get('/inventario/resumen', [InventarioController::class, 'resumen'])
+    ->name('inventario.resumen');
 
 Route::post('/autorizar', [VentaController::class, 'autorizar'])->name('ventas.autorizar');
 Route::get('/comprobantes/descargar/{filename}', [VentaController::class, 'descargarComprobante']);
