@@ -14,10 +14,16 @@
     background: linear-gradient(135deg, #28a745, #198754);
 }
 
+
 .dashboard-card {
-    transition: 0.3s ease;
+    transition: all 0.25s ease;
+    cursor: default;
 }
 
 .dashboard-card:hover {
-    transform: translateY(-4px);
+    transform: translateY(-5px);
+}
+
+.dashboard-card h1 {
+    letter-spacing: 1px;
 }
