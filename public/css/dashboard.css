@@ -171,3 +171,134 @@ body {
 .chart-wrapper canvas {
     background: transparent;
 }
+
+/*icono*/
+/* ICONO GRANDE DIFUMINADO */
+.kpi-icon {
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 48px;
+    opacity: 0.15;
+}
+
+.kpi-icon i {
+    pointer-events: none;
+}
+
+/* Animación entrada */
+.kpi-card {
+    animation: fadeUp .6s ease forwards;
+    opacity: 0;
+}
+
+.kpi-card:nth-child(1) { animation-delay: .1s; }
+.kpi-card:nth-child(2) { animation-delay: .2s; }
+.kpi-card:nth-child(3) { animation-delay: .3s; }
+.kpi-card:nth-child(4) { animation-delay: .4s; }
+
+@keyframes fadeUp {
+    from {
+        transform: translateY(10px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+/* Separación superior del contenido */
+#content .container-fluid {
+    padding: 32px 28px 24px 28px;
+}
+.row.mb-4 {
+    margin-bottom: 28px !important;
+}
+
+/* ===============================
+   MOVIMIENTOS – ESTILO PREMIUM
+================================ */
+
+/* Contenedor item */
+.ult-mov-item {
+    padding: 14px 0;
+    border-bottom: 1px solid #f1f5f9;
+    transition: all .2s ease;
+}
+
+.ult-mov-item:last-child {
+    border-bottom: none;
+}
+
+.ult-mov-item:hover {
+    background: #f8fafc;
+    padding-left: 8px;
+    border-radius: 10px;
+}
+
+/* Icono circular */
+.mov-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+/* Ingreso */
+.mov-in {
+    background: rgba(34,197,94,0.12);
+    color: #16a34a;
+}
+
+/* Egreso */
+.mov-out {
+    background: rgba(239,68,68,0.12);
+    color: #dc2626;
+}
+
+/* Título */
+.mov-title {
+    font-size: 14px;
+}
+
+/* Monto */
+.mov-amount {
+    font-size: 15px;
+}
+
+/* ===============================
+   DASHBOARD STATUS MESSAGE
+================================ */
+
+.dashboard-status-card {
+    border-radius: 16px;
+}
+
+.status-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.status-positive {
+    background: rgba(34,197,94,0.15);
+    color: #16a34a;
+}
+
+.status-negative {
+    background: rgba(239,68,68,0.15);
+    color: #dc2626;
+}
+
+.status-neutral {
+    background: rgba(148,163,184,0.15);
+    color: #64748b;
+}

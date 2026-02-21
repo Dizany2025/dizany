@@ -27,89 +27,97 @@ Resumen de Inventario
 
         {{-- Sin stock --}}
         <div class="col">
-            <div class="card border-0 shadow-sm rounded-4 dashboard-card bg-gradient-danger text-white h-100">
-                <div class="card-body py-3 px-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="small opacity-75 fw-semibold mb-1">
-                                Productos sin stock
-                            </div>
-                            <div class="fs-3 fw-bold counter"
-                                 data-target="{{ $productosSinStock }}">
-                                0
-                            </div>
-                        </div>
-                        <div class="icon-circle bg-white bg-opacity-25">
-                            <i class="bi bi-x-circle"></i>
-                        </div>
+            <div class="card border-0 shadow-sm rounded-4 dashboard-card bg-gradient-danger text-white h-100 position-relative overflow-hidden">
+                <div class="card-body py-3 px-4 d-flex flex-column justify-content-between">
+
+                    <!-- Línea 1 -->
+                    <div class="small opacity-75 fw-semibold">
+                        Productos sin stock
                     </div>
+
+                    <!-- Línea 2 -->
+                    <div class="fs-2 fw-bold counter"
+                        data-target="{{ $productosSinStock }}">
+                        0
+                    </div>
+
                 </div>
+
+                <!-- Línea 3 (icono decorativo) -->
+                <i class="bi bi-x-circle card-icon"></i>
+
             </div>
         </div>
 
         {{-- Stock bajo --}}
         <div class="col">
-            <div class="card border-0 shadow-sm rounded-4 dashboard-card bg-gradient-warning text-dark h-100">
-                <div class="card-body py-3 px-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="small fw-semibold mb-1">
-                                Stock bajo
-                            </div>
-                            <div class="fs-3 fw-bold counter"
-                                 data-target="{{ $productosStockBajo->count() }}">
-                                0
-                            </div>
-                        </div>
-                        <div class="icon-circle bg-dark bg-opacity-10 text-dark">
-                            <i class="bi bi-exclamation-triangle"></i>
-                        </div>
+            <div class="card border-0 shadow-sm rounded-4 dashboard-card bg-gradient-warning text-dark h-100 position-relative overflow-hidden">
+                <div class="card-body py-3 px-4 d-flex flex-column justify-content-between">
+
+                    <!-- Línea 1 -->
+                    <div class="small fw-semibold">
+                        Stock bajo
                     </div>
+
+                    <!-- Línea 2 -->
+                    <div class="fs-2 fw-bold counter"
+                        data-target="{{ $productosStockBajo->count() }}">
+                        0
+                    </div>
+
                 </div>
+
+                <!-- Icono decorativo -->
+                <i class="bi bi-exclamation-triangle card-icon text-dark"></i>
+
             </div>
         </div>
 
         {{-- Por vencer --}}
         <div class="col">
-            <div class="card border-0 shadow-sm rounded-4 dashboard-card bg-gradient-info text-white h-100">
-                <div class="card-body py-3 px-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="small opacity-75 fw-semibold mb-1">
-                                Lotes por vencer
-                            </div>
-                            <div class="fs-3 fw-bold counter"
-                                 data-target="{{ $lotesPorVencer->count() }}">
-                                0
-                            </div>
-                        </div>
-                        <div class="icon-circle bg-white bg-opacity-25">
-                            <i class="bi bi-calendar-event"></i>
-                        </div>
+            <div class="card border-0 shadow-sm rounded-4 dashboard-card bg-gradient-info text-white h-100 position-relative overflow-hidden">
+                <div class="card-body py-3 px-4 d-flex flex-column justify-content-between">
+
+                    <!-- Línea 1 -->
+                    <div class="small opacity-75 fw-semibold">
+                        Lotes por vencer
                     </div>
+
+                    <!-- Línea 2 -->
+                    <div class="fs-2 fw-bold counter"
+                        data-target="{{ $lotesPorVencer->count() }}">
+                        0
+                    </div>
+
                 </div>
+
+                <!-- Icono decorativo -->
+                <i class="bi bi-calendar-event card-icon"></i>
+
             </div>
         </div>
 
         {{-- Total unidades --}}
         <div class="col">
-            <div class="card border-0 shadow-sm rounded-4 dashboard-card bg-gradient-success text-white h-100">
-                <div class="card-body py-3 px-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="small opacity-75 fw-semibold mb-1">
-                                Total unidades
-                            </div>
-                            <div class="fs-3 fw-bold counter"
-                                 data-target="{{ $totalUnidades }}">
-                                0
-                            </div>
-                        </div>
-                        <div class="icon-circle bg-white bg-opacity-25">
-                            <i class="bi bi-box-seam"></i>
-                        </div>
+            <div class="card border-0 shadow-sm rounded-4 dashboard-card bg-gradient-success text-white h-100 position-relative overflow-hidden">
+                <div class="card-body py-3 px-4 d-flex flex-column justify-content-between">
+
+                    <!-- Línea 1 -->
+                    <div class="small opacity-75 fw-semibold">
+                        Total unidades
                     </div>
+
+                    <!-- Línea 2 -->
+                    <div class="fs-2 fw-bold counter"
+                        data-target="{{ $totalUnidades }}">
+                        0
+                    </div>
+
                 </div>
+
+                <!-- Icono decorativo -->
+                <i class="bi bi-box-seam card-icon"></i>
+
             </div>
         </div>
 

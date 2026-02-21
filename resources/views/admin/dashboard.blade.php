@@ -25,32 +25,46 @@ Dashboard
 
         <div class="col-md-3">
             <div class="kpi-card kpi-primary">
-                <small class="kpi-title">Balance actual</small>
-                <div class="kpi-value">S/ {{ number_format($balance,2) }}</div>
+                <div class="kpi-icon">
+                    <i class="fas fa-wallet"></i>
+                </div>
+                <small class="kpi-label">Balance actual</small>
+                <div class="kpi-value counter" data-value="{{ $balance }}">
+                    S/ 0.00
+                </div>
             </div>
         </div>
 
         <div class="col-md-3">
             <div class="kpi-card kpi-success">
-                <small class="kpi-title">Ingresos hoy</small>
-                <div class="kpi-value success">
-                    + S/ {{ number_format($ingresosHoy,2) }}
+                <div class="kpi-icon">
+                    <i class="fas fa-arrow-up"></i>
+                </div>
+                <small class="kpi-label">Ingresos hoy</small>
+                <div class="kpi-value success counter" data-value="{{ $ingresosHoy }}">
+                    S/ 0.00
                 </div>
             </div>
         </div>
 
         <div class="col-md-3">
             <div class="kpi-card kpi-danger">
-                <small class="kpi-title">Gastos hoy</small>
-                <div class="kpi-value danger">
-                    - S/ {{ number_format($egresosHoy,2) }}
+                <div class="kpi-icon">
+                    <i class="fas fa-arrow-down"></i>
+                </div>
+                <small class="kpi-label">Gastos hoy</small>
+                <div class="kpi-value danger counter" data-value="{{ $egresosHoy }}">
+                    S/ 0.00
                 </div>
             </div>
         </div>
 
         <div class="col-md-3">
             <div class="kpi-card kpi-warning">
-                <small class="kpi-title">Pendientes</small>
+                <div class="kpi-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <small class="kpi-label">Pendientes</small>
                 <div class="kpi-sub warning">
                     Cobrar: S/ {{ number_format($porCobrar,2) }} <br>
                     Pagar: S/ {{ number_format($porPagar,2) }}
@@ -84,26 +98,40 @@ Dashboard
                     <h6 class="fw-bold mb-3">Últimos movimientos</h6>
 
                     @forelse($ultimosMovimientos as $m)
-                        <div class="d-flex justify-content-between align-items-center ult-mov-item">
+                        <div class="ult-mov-item">
 
-                            <div>
-                                <div class="fw-semibold">
-                                    {{ $m->concepto }}
+                            <div class="d-flex justify-content-between align-items-center">
+
+                                {{-- LADO IZQUIERDO --}}
+                                <div class="d-flex align-items-center gap-3">
+
+                                    <div class="mov-icon {{ $m->tipo === 'ingreso' ? 'mov-in' : 'mov-out' }}">
+                                        <i class="fas {{ $m->tipo === 'ingreso' ? 'fa-arrow-down' : 'fa-arrow-up' }}"></i>
+                                    </div>
+
+                                    <div>
+                                        <div class="fw-semibold mov-title">
+                                            {{ $m->concepto }}
+                                        </div>
+                                        <small class="text-muted">
+                                            {{ \Carbon\Carbon::parse($m->fecha)->format('d/m/Y') }}
+                                        </small>
+                                    </div>
+
                                 </div>
-                                <small class="text-muted">
-                                    {{ \Carbon\Carbon::parse($m->fecha)->format('d/m/Y') }}
-                                </small>
-                            </div>
 
-                            <div class="text-end">
-                                <div class="fw-bold {{ $m->tipo === 'ingreso' ? 'text-success' : 'text-danger' }}">
-                                    {{ $m->tipo === 'ingreso' ? '+' : '-' }}
-                                    S/ {{ number_format($m->monto,2) }}
+                                {{-- LADO DERECHO --}}
+                                <div class="text-end">
+                                    <div class="fw-bold mov-amount {{ $m->tipo === 'ingreso' ? 'text-success' : 'text-danger' }}">
+                                        {{ $m->tipo === 'ingreso' ? '+' : '-' }}
+                                        S/ {{ number_format($m->monto,2) }}
+                                    </div>
+
+                                    <span class="badge {{ $m->estado === 'pagado' ? 'bg-success' : 'bg-warning text-dark' }}">
+                                        {{ ucfirst($m->estado) }}
+                                    </span>
                                 </div>
 
-                                <span class="badge {{ $m->estado === 'pagado' ? 'bg-success' : 'bg-warning text-dark' }}">
-                                    {{ ucfirst($m->estado) }}
-                                </span>
                             </div>
 
                         </div>
@@ -117,6 +145,46 @@ Dashboard
             </div>
         </div>
 
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm dashboard-status-card">
+                <div class="card-body d-flex align-items-center gap-3">
+
+                    <div class="status-icon
+                        @if($balance > 0) status-positive
+                        @elseif($balance < 0) status-negative
+                        @else status-neutral
+                        @endif
+                    ">
+                        <i class="fas
+                            @if($balance > 0) fa-chart-line
+                            @elseif($balance < 0) fa-exclamation-triangle
+                            @else fa-minus
+                            @endif
+                        "></i>
+                    </div>
+
+                    <div>
+                        <div class="fw-semibold mb-1">
+                            Estado del negocio
+                        </div>
+
+                        <div class="text-muted">
+                            @if($balance > 0)
+                                Flujo positivo esta semana. Buen ritmo de ventas 👌
+                            @elseif($balance < 0)
+                                El balance es negativo. Revisa gastos y pendientes.
+                            @else
+                                No hay movimientos suficientes para analizar el flujo.
+                            @endif
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
     </div>
 
 </div>

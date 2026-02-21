@@ -16,8 +16,7 @@
 
 
 .dashboard-card {
-    transition: all 0.25s ease;
-    cursor: default;
+    transition: 0.2s ease;
 }
 
 .dashboard-card:hover {
@@ -31,14 +30,23 @@
 .icon-circle {
     width: 42px;
     height: 42px;
-    min-width: 42px; /* evita que se deforme */
+    min-width: 42px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
+    backdrop-filter: blur(4px);
 }
 
 .icon-circle i {
     font-size: 18px;
     line-height: 1;
+}
+
+.card-icon {
+    position: absolute;
+    bottom: 12px;
+    right: 14px;
+    font-size: 44px;
+    opacity: 0.25;
 }
