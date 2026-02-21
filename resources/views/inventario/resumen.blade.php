@@ -1,142 +1,175 @@
 @extends('layouts.app')
 
+{{-- BOTÓN ATRÁS --}}
+@section('header-back')
+<button class="btn-header-back" onclick="history.back()">
+    <i class="fas fa-arrow-left"></i>
+</button>
+@endsection
+
+{{-- TÍTULO --}}
 @section('header-title')
 Resumen de Inventario
 @endsection
 
 @push('styles')
-    <link href="{{ asset('css/resumen.css') }}" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link href="{{ asset('css/resumen.css') }}" rel="stylesheet" />
 @endpush
 
 @section('content')
 
 <div class="container py-4">
 
-    {{-- DASHBOARD CARDS PRO --}}
-    <div class="row g-3 mb-4 flex-nowrap overflow-auto">
+    {{-- DASHBOARD CARDS --}}
+    <div class="row g-3 mb-4 align-items-stretch">
 
         {{-- Sin stock --}}
         <div class="col">
-            <div class="card border-0 shadow-lg rounded-4 h-100 dashboard-card bg-gradient-danger text-white">
-                <div class="card-body d-flex flex-column justify-content-between">
-
-                    <div class="d-flex justify-content-between align-items-start">
-                        <span class="small opacity-75 fw-semibold">
-                            Productos sin stock
-                        </span>
-                        <i class="bi bi-x-circle fs-4 opacity-75"></i>
+            <div class="card border-0 shadow-sm rounded-4 dashboard-card bg-gradient-danger text-white h-100">
+                <div class="card-body py-3 px-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="small opacity-75 fw-semibold mb-1">
+                                Productos sin stock
+                            </div>
+                            <div class="fs-3 fw-bold counter"
+                                 data-target="{{ $productosSinStock }}">
+                                0
+                            </div>
+                        </div>
+                        <div class="icon-circle bg-white bg-opacity-25">
+                            <i class="bi bi-x-circle"></i>
+                        </div>
                     </div>
-
-                    <div class="mt-3">
-                        <h1 class="fw-bold display-6 mb-0 counter"
-                            data-target="{{ $productosSinStock }}">
-                            0
-                        </h1>
-                    </div>
-
                 </div>
             </div>
-
         </div>
 
         {{-- Stock bajo --}}
         <div class="col">
-            <div class="card border-0 shadow-lg rounded-4 h-100 dashboard-card bg-gradient-warning text-dark">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="small mb-1">Stock bajo</p>
-                        <h2 class="fw-bold mb-0 counter" data-target="{{ $productosStockBajo->count() }}">0</h2>
+            <div class="card border-0 shadow-sm rounded-4 dashboard-card bg-gradient-warning text-dark h-100">
+                <div class="card-body py-3 px-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="small fw-semibold mb-1">
+                                Stock bajo
+                            </div>
+                            <div class="fs-3 fw-bold counter"
+                                 data-target="{{ $productosStockBajo->count() }}">
+                                0
+                            </div>
+                        </div>
+                        <div class="icon-circle bg-dark bg-opacity-10 text-dark">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
                     </div>
-                    <i class="bi bi-exclamation-triangle fs-1 opacity-75"></i>
                 </div>
             </div>
         </div>
 
         {{-- Por vencer --}}
         <div class="col">
-            <div class="card border-0 shadow-lg rounded-4 h-100 dashboard-card bg-gradient-info text-white">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="small mb-1 opacity-75">Lotes por vencer</p>
-                        <h2 class="fw-bold mb-0 counter" data-target="{{ $lotesPorVencer->count() }}">0</h2>
+            <div class="card border-0 shadow-sm rounded-4 dashboard-card bg-gradient-info text-white h-100">
+                <div class="card-body py-3 px-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="small opacity-75 fw-semibold mb-1">
+                                Lotes por vencer
+                            </div>
+                            <div class="fs-3 fw-bold counter"
+                                 data-target="{{ $lotesPorVencer->count() }}">
+                                0
+                            </div>
+                        </div>
+                        <div class="icon-circle bg-white bg-opacity-25">
+                            <i class="bi bi-calendar-event"></i>
+                        </div>
                     </div>
-                    <i class="bi bi-calendar-event fs-1 opacity-75"></i>
                 </div>
             </div>
         </div>
 
         {{-- Total unidades --}}
         <div class="col">
-            <div class="card border-0 shadow-lg rounded-4 h-100 dashboard-card bg-gradient-success text-white">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="small mb-1 opacity-75">Total unidades</p>
-                        <h2 class="fw-bold mb-0 counter" data-target="{{ $totalUnidades }}">0</h2>
+            <div class="card border-0 shadow-sm rounded-4 dashboard-card bg-gradient-success text-white h-100">
+                <div class="card-body py-3 px-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="small opacity-75 fw-semibold mb-1">
+                                Total unidades
+                            </div>
+                            <div class="fs-3 fw-bold counter"
+                                 data-target="{{ $totalUnidades }}">
+                                0
+                            </div>
+                        </div>
+                        <div class="icon-circle bg-white bg-opacity-25">
+                            <i class="bi bi-box-seam"></i>
+                        </div>
                     </div>
-                    <i class="bi bi-box-seam fs-1 opacity-75"></i>
                 </div>
             </div>
         </div>
 
-        {{-- TARJETA FINANCIERA ERP --}}
-        <div class="col-md-6">
-            <div class="card border-0 shadow-lg rounded-4 bg-dark text-white h-100">
-                <div class="card-body">
+        {{-- Tarjeta financiera --}}
+        <div class="col-md-5">
+            <div class="card border-0 shadow-sm rounded-4 bg-dark text-white h-100">
+                <div class="card-body py-3 px-4">
 
-                    <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <p class="small mb-1 opacity-75">Inversión total inventario</p>
-                            <h2 class="fw-bold mb-0 counter-money" data-target="{{ $inversion }}">S/ 0</h2>
+                            <div class="small opacity-75 mb-1">
+                                Inversión total
+                            </div>
+                            <div class="fs-4 fw-bold counter-money"
+                                 data-target="{{ $inversion }}">
+                                S/ 0
+                            </div>
                         </div>
-                        <div class="mt-3">
-    <canvas id="miniFinanceChart" height="80"></canvas>
-</div>
 
-                        <div class="bg-success bg-opacity-25 p-3 rounded-circle">
-                            <i class="bi bi-cash-coin fs-3 text-success"></i>
+                        <div style="width:70px;height:70px;">
+                            <canvas id="miniFinanceChart"></canvas>
                         </div>
                     </div>
 
-                    <hr class="border-secondary">
-
-                    <div class="row text-center">
-
-                        <div class="col-4">
-                            <small class="opacity-75">Valor venta</small>
-                            <div class="fw-bold">
+                    <div class="d-flex justify-content-between mt-3 small">
+                        <div>
+                            <div class="opacity-75">Venta</div>
+                            <div class="fw-semibold">
                                 S/ {{ number_format($valorVenta, 2) }}
                             </div>
                         </div>
 
-                        <div class="col-4">
-                            <small class="opacity-75">Margen</small>
-                            <div class="fw-bold 
+                        <div>
+                            <div class="opacity-75">Margen</div>
+                            <div class="fw-semibold 
                                 {{ $margenPotencial >= 0 ? 'text-success' : 'text-danger' }}">
                                 S/ {{ number_format($margenPotencial, 2) }}
                             </div>
                         </div>
 
-                        <div class="col-4">
-                            <small class="opacity-75">Rentabilidad</small>
-                            <div class="fw-bold 
+                        <div>
+                            <div class="opacity-75">Rentabilidad</div>
+                            <div class="fw-semibold 
                                 {{ $porcentajeRentabilidad >= 0 ? 'text-success' : 'text-danger' }}">
                                 {{ number_format($porcentajeRentabilidad, 1) }}%
                             </div>
                         </div>
-
                     </div>
 
                 </div>
             </div>
         </div>
+
     </div>
 
-    {{-- PRODUCTOS CRÍTICOS --}}
+    {{-- TABLAS LADO A LADO --}}
     <div class="row g-4">
 
         <div class="col-md-6">
-            {{-- PRODUCTOS CRÍTICOS --}}
-            <div class="card shadow-lg rounded-4 border-0 h-100">
+            <div class="card shadow-sm rounded-4 border-0 h-100">
                 <div class="card-header bg-white fw-bold border-0">
                     Productos críticos
                 </div>
@@ -165,14 +198,12 @@ Resumen de Inventario
                             @endforeach
                         </tbody>
                     </table>
-                </div>   
+                </div>
             </div>
         </div>
-    
 
         <div class="col-md-6">
-            {{-- LOTES POR VENCER --}}
-            <div class="card shadow-lg rounded-4 border-0 h-100">
+            <div class="card shadow-sm rounded-4 border-0 h-100">
                 <div class="card-header bg-white fw-bold border-0">
                     Lotes próximos a vencer (30 días)
                 </div>
@@ -184,7 +215,7 @@ Resumen de Inventario
                                 <th>Producto</th>
                                 <th>Stock</th>
                                 <th>Vencimiento</th>
-                                <th>Días restantes</th>
+                                <th>Días</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -211,6 +242,7 @@ Resumen de Inventario
                 </div>
             </div>
         </div>
+
     </div>
 
 </div>

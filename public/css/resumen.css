@@ -21,9 +21,24 @@
 }
 
 .dashboard-card:hover {
-    transform: translateY(-5px);
+    transform: translateY(-4px);
 }
 
 .dashboard-card h1 {
     letter-spacing: 1px;
+}
+
+.icon-circle {
+    width: 42px;
+    height: 42px;
+    min-width: 42px; /* evita que se deforme */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-circle i {
+    font-size: 18px;
+    line-height: 1;
 }
