@@ -1,6 +1,10 @@
 /* =================================
    DIZANY UI – CARDS
 ================================= */
+.container-card {
+    max-width: 1100px;
+    margin: 0 auto;
+}
 
 .ui-card,
 .card.ui-card{

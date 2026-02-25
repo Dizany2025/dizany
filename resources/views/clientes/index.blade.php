@@ -23,83 +23,81 @@ Clientes
 @endsection
 
 @section('content')
-<div class="card clientes-card mx-auto my-4">
+<div class="card ui-card container-card my-4">
 
-    {{-- HEADER LIMPIO --}}
-    <div class="card-header bg-transparent border-0 text-center pt-4">
-        <h4 class="mb-0 fw-semibold">
-            <i class="fas fa-user-friends me-2 text-primary"></i>
-            Lista de Clientes
-        </h4>
-    </div>
+        <div class="card-header text-center pt-4">
+            <h4 class="mb-0 fw-semibold">
+                <i class="fas fa-user-friends me-2 text-primary"></i>
+                Lista de Clientes
+            </h4>
+        </div>
 
     <div class="card-body px-4 pb-4">
 
-        {{-- BUSCADOR CENTRADO --}}
-        <div class="d-flex justify-content-center mb-4">
-            <div class="position-relative" style="max-width: 350px; width:100%;">
-                <i class="fas fa-search clientes-search-icon"></i>
-                <input type="text"
-                       name="search"
-                       id="search"
-                       class="form-control clientes-search"
-                       placeholder="Buscar cliente..."
-                       value="{{ request()->query('search') }}">
-            </div>
-        </div>
-
-        {{-- TABLA --}}
-        <div class="table-responsive ui-scroll" style="max-height: 500px; overflow-y:auto;">
-            <div id="table-content">
-
-                <table class="table table-hover align-middle mb-0 ui-table text-nowrap">
-
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nombre</th>
-                            <th>Dirección</th>
-                            <th>Teléfono</th>
-                            <th>RUC</th>
-                            <th>DNI</th>
-                            <th class="text-center">Acciones</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        @foreach($clientes as $cliente)
-                            <tr>
-                                <td>{{ $cliente->id }}</td>
-                                <td class="fw-semibold">{{ $cliente->nombre }}</td>
-                                <td>{{ $cliente->direccion ?? 'No disponible' }}</td>
-                                <td>{{ $cliente->telefono ?? 'No disponible' }}</td>
-                                <td>{{ $cliente->ruc ?? 'No disponible' }}</td>
-                                <td>{{ $cliente->dni ?? 'No disponible' }}</td>
-                                <td>
-                                    <div class="d-flex justify-content-center action-buttons">
-
-                                        <a href="javascript:void(0);"
-                                           class="btn-soft btn-soft-warning btn-soft-icon btn-edit"
-                                           data-id="{{ $cliente->id }}">
-                                            <i class="fa fa-edit"></i>
-                                        </a>
-
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-
-                </table>
-
-                {{-- PAGINACIÓN --}}
-                <div class="d-flex justify-content-center mt-4">
-                    {{ $clientes->appends(['search' => request()->query('search')])->links() }}
+            {{-- BUSCADOR CENTRADO --}}
+            <div class="d-flex justify-content-center mb-4">
+                <div class="ui-search-wrapper" style="max-width: 350px; width:100%;">
+                    <i class="fas fa-search ui-search-icon"></i>
+                    <input type="text"
+                        name="search"
+                        id="search"
+                        class="form-control ui-input ui-search-input"
+                        placeholder="Buscar cliente..."
+                        value="{{ request()->query('search') }}">
                 </div>
-
             </div>
-        </div>
 
+            {{-- TABLA --}}
+            <div class="table-responsive ui-scroll" style="max-height: 500px; overflow-y:auto;">
+                <div id="table-content">
+
+                    <table class="table table-hover align-middle mb-0 ui-table text-nowrap">
+
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Dirección</th>
+                                <th>Teléfono</th>
+                                <th>RUC</th>
+                                <th>DNI</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach($clientes as $cliente)
+                                <tr>
+                                    <td>{{ $cliente->id }}</td>
+                                    <td class="fw-semibold">{{ $cliente->nombre }}</td>
+                                    <td>{{ $cliente->direccion ?? 'No disponible' }}</td>
+                                    <td>{{ $cliente->telefono ?? 'No disponible' }}</td>
+                                    <td>{{ $cliente->ruc ?? 'No disponible' }}</td>
+                                    <td>{{ $cliente->dni ?? 'No disponible' }}</td>
+                                    <td>
+                                        <div class="d-flex justify-content-center action-buttons">
+
+                                            <a href="javascript:void(0);"
+                                            class="btn-soft btn-soft-warning btn-soft-icon btn-edit"
+                                            data-id="{{ $cliente->id }}">
+                                                <i class="fa fa-edit"></i>
+                                            </a>
+
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+
+                    </table>
+
+                    {{-- PAGINACIÓN --}}
+                    <div class="d-flex justify-content-center mt-4">
+                        {{ $clientes->appends(['search' => request()->query('search')])->links() }}
+                    </div>
+
+                </div>
+            </div>
     </div>
 </div>
 <!-- Modal de Edición de Cliente -->

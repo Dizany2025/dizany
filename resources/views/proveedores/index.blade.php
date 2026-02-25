@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+@push('styles')
+    <link href="{{ asset('css/proveedor.css') }}" rel="stylesheet" />
+@endpush
+
 {{-- BOTÓN ATRÁS --}}
 @section('header-back')
 <button class="btn-header-back" onclick="history.back()">
@@ -23,25 +27,24 @@ Proveedores
 @endsection
 
 @section('content')
-<div class="container-fluid px-3 mt-4">
+<div class="card ui-card container-card my-4">
 
-    <div class="card ui-card mx-auto" style="max-width: 1100px;">
-        <div class="card-header bg-transparent border-0 text-center pt-4">
+        <div class="card-header text-center pt-4">
             <h4 class="mb-0 fw-semibold">
-                <i class="fas fa-industry me-2 text-primary"></i>
-                Lista de Proveedores
+                    <i class="fas fa-industry me-2 text-primary"></i>
+                    Lista de Proveedores
             </h4>
         </div>
 
-        <div class="card-body pt-2 pb-4">
+    <div class="card-body pt-2 pb-4">
 
         {{-- BUSCADOR --}}
-        <div class="d-flex justify-content-center mb-3">
-            <div class="position-relative" style="max-width: 420px; width:100%;">
-                <i class="fas fa-search clientes-search-icon"></i>
+        <div class="d-flex justify-content-center mb-4">
+            <div class="ui-search-wrapper">
+                <i class="fas fa-search ui-search-icon"></i>
                 <input type="text"
                     id="searchProveedor"
-                    class="form-control ui-input"
+                    class="form-control ui-input ui-search-input"
                     placeholder="Buscar por razón social, nombre, DNI o RUC...">
             </div>
         </div>
@@ -71,15 +74,15 @@ Proveedores
                                     <td>{{ $proveedor->email ?? '—' }}</td>
                                     <td>
                                         @if($proveedor->estado)
-                                            <span class="badge bg-success">Activo</span>
+                                            <span class="ui-badge ui-badge-success">Activo</span>
                                         @else
-                                            <span class="badge bg-secondary">Inactivo</span>
+                                            <span class="ui-badge ui-badge-secondary">Inactivo</span>
                                         @endif
                                     </td>
                                     <td>
                                         <div class="d-flex justify-content-center gap-2 action-buttons">
                                             <button type="button"
-                                                    class="btn-soft btn-soft-warning btn-soft-icon btn-edit"
+                                                    class="btn-soft btn-soft-warning btn-soft-icon"
                                                     data-id="{{ $proveedor->id }}"
                                                     data-bs-toggle="modal"
                                                     data-bs-target="#modalEditarProveedor">
@@ -99,10 +102,7 @@ Proveedores
                     </table>
                 </div>
             </div>
-
-        </div>
     </div>
-
 </div>
 
 

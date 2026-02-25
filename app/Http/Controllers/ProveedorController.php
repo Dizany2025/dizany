@@ -53,4 +53,24 @@ public function edit($id)
         return redirect()->route('proveedores.index')
             ->with('success', 'Proveedor registrado correctamente');
     }
+
+    public function update(Request $request, $id)
+{
+    $proveedor = Proveedor::findOrFail($id);
+
+    $data = $request->validate([
+        'nombre' => 'required|string|max:255',
+        'tipo_documento' => 'required|string|max:10',
+        'numero_documento' => 'required|string|max:30',
+        'contacto' => 'nullable|string|max:255',
+        'telefono' => 'nullable|string|max:30',
+        'email' => 'nullable|email|max:255',
+        'direccion' => 'nullable|string|max:255',
+        'estado' => 'required|in:0,1',
+    ]);
+
+    $proveedor->update($data);
+
+    return redirect()->route('proveedores.index')->with('success', 'Proveedor actualizado correctamente.');
+}
 }

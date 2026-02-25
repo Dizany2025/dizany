@@ -6,6 +6,11 @@
     font-size: 14px;
 }
 
+.ui-table thead {
+    background: linear-gradient(90deg, #1e40af, #2563eb);
+    color: white;
+}
+
 .ui-table thead th {
     background: #1f6fd8;
     color: #ffffff;
@@ -17,14 +22,52 @@
     z-index: 20;
 }
 
+.ui-table tbody tr {
+    transition: background .15s ease;
+}
+
 .ui-table tbody tr:hover {
     background: #f8fafc;
 }
 
-.ui-table td {
-    border-top: 1px solid #f1f5f9;
+.ui-table th {
+    font-weight: 600;
+    border: none;
+    padding: 14px 16px;
 }
 
+.ui-table td {
+    border-top: 1px solid #f1f5f9;
+    padding: 14px 16px;
+}
+
+.ui-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 999px;
+}
+
+.ui-badge-success {
+    background: rgba(34,197,94,.15);
+    color: #16a34a;
+}
+
+.ui-badge-secondary {
+    background: rgba(148,163,184,.2);
+    color: #475569;
+}
+
+.ui-badge-danger {
+    background: rgba(239,68,68,.15);
+    color: #dc2626;
+}
+
+.ui-badge-warning {
+    background: rgba(234,179,8,.15);
+    color: #ca8a04;
+}
 /* Scroll fino */
 
 .ui-scroll::-webkit-scrollbar {

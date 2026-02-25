@@ -53,30 +53,30 @@ Usuarios
         </ul>
     </div>
     @endif
-    <div class="card users-card mx-auto my-4">
-    
-        {{-- HEADER LIMPIO --}}
-        <div class="card-header bg-transparent border-0 text-center pt-4">
+<div class="card ui-card container-card my-4">
+
+        <div class="card-header text-center pt-4">
             <h4 class="mb-0 fw-semibold">
                 <i class="fa-solid fa-users me-2 text-primary"></i>
                 Lista de Usuarios
             </h4>
         </div>
 
-        <div class="card-body px-4 pb-4">
+    <div class="card-body px-4 pb-4">
 
             {{-- BUSCADOR + EXPORTAR --}}
             <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
 
-                <div class="flex-grow-1" style="max-width: 400px;">
+                <div class="ui-search-wrapper flex-grow-1" style="max-width: 400px;">
+                    <i class="fas fa-search ui-search-icon"></i>
                     <input type="text"
                         id="buscadorUsuarios"
-                        class="form-control users-search"
+                        class="form-control ui-input ui-search-input"
                         placeholder="Buscar por nombre, usuario o rol...">
                 </div>
 
                 <a href="{{ route('usuarios.exportarExcel') }}"
-                class="btn btn-success users-export-btn">
+                class="btn-soft btn-soft-success">
                     <i class="fa-solid fa-file-excel me-1"></i>
                     Exportar Excel
                 </a>
@@ -154,9 +154,8 @@ Usuarios
 
                 </table>
             </div>
-
-        </div>
     </div>
+</div>
 
 <!-- Modal para Agregar Usuario -->
 <div class="modal fade" id="modalNuevoUsuario" tabindex="-1" aria-hidden="true">

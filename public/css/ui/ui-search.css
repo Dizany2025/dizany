@@ -1,0 +1,30 @@
+/* =================================
+   DIZANY UI – SEARCH SYSTEM
+================================= */
+
+.ui-search-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+}
+
+.ui-search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    color: #94a3b8;
+    pointer-events: none;
+    transition: color .2s ease;
+}
+
+.ui-search-input {
+    padding-left: 40px !important;
+    border-radius: 14px;
+}
+
+/* Efecto focus premium */
+.ui-search-wrapper:focus-within .ui-search-icon {
+    color: #2563eb;
+}

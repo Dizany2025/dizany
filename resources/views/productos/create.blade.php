@@ -35,11 +35,14 @@ Nuevo Producto
 <link href="{{ asset('css/crear_productos.css') }}" rel="stylesheet" />
 
 <!-- Formulario en tarjeta -->
-<div class="card shadow-sm mx-auto my-4" style="max-width: 960px;">
-    <div class="card-header bg-primary text-white text-center">
-        <h4 class="mb-0"><i class="fas fa-box-open"></i> Nuevo Producto</h4>
+<div class="card ui-card container-card my-4">
+
+        <div class="card-header text-center pt-4">
+            <h4 class="mb-0 fw-semibold">
+            <i class="fas fa-box-open"></i> Nuevo Producto
+        </h4>
     </div>
-    <div class="card-body">
+    <div class="card-body pt-2 pb-4">
 
         {{-- Errores de validación --}}
         @if ($errors->any())
@@ -63,7 +66,7 @@ Nuevo Producto
                 <input type="text"
                     name="codigo_barras"
                     id="codigo_barras"
-                    class="form-control"
+                    class="form-control ui-input"
                     value="{{ old('codigo_barras') }}">
 
                 <div id="codigo_barras_error"
@@ -76,7 +79,7 @@ Nuevo Producto
                 <label class="form-label">Nombre</label>
                 <input type="text"
                        name="nombre"
-                       class="form-control"
+                       class="form-control ui-input"
                        value="{{ old('nombre') }}"
                        required>
             </div>
@@ -85,14 +88,14 @@ Nuevo Producto
                 <label class="form-label">Ubicación</label>
                 <input type="text"
                        name="ubicacion"
-                       class="form-control"
+                       class="form-control ui-input"
                        value="{{ old('ubicacion') }}">
             </div>
 
             <div class="col-12">
                 <label class="form-label">Descripción</label>
                 <textarea name="descripcion"
-                          class="form-control"
+                          class="form-control ui-input"
                           rows="2">{{ old('descripcion') }}</textarea>
             </div>
 

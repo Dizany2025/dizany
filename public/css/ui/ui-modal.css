@@ -98,3 +98,37 @@
 .modal-backdrop.show{
   opacity: .55;
 }
+
+/* =========================
+   DIZANY UI – MODAL
+========================= */
+
+.modal-content {
+    border-radius: 18px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 25px 60px rgba(0,0,0,.18);
+    overflow: hidden;
+}
+
+/* Header más fino */
+.modal-header {
+    background: linear-gradient(90deg, #1e40af, #2563eb);
+    color: white;
+    border-bottom: none;
+    padding: 16px 22px;
+}
+
+.modal-title {
+    font-weight: 600;
+    font-size: 16px;
+}
+
+/* Botón cerrar más limpio */
+.modal-header .btn-close {
+    filter: brightness(0) invert(1);
+    opacity: .8;
+}
+
+.modal-header .btn-close:hover {
+    opacity: 1;
+}

@@ -1,12 +1,7 @@
 @extends('layouts.app')
 
 @push('styles')
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <!-- CSS personalizado para productos -->
-    
+    <link href="{{ asset('css/mostrar_detalles_productos.css') }}" rel="stylesheet" />    
 @endpush
 
 {{-- Botón atrás (opcional) --}}
@@ -30,39 +25,68 @@ Productos
 @endsection
 
 @section('content')
-<link href="{{ asset('css/mostrar_detalles_productos.css') }}" rel="stylesheet" />
-<div class="card mx-auto my-4" style="max-width: 1000px;">
-    <div class="card-header text-center bg-primary text-white">
-        <h4 class="mb-0"><i class="fa-solid fa-receipt"></i> Lista de Productos</h4>
+
+@section('content')
+
+<div class="card ui-card container-card my-4">
+
+    {{-- HEADER --}}
+    <div class="card-header text-center pt-4">
+        <h4 class="mb-0 fw-semibold">
+            <i class="fa-solid fa-box me-2 text-primary"></i>
+            Lista de Productos
+        </h4>
     </div>
-    <div class="card-body">
+
+    <div class="card-body pt-2 pb-4">
 
         <!-- Filtro y buscador -->
-        <form method="GET" action="{{ route('productos.index') }}" class="row gy-2 gx-2 align-items-center mb-3">
+        <form method="GET"
+            action="{{ route('productos.index') }}"
+            class="row g-3 align-items-end mb-4">
+
             <div class="col-md-3">
-                <select name="categoria_id" class="form-select">
+                <select name="categoria_id" class="form-select ui-input">
                     <option value="todos">- Todas las Categorías -</option>
                     @foreach($categorias as $categoria)
-                        <option value="{{ $categoria->id }}" {{ request('categoria_id') == $categoria->id ? 'selected' : '' }}>{{ $categoria->nombre }}</option>
+                        <option value="{{ $categoria->id }}"
+                            {{ request('categoria_id') == $categoria->id ? 'selected' : '' }}>
+                            {{ $categoria->nombre }}
+                        </option>
                     @endforeach
                 </select>
             </div>
+
             <div class="col-md-3">
-                <select name="marca_id" class="form-select">
+                <select name="marca_id" class="form-select ui-input">
                     <option value="todos">- Todas las Marcas -</option>
                     @foreach($marcas as $marca)
-                        <option value="{{ $marca->id }}" {{ request('marca_id') == $marca->id ? 'selected' : '' }}>{{ $marca->nombre }}</option>
+                        <option value="{{ $marca->id }}"
+                            {{ request('marca_id') == $marca->id ? 'selected' : '' }}>
+                            {{ $marca->nombre }}
+                        </option>
                     @endforeach
                 </select>
             </div>
+
             <div class="col-md-4">
-                <input type="search" name="search" class="form-control" placeholder="Buscar código / nombre..." value="{{ request('search') }}">
+                <div class="ui-search-wrapper">
+                    <i class="fas fa-search ui-search-icon"></i>
+                    <input type="search"
+                        name="search"
+                        class="form-control ui-input ui-search-input"
+                        placeholder="Buscar código / nombre..."
+                        value="{{ request('search') }}">
+                </div>
             </div>
-            <div class="col-md-2 d-flex justify-content-end">
-                <button type="submit" class="btn btn-primary me-2">
+
+            <div class="col-md-2 d-flex gap-2 justify-content-end">
+                <button type="submit" class="btn-soft btn-soft-primary btn-soft-icon">
                     <i class="fas fa-search"></i>
                 </button>
-                <a href="{{ route('productos.export') }}" class="btn btn-success">
+
+                <a href="{{ route('productos.export') }}"
+                class="btn-soft btn-soft-success btn-soft-icon">
                     <i class="fa-solid fa-file-excel"></i>
                 </a>
             </div>
@@ -70,7 +94,7 @@ Productos
 
         <!-- Tabla de productos -->
         <div class="table-responsive">
-            <table class="table table-hover align-middle text-center table-bordered mb-0">
+            <table class="table table-hover align-middle mb-0 ui-table text-nowrap">
                 <thead class="table-light">
                     <tr>
                         <th>Imagen</th>
@@ -101,14 +125,14 @@ Productos
                             <td>
                                 <span class="fw-bold">{{ $producto->stock_total }}</span>
                                 @if($producto->stock_total <= 5)
-                                    <span class="badge bg-danger ms-1">Stock bajo</span>
+                                    <span class="ui-badge ui-badge-danger ms-2">Stock bajo</span>
                                 @elseif($producto->stock_total <= 10)
-                                    <span class="badge bg-warning text-dark ms-1">Poco stock</span>
+                                    <span class="ui-badge ui-badge-warning ms-2">Poco stock</span>
                                 @endif
                             </td>
                             <td>
                                 <div class="d-flex justify-content-center gap-2">
-                                    <a href="{{ route('productos.edit', $producto->id) }}" class="btn btn-warning btn-sm">
+                                    <a href="{{ route('productos.edit', $producto->id) }}" class="btn-soft btn-soft-warning btn-soft-icon">
                                         <i class="fa-solid fa-pen"></i>
                                     </a>
 
@@ -117,19 +141,19 @@ Productos
                                         @csrf
                                         @method('PATCH')
                                         @if($producto->activo)
-                                            <button type="submit" class="btn btn-success btn-sm" title="Activo: clic para desactivar">
+                                            <button type="submit" class="btn-soft btn-soft-success btn-soft-icon" title="Activo: clic para desactivar">
                                                 <i class="fas fa-toggle-on"></i>
                                             </button>
                                         @else
-                                            <button type="submit" class="btn btn-danger btn-sm" title="Inactivo: clic para activar">
+                                            <button type="submit" class="btn-soft btn-soft-danger btn-soft-icon" title="Inactivo: clic para activar">
                                                 <i class="fas fa-toggle-off"></i>
                                             </button>
                                         @endif
                                     </form>
                                      <!-- Coloca este código dentro de tu tabla de productos, en la columna de acciones -->
                                     
-                                        <div class="d-flex justify-content-center gap-2">
-                                            <a href="javascript:void(0);" class="btn btn-info btn-sm ver-detalles" data-id="{{ $producto->id }}">
+                                        <div class="d-flex justify-content-center gap-2 action-buttons">
+                                            <a href="javascript:void(0);" class="btn-soft btn-soft-info btn-soft-icon ver-detalles" data-id="{{ $producto->id }}">
                                                 <i class="fa-solid fa-eye"></i>
                                             </a>
                                         </div>
@@ -159,8 +183,11 @@ Productos
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
 
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">Detalles del Producto</h5>
+           <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fa-solid fa-box me-2 text-primary"></i>
+                    Detalles del Producto
+                </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
 
@@ -172,31 +199,31 @@ Productos
                         <h6 class="fw-bold border-bottom pb-1">Información General</h6>
 
                         <label>ID</label>
-                        <input id="modalId" class="form-control mb-2" disabled>
+                        <input id="modalId" class="form-control ui-input" disabled>
 
                         <label>Código de Barras</label>
-                        <input id="modalCodigo" class="form-control mb-2" disabled>
+                        <input id="modalCodigo" class="form-control ui-input" disabled>
 
                         <label>Nombre</label>
-                        <input id="modalNombre" class="form-control mb-2" disabled>
+                        <input id="modalNombre" class="form-control ui-input" disabled>
 
                         <label>Descripción</label>
-                        <textarea id="modalDescripcion" class="form-control mb-2" rows="3" disabled></textarea>
+                        <textarea id="modalDescripcion" class="form-control ui-input" rows="3" disabled></textarea>
 
                         <label>Categoría</label>
-                        <input id="modalCategoria" class="form-control mb-2" disabled>
+                        <input id="modalCategoria" class="form-control ui-input" disabled>
 
                         <label>Marca</label>
-                        <input id="modalMarca" class="form-control mb-2" disabled>
+                        <input id="modalMarca" class="form-control ui-input" disabled>
 
                         <label>Ubicación</label>
-                        <input id="modalUbicacion" class="form-control mb-2" disabled>
+                        <input id="modalUbicacion" class="form-control ui-input" disabled>
 
                         <label>Activo</label>
-                        <input id="modalActivo" class="form-control mb-2" disabled>
+                        <input id="modalActivo" class="form-control ui-input" disabled>
 
                         <label>Visible en catálogo</label>
-                        <input id="modalVisibleCatalogo" class="form-control mb-2" disabled>
+                        <input id="modalVisibleCatalogo" class="form-control ui-input" disabled>
                     </div>
 
                     <!-- 🟩 PRESENTACIONES -->
@@ -204,16 +231,16 @@ Productos
                         <h6 class="fw-bold border-bottom pb-1">Presentaciones</h6>
 
                         <label>Unidades por paquete</label>
-                        <input id="modalUnidadesPorPaquete" class="form-control mb-2" disabled>
+                        <input id="modalUnidadesPorPaquete" class="form-control ui-input" disabled>
 
                         <label>Paquetes por caja</label>
-                        <input id="modalPaquetesPorCaja" class="form-control mb-2" disabled>
+                        <input id="modalPaquetesPorCaja" class="form-control ui-input" disabled>
 
                         <label>Unidades por caja</label>
-                        <input id="modalUnidadesPorCaja" class="form-control mb-2" disabled>
+                        <input id="modalUnidadesPorCaja" class="form-control ui-input" disabled>
 
                         <label>Maneja fecha de vencimiento</label>
-                        <input id="modalManejaVencimiento" class="form-control mb-2" disabled>
+                        <input id="modalManejaVencimiento" class="form-control ui-input" disabled>
                     </div>
 
                     <!-- 🟧 RESUMEN INVENTARIO (DESDE LOTES) -->
@@ -221,14 +248,14 @@ Productos
                         <h6 class="fw-bold border-bottom pb-1">Inventario (Resumen)</h6>
 
                         <label>Stock total actual</label>
-                        <input id="modalStockTotal" class="form-control mb-2" disabled>
+                        <input id="modalStockTotal" class="form-control ui-input" disabled>
 
                         <label>Lotes activos</label>
-                        <input id="modalCantidadLotes" class="form-control mb-2" disabled>
+                        <input id="modalCantidadLotes" class="form-control ui-input" disabled>
 
                         <div class="text-center mt-3">
                             <img id="modalImagen"
-                                 class="img-thumbnail"
+                                 class="ui-product-image"
                                  style="width:130px;height:130px;object-fit:contain;">
                         </div>
                     </div>
@@ -237,7 +264,9 @@ Productos
             </div>
 
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button class="btn-soft btn-soft-info" data-bs-dismiss="modal">
+                    Cerrar
+                </button>
             </div>
 
         </div>
