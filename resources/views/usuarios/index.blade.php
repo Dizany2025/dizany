@@ -100,58 +100,61 @@ Usuarios
 
                     <tbody>
                         @foreach($usuarios as $usuario)
-                            <tr>
-                                <td>{{ $usuario->id }}</td>
-                                <td class="fw-semibold">{{ $usuario->nombre }}</td>
-                                <td>{{ $usuario->usuario }}</td>
-                                <td>
-                                    <span class="badge bg-light text-dark border">
-                                        {{ $usuario->rol->nombre ?? 'Sin rol' }}
-                                    </span>
-                                </td>
+                        <tr>
+                            <td data-label="ID">{{ $usuario->id }}</td>
 
-                                <td>
-                                    <div class="d-flex justify-content-center gap-2 action-buttons">
+                            <td data-label="Nombre" class="fw-semibold">
+                                {{ $usuario->nombre }}
+                            </td>
 
-                                        {{-- EDITAR --}}
-                                        <button type="button"
-                                            class="btn btn-warning btn-sm"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#modalEditarUsuario"
-                                            data-id="{{ $usuario->id }}"
-                                            data-nombre="{{ $usuario->nombre }}"
-                                            data-usuario="{{ $usuario->usuario }}"
-                                            data-email="{{ $usuario->email }}"
-                                            data-rol="{{ $usuario->rol_id }}">
-                                            <i class="fa fa-edit"></i>
+                            <td data-label="Usuario">
+                                {{ $usuario->usuario }}
+                            </td>
+
+                            <td data-label="Rol">
+                                <span class="badge bg-light text-dark border">
+                                    {{ $usuario->rol->nombre ?? 'Sin rol' }}
+                                </span>
+                            </td>
+
+                            <td data-label="Acciones">
+                                <div class="d-flex justify-content-center gap-2 action-buttons">
+
+                                    <button type="button"
+                                        class="btn btn-warning btn-sm"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modalEditarUsuario"
+                                        data-id="{{ $usuario->id }}"
+                                        data-nombre="{{ $usuario->nombre }}"
+                                        data-usuario="{{ $usuario->usuario }}"
+                                        data-email="{{ $usuario->email }}"
+                                        data-rol="{{ $usuario->rol_id }}">
+                                        <i class="fa fa-edit"></i>
+                                    </button>
+
+                                    <form action="{{ route('usuarios.destroy', $usuario->id) }}"
+                                        method="POST"
+                                        onsubmit="return confirm('¿Estás seguro de eliminar este usuario?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger btn-sm">
+                                            <i class="fa fa-trash"></i>
                                         </button>
+                                    </form>
 
-                                        {{-- ELIMINAR --}}
-                                        <form action="{{ route('usuarios.destroy', $usuario->id) }}"
-                                            method="POST"
-                                            onsubmit="return confirm('¿Estás seguro de eliminar este usuario?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-danger btn-sm">
-                                                <i class="fa fa-trash"></i>
-                                            </button>
-                                        </form>
+                                    <button class="btn btn-primary btn-sm cambiar-clave-btn"
+                                        data-id="{{ $usuario->id }}"
+                                        data-nombre="{{ $usuario->nombre }}"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modalCambiarClave">
+                                        <i class="fa-solid fa-key"></i>
+                                    </button>
 
-                                        {{-- CAMBIAR CLAVE --}}
-                                        <button class="btn btn-primary btn-sm cambiar-clave-btn"
-                                                data-id="{{ $usuario->id }}"
-                                                data-nombre="{{ $usuario->nombre }}"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#modalCambiarClave">
-                                            <i class="fa-solid fa-key"></i>
-                                        </button>
-
-                                    </div>
-                                </td>
-                            </tr>
+                                </div>
+                            </td>
+                        </tr>
                         @endforeach
                     </tbody>
-
                 </table>
             </div>
     </div>

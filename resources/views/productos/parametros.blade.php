@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @push('styles')
-
+<link href="{{ asset('css/parametros.css') }}" rel="stylesheet" />
 @endpush
 {{-- BOTÓN ATRÁS --}}
 @section('header-back')

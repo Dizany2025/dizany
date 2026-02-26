@@ -18,6 +18,7 @@
     <link href="{{ asset('css/ui/ui-card.css') }}" rel="stylesheet" />
     <link href="{{ asset('css/ui/ui-variables.css') }}" rel="stylesheet" />
     <link href="{{ asset('css/ui/ui-search.css') }}" rel="stylesheet" />
+    <link href="{{ asset('css/ui/ui-responsive.css') }}" rel="stylesheet" />
 
     <!-- Vite -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
