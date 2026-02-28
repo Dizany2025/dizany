@@ -167,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 </div>
 
-                <div class="acciones-detalle sticky-actions">
+                <div class="acciones-detalle sticky-actions d-flex gap-2">
                     ${
                         (estado === 'pendiente' || estado === 'credito')
                         ? `
@@ -187,7 +187,9 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
 
             <div id="panel-cobro" style="display:none">
-                <h6 class="fw-bold mt-3">Cobrar venta</h6>
+                <h6 class="fw-semibold text-muted text-uppercase small mt-3">
+                    Cobrar venta
+                </h6>
 
                 <div class="fw-bold mb-2">
                     Total a pagar: S/ <span id="cc_total">${montoCobrar.toFixed(2)}</span>
@@ -215,11 +217,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
 
                 <div class="d-flex gap-2 mt-3">
-                    <button type="button" class="accion-btn" onclick="volverDetalle()">
+                    <button type="button" class="btn-soft btn-soft-info flex-fill" onclick="volverDetalle()">
                         Volver
                     </button>
 
-                    <button type="button" class="accion-btn success" onclick="confirmarCobro()">
+                    <button type="button" class="btn-soft btn-soft-success flex-fill" onclick="confirmarCobro()">
                         Registrar pago
                     </button>
                 </div>
