@@ -62,6 +62,10 @@
     border: 1px solid #e5e7eb;
     padding: 14px;
 }
+.detalle-card .divider-green{
+  margin-left: 0;
+  margin-right: 0;
+}
 
 .detalle-total {
     font-size: 26px;
@@ -205,10 +209,12 @@
     background-color: #eab308;
     color: #1f1f1f;
 }
-/* Quitar scroll del panel lateral */
-.detalle-venta-panel .offcanvas-body {
-    overflow: hidden;
-    padding-bottom: 90px; /* espacio para botones fijos */
+/* ✅ OFFCANVAS: permitir scroll real */
+.detalle-venta-panel .offcanvas-body{
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 120px; /* espacio para la barra de acciones */
 }
 .sticky-actions {
     position: absolute;

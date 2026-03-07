@@ -347,7 +347,8 @@ public function registrarVenta(Request $request)
 
             $pdf->save("$ruta/$nombreArchivo");
             $pdfUrl = asset("comprobantes/$nombreArchivo");
-            $venta->update(['pdf_url' => $pdfUrl]);
+            $venta->pdf_url = $pdfUrl;
+            $venta->save();
 
             /* ================= MOVIMIENTOS ================= */
             if ($estado === 'pagado') {
@@ -461,34 +462,50 @@ public function detalle($id)
     return response()->json([
         'id' => $venta->id,
 
-        // texto superior
-        'tipo' => ucfirst($venta->tipo_comprobante),
+        // === Comprobante (para que salga F001-000001) ===
+        'tipo_comprobante' => $venta->tipo_comprobante,               // "factura" | "boleta"
+        'tipo'             => ucfirst($venta->tipo_comprobante),      // texto superior (compat)
+        'serie'            => $venta->serie,                          // "F001"
+        'numero'           => str_pad($venta->correlativo, 6, '0', STR_PAD_LEFT), // "000001"
 
-        // estado real
-        'estado' => $venta->estado, // pagado | pendiente | credito
+        // === Estados ===
+        'estado'       => $venta->estado,        // pagado | pendiente | credito
+        'estado_sunat' => $venta->estado_sunat,  // aceptado | enviado | rechazado | pendiente | etc
 
-        // montos
-        'total' => $venta->total,
-        'saldo' => $venta->saldo, // 👈 CLAVE PARA EL SALDO PENDIENTE
+        // === Totales FE ===
+        'subtotal' => (float) $venta->op_gravadas, // tu op_gravadas = subtotal
+        'igv'      => (float) $venta->igv,
+        'total'    => (float) $venta->total,
+        'saldo'    => (float) $venta->saldo,
 
-        // fecha formateada (esto arregla el null)
+        // === Fecha ===
         'fecha_formato' => $venta->fecha
             ? $venta->fecha->format('h:i A | d F Y')
             : null,
 
-        // método
+        // === Método pago ===
         'metodo_pago' => $venta->metodo_pago,
 
-        // cliente COMO STRING (no objeto)
-        'cliente'       => optional($venta->cliente)->razon_social
-                                ?? optional($venta->cliente)->nombre
-                                ?? optional($venta->cliente)->nombres
-                                ?? '—',
+        // === Cliente (sigues enviándolo como string para tu JS actual) ===
+        'cliente' => optional($venta->cliente)->razon_social
+            ?? optional($venta->cliente)->nombre
+            ?? optional($venta->cliente)->nombres
+            ?? '—',
 
-        // ganancia total
-        'ganancia' => $venta->detalleVentas->sum('ganancia'),
+        // (opcional) si quieres mostrar RUC/DNI luego:
+        'cliente_doc' => optional($venta->cliente)->ruc
+            ?? optional($venta->cliente)->dni
+            ?? null,
 
-        // productos
+        // === Ganancia ===
+        'ganancia' => (float) $venta->detalleVentas->sum('ganancia'),
+
+        // === Archivos FE ===
+        'pdf_url' => $venta->pdf_url ?? null,
+        'xml_url' => $venta->xml_url ?? null,
+        'cdr_url' => $venta->cdr_url ?? null,
+
+        // === Productos ===
         'productos' => $venta->detalleVentas->map(function ($d) {
             return [
                 'nombre' => $d->producto->nombre,
@@ -497,9 +514,9 @@ public function detalle($id)
                     ? asset('uploads/productos/' . $d->producto->imagen)
                     : asset('img/sin-imagen.png'),
                 'cantidad_txt' => "{$d->cantidad} {$d->presentacion}",
-                'subtotal' => $d->subtotal,
+                'subtotal' => (float) $d->subtotal,
             ];
-        }),
+        })->values(),
     ]);
 }
 public function pagarCredito(Request $request, Venta $venta)

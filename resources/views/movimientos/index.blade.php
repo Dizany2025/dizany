@@ -292,7 +292,7 @@ Movimientos
     <div class="divider-green"></div>
 
     <div class="offcanvas-body" id="detalleContenido">
-        {{-- JS inyecta aquí --}}
+        {{-- EL JS inyecta aquí --}}
     </div>
 </div>
 

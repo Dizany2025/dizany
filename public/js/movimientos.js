@@ -1,5 +1,5 @@
 /* ===========================
-   movimientos.js (COMPLETO)
+   movimientos.js (COMPLETO FE)
    Requiere: Bootstrap + SweetAlert2
 =========================== */
 
@@ -32,7 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const toastWarn = (text) => toast('warning', text);
     const toastError = (text) => toast('error', text);
 
-    // 👇 AGREGA ESTO AQUÍ
+    const money = (n) => `S/ ${Number(n || 0).toFixed(2)}`;
+
     function renderEstadoBadge(estado) {
         switch (estado) {
             case 'pagado':
@@ -43,6 +44,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 return `<span class="ui-badge ui-badge-danger">Crédito</span>`;
             default:
                 return `<span class="ui-badge ui-badge-secondary">—</span>`;
+        }
+    }
+
+    // ✅ NUEVO: Badge SUNAT
+    function renderSunatBadge(estadoSunat) {
+        const s = (estadoSunat || '').toLowerCase();
+        switch (s) {
+            case 'aceptado':
+            case 'aceptada':
+                return `<span class="ui-badge ui-badge-success">Aceptado SUNAT</span>`;
+            case 'enviado':
+            case 'procesando':
+                return `<span class="ui-badge ui-badge-warning">Enviado a SUNAT</span>`;
+            case 'rechazado':
+                return `<span class="ui-badge ui-badge-danger">Rechazado SUNAT</span>`;
+            case 'anulado':
+                return `<span class="ui-badge ui-badge-secondary">Anulado</span>`;
+            case 'pendiente':
+                return `<span class="ui-badge ui-badge-secondary">SUNAT pendiente</span>`;
+            default:
+                return `<span class="ui-badge ui-badge-secondary">SUNAT —</span>`;
         }
     }
 
@@ -91,31 +113,55 @@ document.addEventListener('DOMContentLoaded', () => {
                 saldo,
                 montoCobrar
             };
-
-            // Render detalle completo
+const pdfUrl = v.pdf_url || v.url_pdf || v.pdf || v.pdfPath || null;
+const xmlUrl = v.xml_url || v.url_xml || v.xml || v.xmlPath || null;
+const cdrUrl = v.cdr_url || v.url_cdr || v.cdr || v.cdrPath || null;
+            // Render detalle FE
             contenido.innerHTML = `
             <div id="panel-detalle">
 
-                <div class="card ui-card rounded-4 detalle-card mt-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="text-muted">${(v.tipo || v.tipo_comprobante || 'Venta')} • Valor total</span>
-                        <div id="estadoVenta"></div>
+                <!-- ===== CARD RESUMEN (Comprobante + Estados + Total) ===== -->
+
+                <div class="card ui-card rounded-4 detalle-card mt-2 p-3">
+
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="text-muted small">Comprobante</div>
+                            <div class="fw-bold">
+                                ${(v.tipo_comprobante ?? v.tipo ?? 'Comprobante')}
+                                ${(v.serie ?? '')}-${(v.numero ?? '')}
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-column gap-1 align-items-end">
+                            <div id="estadoVenta"></div>
+                            <div id="estadoSunat"></div>
+                        </div>
                     </div>
 
-                    <div class="detalle-total">
-                        S/ ${total.toFixed(2)}
+                    <div class="d-flex justify-content-between align-items-end mt-2">
+                        <div class="text-muted small fw-semibold">Total</div>
+
+                        <div class="d-flex align-items-end gap-2">
+                            <span class="text-muted fw-semibold" style="font-size:14px; line-height:1;">S/</span>
+                            <span class="fw-bold" style="font-size:30px; line-height:1;">
+                                ${Number(total || 0).toFixed(2)}
+                            </span>
+                        </div>
                     </div>
 
                     ${
                         estado === 'credito'
                         ? `<div class="text-danger fw-bold mt-1">
-                                Saldo pendiente: S/ ${saldo.toFixed(2)}
-                           </div>`
+                                Saldo pendiente: ${money(saldo)}
+                        </div>`
                         : ''
                     }
 
-                    <hr>
+                </div>
 
+                <!-- ===== DATOS ===== -->
+                <div class="card ui-card rounded-4 mt-3 p-3">
                     <div class="detalle-item">
                         <i class="far fa-calendar"></i>
                         <span>Fecha y hora</span>
@@ -134,20 +180,53 @@ document.addEventListener('DOMContentLoaded', () => {
                         <strong>${typeof v.cliente === 'string' ? v.cliente : (v.cliente?.nombre ?? '—')}</strong>
                     </div>
 
+                    ${
+                        v.cliente_doc
+                        ? `<div class="detalle-item">
+                                <i class="fas fa-id-card"></i>
+                                <span>Documento</span>
+                                <strong>${v.cliente_doc}</strong>
+                           </div>`
+                        : ''
+                    }
+
                     <div class="detalle-item">
                         <i class="fas fa-chart-line"></i>
                         <span>Ganancia</span>
                         <strong class="text-success">
-                            S/ ${Number(v.ganancia || 0).toFixed(2)}
+                            ${money(v.ganancia || 0)}
                         </strong>
                     </div>
                 </div>
 
+                <!-- ===== TRIBUTOS (FE) ===== -->
+                <h6 class="mt-4 fw-semibold text-muted small text-uppercase">
+                    Información tributaria
+                </h6>
+
+                <div class="card ui-card rounded-4 p-3">
+                    <div class="d-flex justify-content-between py-1">
+                        <span class="text-muted">Subtotal</span>
+                        <strong>${money(v.subtotal || 0)}</strong>
+                    </div>
+
+                    <div class="d-flex justify-content-between py-1">
+                        <span class="text-muted">IGV</span>
+                        <strong>${money(v.igv || 0)}</strong>
+                    </div>
+
+                    <div class="d-flex justify-content-between py-1 border-top mt-2 pt-2">
+                        <span class="fw-bold">Total</span>
+                        <strong class="fw-bold">${money(total)}</strong>
+                    </div>
+                </div>
+
+                <!-- ===== PRODUCTOS ===== -->
                 <h6 class="mt-4 fw-semibold text-muted small text-uppercase">
                     Listado de productos
                 </h6>
 
-                <div class="listado-productos">
+                <div class="card ui-card rounded-4 mt-6 p-3 listado-productos">
                     ${
                         Array.isArray(v.productos) && v.productos.length
                         ? v.productos.map(p => `
@@ -159,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <div class="producto-cantidad">${p.cantidad_txt ?? ''}</div>
                                 </div>
                                 <div class="producto-precio">
-                                    S/ ${Number(p.subtotal || 0).toFixed(2)}
+                                    ${money(p.subtotal || 0)}
                                 </div>
                             </div>
                         `).join('')
@@ -167,7 +246,27 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 </div>
 
-                <div class="acciones-detalle sticky-actions d-flex gap-2">
+                <!-- ===== ACCIONES (sticky abajo) ===== -->
+                <div class="acciones-detalle sticky-actions d-flex gap-2 flex-wrap mt-3">
+                    ${pdfUrl ? `
+                        <button class="btn-soft btn-soft-primary" type="button"
+                                onclick="menuPdf('${pdfUrl || ''}')">
+                                <i class="fas fa-file-pdf"></i>
+                                <span>PDF</span>
+                        </button>` : ''}
+
+                    ${v.xml_url ? `
+                        <a class="btn-soft btn-soft-info" href="${v.xml_url}">
+                            <i class="fas fa-file-code"></i>
+                            <span>XML</span>
+                        </a>` : ''}
+
+                    ${v.cdr_url ? `
+                        <a class="btn-soft btn-soft-success" href="${v.cdr_url}">
+                            <i class="fas fa-check-circle"></i>
+                            <span>CDR</span>
+                        </a>` : ''}
+
                     ${
                         (estado === 'pendiente' || estado === 'credito')
                         ? `
@@ -178,11 +277,6 @@ document.addEventListener('DOMContentLoaded', () => {
                           `
                         : ''
                     }
-
-                    <button class="btn-soft btn-soft-primary" type="button">
-                        <i class="fas fa-print"></i>
-                        <span>Imprimir</span>
-                    </button>
                 </div>
             </div>
 
@@ -228,14 +322,17 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             `;
 
-            // Badge estado
+            // Pintar badges
             const estadoEl = document.getElementById('estadoVenta');
-            estadoEl.innerHTML = renderEstadoBadge(estado);
+            if (estadoEl) estadoEl.innerHTML = renderEstadoBadge(estado);
 
-            } catch (err) {
-                console.error(err);
-                contenido.innerHTML = `<div class="text-danger">Error al cargar detalle</div>`;
-            }
+            const sunatEl = document.getElementById('estadoSunat');
+            if (sunatEl) sunatEl.innerHTML = renderSunatBadge(v.estado_sunat);
+
+        } catch (err) {
+            console.error(err);
+            contenido.innerHTML = `<div class="text-danger">Error al cargar detalle</div>`;
+        }
     });
 
     // ===== Recalcular vuelto EN VIVO (funciona para pendiente y crédito) =====
@@ -318,9 +415,6 @@ async function confirmarCobro() {
         return;
     }
 
-    // ===== Reglas =====
-    // Pendiente: NO permitir menor. Permitir mayor (vuelto visual) y cobrar solo deuda.
-    // Crédito:   NO permitir menor al saldo. Permitir mayor (vuelto visual) y cobrar solo saldo.
     const totalCobrar = Number(v.montoCobrar || 0);
 
     if (montoIngresado < totalCobrar) {
@@ -332,8 +426,6 @@ async function confirmarCobro() {
         return;
     }
 
-    // Si paga más, backend solo debe registrar el monto real (deuda),
-    // el vuelto es solo visual.
     const montoAEnviar = totalCobrar;
 
     const url = (v.estado === 'credito')
@@ -368,14 +460,104 @@ async function confirmarCobro() {
             return;
         }
 
-        // ✅ SweetAlert éxito (sin OK)
         toast('success', 'Deuda pagada con éxito');
-
-        // recargar bonito luego del toast
         setTimeout(() => location.reload(), 900);
 
     } catch (err) {
         console.error(err);
         toast('error', 'Error al cobrar');
+    }
+}
+
+function menuPdf(url) {
+
+    url = fixUrlHost(url);
+    if (!url) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({ icon: 'warning', title: 'No hay PDF generado' });
+        } else {
+            alert('No hay PDF generado');
+        }
+        return;
+    }
+
+    if (typeof Swal === 'undefined') {
+        // fallback simple
+        window.open(url, '_blank');
+        return;
+    }
+
+    Swal.fire({
+        title: 'Comprobante PDF',
+        text: '¿Qué deseas hacer?',
+        icon: 'info',
+        showCancelButton: true,
+        showDenyButton: true,
+        confirmButtonText: 'Imprimir',
+        denyButtonText: 'Descargar',
+        cancelButtonText: 'Cerrar',
+        confirmButtonColor: '#0f172a'
+    }).then((r) => {
+        if (r.isConfirmed) {
+            imprimirPdf(url);
+        } else if (r.isDenied) {
+            descargarPdf(url);
+        }
+    });
+}
+
+function imprimirPdf(url) {
+
+    url = fixUrlHost(url);
+    const w = window.open(url, '_blank');
+    if (!w) return;
+
+    // Intento de auto-print (en algunos navegadores no se permite; igual abre el PDF)
+    const timer = setInterval(() => {
+        try {
+            if (w.document && w.document.readyState === 'complete') {
+                clearInterval(timer);
+                w.focus();
+                w.print();
+            }
+        } catch (e) {
+            // Si el navegador bloquea acceso al documento del PDF, no pasa nada.
+            // El PDF queda abierto y el usuario imprime manual.
+        }
+    }, 300);
+
+    setTimeout(() => clearInterval(timer), 5000);
+}
+
+function descargarPdf(url) {
+
+    url = fixUrlHost(url);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = ''; // deja que el servidor/navegador defina nombre
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+}
+
+function fixUrlHost(url) {
+    if (!url) return '';
+
+    try {
+        const currentOrigin = window.location.origin; // ej: http://192.168.1.50:8000
+        const u = new URL(url, currentOrigin);
+
+        // Si viene con localhost, lo cambiamos por el origin actual
+        if (u.hostname === 'localhost' || u.hostname === '127.0.0.1') {
+            const fixed = new URL(currentOrigin);
+            u.protocol = fixed.protocol;
+            u.host = fixed.host; // incluye puerto
+        }
+
+        return u.toString();
+    } catch (e) {
+        // si es una ruta relativa tipo /comprobantes/xx.pdf
+        if (url.startsWith('/')) return window.location.origin + url;
+        return url;
     }
 }
